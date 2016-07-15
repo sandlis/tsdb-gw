@@ -27,7 +27,7 @@ func Init(metrics met.Backend, t string, addr string, enabled bool) {
 	}
 	topic = t
 	cfg := nsq.NewConfig()
-	cfg.UserAgent = fmt.Sprintf("raintank-apps-server")
+	cfg.UserAgent = fmt.Sprintf("tsdb-gw-server")
 	var err error
 	globalProducer, err = nsq.NewProducer(addr, cfg)
 	if err != nil {

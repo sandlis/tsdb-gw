@@ -13,11 +13,11 @@ import (
 
 	"github.com/Unknwon/macaron"
 	"github.com/raintank/met/helper"
-	"github.com/raintank/raintank-apps/tsdb/api"
-	"github.com/raintank/raintank-apps/tsdb/elasticsearch"
-	"github.com/raintank/raintank-apps/tsdb/event_publish"
-	"github.com/raintank/raintank-apps/tsdb/graphite"
-	"github.com/raintank/raintank-apps/tsdb/metric_publish"
+	"github.com/raintank/tsdb-gw/api"
+	"github.com/raintank/tsdb-gw/elasticsearch"
+	"github.com/raintank/tsdb-gw/event_publish"
+	"github.com/raintank/tsdb-gw/graphite"
+	"github.com/raintank/tsdb-gw/metric_publish"
 	"github.com/raintank/worldping-api/pkg/log"
 	"github.com/rakyll/globalconf"
 )

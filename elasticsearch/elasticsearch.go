@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/raintank/raintank-apps/tsdb/util"
+	"github.com/raintank/tsdb-gw/util"
 	"github.com/raintank/worldping-api/pkg/log"
 )
 

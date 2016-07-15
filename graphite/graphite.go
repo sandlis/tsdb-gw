@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/raintank/raintank-apps/tsdb/util"
+	"github.com/raintank/tsdb-gw/util"
 )
 
 var (

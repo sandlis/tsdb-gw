@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 
 	"github.com/golang/snappy"
-	"github.com/raintank/raintank-apps/tsdb/metric_publish"
+	"github.com/raintank/tsdb-gw/metric_publish"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/raintank/schema.v0"
 	"gopkg.in/raintank/schema.v0/msg"
