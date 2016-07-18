@@ -1,19 +1,21 @@
 package metric_publish
 
 import (
-	"fmt"
+	"encoding/binary"
 	"time"
 
-	"github.com/nsqio/go-nsq"
+	"github.com/Shopify/sarama"
+	"github.com/raintank/fakemetrics/out"
 	"github.com/raintank/met"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/raintank/schema.v0"
-	"gopkg.in/raintank/schema.v0/msg"
 )
 
 var (
-	globalProducer    *nsq.Producer
+	config            *sarama.Config
+	producer          sarama.SyncProducer
 	topic             string
+	brokers           []string
 	metricsPublished  met.Count
 	messagesPublished met.Count
 	messagesSize      met.Meter
@@ -21,21 +23,28 @@ var (
 	publishDuration   met.Timer
 )
 
-func Init(metrics met.Backend, t string, addr string, enabled bool) {
+func Init(metrics met.Backend, t, broker, codec string, enabled bool) {
 	if !enabled {
 		return
 	}
-	topic = t
-	cfg := nsq.NewConfig()
-	cfg.UserAgent = fmt.Sprintf("tsdb-gw-server")
-	var err error
-	globalProducer, err = nsq.NewProducer(addr, cfg)
+	// We are looking for strong consistency semantics.
+	// Because we don't change the flush settings, sarama will try to produce messages
+	// as fast as possible to keep latency low.
+	config := sarama.NewConfig()
+	config.Producer.RequiredAcks = sarama.WaitForAll // Wait for all in-sync replicas to ack the message
+	config.Producer.Retry.Max = 10                   // Retry up to 10 times to produce the message
+	config.Producer.Compression = out.GetCompression(codec)
+	err := config.Validate()
 	if err != nil {
-		log.Fatal(4, "failed to initialize nsq producer. %s", err)
+		log.Fatal(4, "failed to validate kafka config. %s", err)
 	}
-	err = globalProducer.Ping()
+
+	topic = t
+	brokers = []string{broker}
+
+	producer, err = sarama.NewSyncProducer(brokers, config)
 	if err != nil {
-		log.Fatal(4, "can't connect to nsqd: %s", err)
+		log.Fatal(4, "failed to initialize kafka producer. %s", err)
 	}
 	metricsPublished = metrics.NewCount("metricpublisher.metrics-published")
 	messagesPublished = metrics.NewCount("metricpublisher.messages-published")
@@ -45,35 +54,53 @@ func Init(metrics met.Backend, t string, addr string, enabled bool) {
 }
 
 func Publish(metrics []*schema.MetricData) error {
-	if globalProducer == nil {
-		log.Debug("droping %d metrics as publishing is disbaled", len(metrics))
+	if producer == nil {
+		log.Debug("droping %d metrics as publishing is disabled", len(metrics))
 		return nil
 	}
 	if len(metrics) == 0 {
 		return nil
 	}
+	var data []byte
 
-	subslices := schema.Reslice(metrics, 3500)
+	payload := make([]*sarama.ProducerMessage, len(metrics))
+	pre := time.Now()
 
-	for _, subslice := range subslices {
-		id := time.Now().UnixNano()
-		data, err := msg.CreateMsg(subslice, id, msg.FormatMetricDataArrayMsgp)
+	for i, metric := range metrics {
+		data, err := metric.MarshalMsg(data[:])
 		if err != nil {
-			log.Fatal(4, "Fatal error creating metric message: %s", err)
+			return err
 		}
-		metricsPublished.Inc(int64(len(subslice)))
-		messagesPublished.Inc(1)
-		messagesSize.Value(int64(len(data)))
-		metricsPerMessage.Value(int64(len(subslice)))
-		pre := time.Now()
-		err = globalProducer.Publish(topic, data)
-		publishDuration.Value(time.Since(pre))
-		if err != nil {
-			log.Fatal(4, "can't publish to nsqd: %s", err)
+
+		// partition by organisation: metrics for the same org should go to the same
+		// partition/MetricTank (optimize for locality~performance)
+		// the extra 4B (now initialized with zeroes) is to later enable a smooth transition
+		// to a more fine-grained partitioning scheme where
+		// large organisations can go to several partitions instead of just one.
+		key := make([]byte, 8)
+		binary.LittleEndian.PutUint32(key, uint32(metric.OrgId))
+		payload[i] = &sarama.ProducerMessage{
+			Key:   sarama.ByteEncoder(key),
+			Topic: topic,
+			Value: sarama.ByteEncoder(data),
 		}
-		log.Info("published metrics %d size=%d", id, len(data))
+
 	}
+	err := producer.SendMessages(payload)
+	if err != nil {
+		if errors, ok := err.(sarama.ProducerErrors); ok {
+			for i := 0; i < 10 && i < len(errors); i++ {
+				log.Error(4, "ProducerError %d/%d: %s", i, len(errors), errors[i].Error())
+			}
+		}
+		return err
+	}
+	publishDuration.Value(time.Since(pre))
+	metricsPublished.Inc(int64(len(metrics)))
+	messagesPublished.Inc(1)
+	messagesSize.Value(int64(len(data)))
+	metricsPerMessage.Value(int64(len(metrics)))
 
-	//globalProducer.Stop()
+	log.Info("published %d metrics", len(data))
 	return nil
 }

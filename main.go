@@ -28,11 +28,13 @@ var (
 	logLevel    = flag.Int("log-level", 2, "log level. 0=TRACE|1=DEBUG|2=INFO|3=WARN|4=ERROR|5=CRITICAL|6=FATAL")
 	confFile    = flag.String("config", "/etc/raintank/tsdb.ini", "configuration file path")
 
-	nsqdAddr       = flag.String("nsqd-addr", "localhost:4150", "nsqd service address")
-	metricTopic    = flag.String("metric-topic", "metrics", "NSQ topic for metrics")
-	publishMetrics = flag.Bool("publish-metrics", false, "enable metric publishing")
-	eventTopic     = flag.String("event-topic", "metrics", "NSQ topic for events")
-	publishEvents  = flag.Bool("publish-events", false, "enable event publishing")
+	nsqdAddr         = flag.String("nsqd-addr", "localhost:4150", "nsqd service address for events")
+	broker           = flag.String("kafka-tcp-addr", "localhost:9092", "kafka tcp address for metrics")
+	metricTopic      = flag.String("metric-topic", "mdm", "topic for metrics")
+	kafkaCompression = flag.String("kafka-comp", "none", "compression: none|gzip|snappy")
+	publishMetrics   = flag.Bool("publish-metrics", false, "enable metric publishing")
+	eventTopic       = flag.String("event-topic", "metrics", "NSQ topic for events")
+	publishEvents    = flag.Bool("publish-events", false, "enable event publishing")
 
 	addr     = flag.String("addr", "localhost:80", "http service address")
 	ssl      = flag.Bool("ssl", false, "use https")
@@ -98,7 +100,7 @@ func main() {
 		log.Fatal(4, "failed to initialize statsd. %s", err)
 	}
 
-	metric_publish.Init(stats, *metricTopic, *nsqdAddr, *publishMetrics)
+	metric_publish.Init(stats, *metricTopic, *broker, *kafkaCompression, *publishMetrics)
 	event_publish.Init(stats, *eventTopic, *nsqdAddr, *publishEvents)
 
 	m := macaron.Classic()
