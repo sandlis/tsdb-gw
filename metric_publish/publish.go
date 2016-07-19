@@ -97,7 +97,7 @@ func Publish(metrics []*schema.MetricData) error {
 			Topic: topic,
 			Value: sarama.ByteEncoder(data),
 		}
-
+		messagesSize.Value(int64(len(data)))
 	}
 	err := producer.SendMessages(payload)
 	if err != nil {
@@ -110,9 +110,8 @@ func Publish(metrics []*schema.MetricData) error {
 	}
 	publishDuration.Value(time.Since(pre))
 	metricsPublished.Inc(int64(len(metrics)))
-	messagesPublished.Inc(1)
-	messagesSize.Value(int64(len(data)))
-	metricsPerMessage.Value(int64(len(metrics)))
+	messagesPublished.Inc(int64(len(metrics)))
+	metricsPerMessage.Value(1)
 
 	log.Info("published %d metrics", len(data))
 	return nil
