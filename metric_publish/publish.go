@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/raintank/fakemetrics/out"
 	"github.com/raintank/met"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/raintank/schema.v0"
@@ -23,6 +22,20 @@ var (
 	publishDuration   met.Timer
 )
 
+func getCompression(codec string) sarama.CompressionCodec {
+	switch codec {
+	case "none":
+		return sarama.CompressionNone
+	case "gzip":
+		return sarama.CompressionGZIP
+	case "snappy":
+		return sarama.CompressionSnappy
+	default:
+		log.Fatal(5, "unknown compression codec %q", codec)
+		return 0 // make go compiler happy, needs a return *roll eyes*
+	}
+}
+
 func Init(metrics met.Backend, t, broker, codec string, enabled bool) {
 	if !enabled {
 		return
@@ -33,7 +46,7 @@ func Init(metrics met.Backend, t, broker, codec string, enabled bool) {
 	config := sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll // Wait for all in-sync replicas to ack the message
 	config.Producer.Retry.Max = 10                   // Retry up to 10 times to produce the message
-	config.Producer.Compression = out.GetCompression(codec)
+	config.Producer.Compression = getCompression(codec)
 	err := config.Validate()
 	if err != nil {
 		log.Fatal(4, "failed to validate kafka config. %s", err)
