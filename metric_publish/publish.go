@@ -20,6 +20,8 @@ var (
 	messagesSize      met.Meter
 	metricsPerMessage met.Meter
 	publishDuration   met.Timer
+	sendErrProducer   met.Count
+	sendErrOther      met.Count
 )
 
 func getCompression(codec string) sarama.CompressionCodec {
@@ -64,6 +66,8 @@ func Init(metrics met.Backend, t, broker, codec string, enabled bool) {
 	messagesSize = metrics.NewMeter("metricpublisher.message_size", 0)
 	metricsPerMessage = metrics.NewMeter("metricpublisher.metrics_per_message", 0)
 	publishDuration = metrics.NewTimer("metricpublisher.publish_duration", 0)
+	sendErrProducer = metrics.NewCount("metricpublisher.errors.producer")
+	sendErrOther = metrics.NewCount("metricpublisher.errors.other")
 }
 
 func Publish(metrics []*schema.MetricData) error {
@@ -102,9 +106,13 @@ func Publish(metrics []*schema.MetricData) error {
 	err := producer.SendMessages(payload)
 	if err != nil {
 		if errors, ok := err.(sarama.ProducerErrors); ok {
+			sendErrProducer.Inc(int64(len(errors)))
 			for i := 0; i < 10 && i < len(errors); i++ {
-				log.Error(4, "ProducerError %d/%d: %s", i, len(errors), errors[i].Error())
+				log.Error(4, "SendMessages ProducerError %d/%d: %s", i, len(errors), errors[i].Error())
 			}
+		} else {
+			sendErrOther.Inc(1)
+			log.Error(4, "SendMessages error: %s", err.Error())
 		}
 		return err
 	}
