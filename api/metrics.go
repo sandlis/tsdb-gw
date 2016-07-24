@@ -40,6 +40,13 @@ func metricsJson(ctx *Context) {
 			ctx.JSON(400, fmt.Sprintf("unable to parse request body. %s", err))
 			return
 		}
+		for _, md := range metrics {
+			err := md.Validate()
+			if err != nil {
+				ctx.JSON(400, err.Error())
+				return
+			}
+		}
 		if !ctx.IsAdmin {
 			for _, m := range metrics {
 				m.OrgId = int(ctx.OrgId)
@@ -88,6 +95,13 @@ func metricsBinary(ctx *Context, compressed bool) {
 			log.Error(3, "failed to unmarshal metricData. %s", err)
 			ctx.JSON(500, err)
 			return
+		}
+		for _, md := range metricData.Metrics {
+			err := md.Validate()
+			if err != nil {
+				ctx.JSON(400, err.Error())
+				return
+			}
 		}
 		if !ctx.IsAdmin {
 			for _, m := range metricData.Metrics {
