@@ -122,6 +122,6 @@ func Publish(metrics []*schema.MetricData) error {
 	messagesPublished.Inc(int64(len(metrics)))
 	metricsPerMessage.Value(1)
 
-	log.Info("published %d metrics", len(data))
+	log.Info("published %d metrics", len(metrics))
 	return nil
 }
