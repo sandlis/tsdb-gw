@@ -40,16 +40,21 @@ func metricsJson(ctx *Context) {
 			ctx.JSON(400, fmt.Sprintf("unable to parse request body. %s", err))
 			return
 		}
-		for _, md := range metrics {
-			err := md.Validate()
-			if err != nil {
-				ctx.JSON(400, err.Error())
-				return
+
+		if ctx.IsAdmin {
+			for _, m := range metrics {
+				if err := m.Validate(); err != nil {
+					ctx.JSON(400, err.Error())
+					return
+				}
 			}
-		}
-		if !ctx.IsAdmin {
+		} else {
 			for _, m := range metrics {
 				m.OrgId = int(ctx.OrgId)
+				if err := m.Validate(); err != nil {
+					ctx.JSON(400, err.Error())
+					return
+				}
 				m.SetId()
 			}
 		}
@@ -96,16 +101,21 @@ func metricsBinary(ctx *Context, compressed bool) {
 			ctx.JSON(500, err)
 			return
 		}
-		for _, md := range metricData.Metrics {
-			err := md.Validate()
-			if err != nil {
-				ctx.JSON(400, err.Error())
-				return
+
+		if ctx.IsAdmin {
+			for _, m := range metricData.Metrics {
+				if err := m.Validate(); err != nil {
+					ctx.JSON(400, err.Error())
+					return
+				}
 			}
-		}
-		if !ctx.IsAdmin {
+		} else {
 			for _, m := range metricData.Metrics {
 				m.OrgId = int(ctx.OrgId)
+				if err := m.Validate(); err != nil {
+					ctx.JSON(400, err.Error())
+					return
+				}
 				m.SetId()
 			}
 		}
