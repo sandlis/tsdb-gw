@@ -79,12 +79,12 @@ func Publish(metrics []*schema.MetricData) error {
 		return nil
 	}
 	var err error
-	var data []byte
 
 	payload := make([]*sarama.ProducerMessage, len(metrics))
 	pre := time.Now()
 
 	for i, metric := range metrics {
+		var data []byte
 		data, err = metric.MarshalMsg(data[:])
 		if err != nil {
 			return err
