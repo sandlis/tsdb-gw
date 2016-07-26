@@ -85,7 +85,7 @@ func Publish(metrics []*schema.MetricData) error {
 	pre := time.Now()
 
 	for i, metric := range metrics {
-		data, err = metric.MarshalMsg(data[:])
+		data, err = metric.MarshalMsg(data[len(data):])
 		if err != nil {
 			return err
 		}
