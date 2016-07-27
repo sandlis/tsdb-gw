@@ -32,7 +32,7 @@ var (
 	metricTopic      = flag.String("metric-topic", "mdm", "topic for metrics")
 	kafkaCompression = flag.String("kafka-comp", "none", "compression: none|gzip|snappy")
 	publishMetrics   = flag.Bool("publish-metrics", false, "enable metric publishing")
-	eventTopic       = flag.String("event-topic", "metrics", "NSQ topic for events")
+	eventTopic       = flag.String("event-topic", "events", "NSQ topic for events")
 	publishEvents    = flag.Bool("publish-events", false, "enable event publishing")
 
 	addr     = flag.String("addr", "localhost:80", "http service address")
