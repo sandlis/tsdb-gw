@@ -28,7 +28,6 @@ var (
 	logLevel    = flag.Int("log-level", 2, "log level. 0=TRACE|1=DEBUG|2=INFO|3=WARN|4=ERROR|5=CRITICAL|6=FATAL")
 	confFile    = flag.String("config", "/etc/raintank/tsdb.ini", "configuration file path")
 
-	nsqdAddr         = flag.String("nsqd-addr", "localhost:4150", "nsqd service address for events")
 	broker           = flag.String("kafka-tcp-addr", "localhost:9092", "kafka tcp address for metrics")
 	metricTopic      = flag.String("metric-topic", "mdm", "topic for metrics")
 	kafkaCompression = flag.String("kafka-comp", "none", "compression: none|gzip|snappy")
@@ -101,7 +100,7 @@ func main() {
 	}
 
 	metric_publish.Init(stats, *metricTopic, *broker, *kafkaCompression, *publishMetrics)
-	event_publish.Init(stats, *eventTopic, *nsqdAddr, *publishEvents)
+	event_publish.Init(stats, *eventTopic, *broker, *kafkaCompress, *publishEvents)
 
 	m := macaron.Classic()
 	m.Use(macaron.Renderer())
