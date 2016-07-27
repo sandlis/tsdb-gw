@@ -1,7 +1,7 @@
 package event_publish
 
 import (
-	"fmt"
+	"encoding/binary"
 	"time"
 
 	"github.com/Shopify/sarama"

@@ -100,7 +100,7 @@ func main() {
 	}
 
 	metric_publish.Init(stats, *metricTopic, *broker, *kafkaCompression, *publishMetrics)
-	event_publish.Init(stats, *eventTopic, *broker, *kafkaCompress, *publishEvents)
+	event_publish.Init(stats, *eventTopic, *broker, *kafkaCompression, *publishEvents)
 
 	m := macaron.Classic()
 	m.Use(macaron.Renderer())
