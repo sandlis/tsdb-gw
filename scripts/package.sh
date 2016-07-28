@@ -3,6 +3,8 @@ set -x
 BASE=$(dirname $0)
 CODE_DIR=$(readlink -e "$BASE/../")
 
+apt-get install rpm
+
 BUILD_ROOT=$CODE_DIR/build
 
 ARCH="$(uname -m)"
