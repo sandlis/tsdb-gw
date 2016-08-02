@@ -6,13 +6,13 @@ import (
 
 func InitRoutes(m *macaron.Macaron, adminKey string) {
 	m.Use(GetContextHandler())
-	m.Use(Auth(adminKey))
+	m.Use()
 
 	m.Get("/", index)
-	m.Post("/metrics", Metrics)
-	m.Post("/events", Events)
-	m.Any("/graphite/*", GraphiteProxy)
-	m.Any("/elasticsearch/*", ElasticsearchProxy)
+	m.Post("/metrics", Auth(adminKey), Metrics)
+	m.Post("/events", Auth(adminKey), Events)
+	m.Any("/graphite/*", Auth(adminKey), GraphiteProxy)
+	m.Any("/elasticsearch/*", Auth(adminKey), ElasticsearchProxy)
 }
 
 func index(ctx *macaron.Context) {
