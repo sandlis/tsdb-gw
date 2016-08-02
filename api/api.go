@@ -6,7 +6,6 @@ import (
 
 func InitRoutes(m *macaron.Macaron, adminKey string) {
 	m.Use(GetContextHandler())
-	m.Use()
 
 	m.Get("/", index)
 	m.Post("/metrics", Auth(adminKey), Metrics)
