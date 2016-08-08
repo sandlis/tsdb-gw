@@ -1,6 +1,7 @@
 FROM alpine
 MAINTAINER Anthony Woods awoods@raintank.io
 
+RUN apk --update add ca-certificates
 RUN mkdir -p /etc/raintank
 COPY config/tsdb.ini /etc/raintank/tsdb.ini
 
