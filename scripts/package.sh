@@ -24,7 +24,7 @@ cp ${BUILD_ROOT}/tsdb-gw ${BUILD}/usr/bin/
 
 fpm -s dir -t deb \
   -v ${VERSION} -n tsdb-gw -a ${ARCH} --description "HTTP gateway service for metrictank TSDB" \
-  --deb-upstart ${BASE}/config/upstart/tsdb-gw.conf \
+  --deb-upstart ${BASE}/config/upstart/tsdb-gw \
   -C ${BUILD} -p ${PACKAGE_NAME} .
 
 ## ubuntu 16.04, Debian 8, CentOS 7
