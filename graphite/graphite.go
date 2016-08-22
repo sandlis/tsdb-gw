@@ -34,7 +34,7 @@ func Proxy(orgId int64, proxyPath string, request *http.Request) *httputil.Rever
 			director := func(req *http.Request) {
 				req.URL.Scheme = WorldpingUrl.Scheme
 				req.URL.Host = WorldpingUrl.Host
-				req.URL.Path = util.JoinUrlFragments(WorldpingUrl.Path, "graphite"+proxyPath)
+				req.URL.Path = util.JoinUrlFragments(WorldpingUrl.Path, "graphite/"+proxyPath)
 			}
 			return &httputil.ReverseProxy{Director: director}
 		}
