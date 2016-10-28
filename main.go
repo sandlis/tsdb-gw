@@ -56,13 +56,19 @@ func main() {
 	flag.Parse()
 
 	// Only try and parse the conf file if it exists
+	path := ""
 	if _, err := os.Stat(*confFile); err == nil {
-		conf, err := globalconf.NewWithOptions(&globalconf.Options{Filename: *confFile})
-		if err != nil {
-			panic(fmt.Sprintf("error with configuration file: %s", err))
-		}
-		conf.ParseAll()
+		path = *confFile
 	}
+	conf, err := globalconf.NewWithOptions(&globalconf.Options{
+		Filename:  path,
+		EnvPrefix: "GW_",
+	})
+	if err != nil {
+		log.Fatal(4, "error with configuration file: %s", err)
+		os.Exit(1)
+	}
+	conf.ParseAll()
 
 	log.NewLogger(0, "console", fmt.Sprintf(`{"level": %d, "formatting":true}`, *logLevel))
 	// workaround for https://github.com/grafana/grafana/issues/4055
