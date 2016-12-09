@@ -32,7 +32,7 @@ func metricsJson(ctx *Context) {
 	if ctx.Req.Request.Body != nil {
 		body, err := ioutil.ReadAll(ctx.Req.Request.Body)
 		if err != nil {
-			log.Error(3, "unable to read requst body. %s", err)
+			log.Error(3, "unable to read request body. %s", err)
 		}
 		metrics := make([]*schema.MetricData, 0)
 		err = json.Unmarshal(body, &metrics)
@@ -61,7 +61,7 @@ func metricsJson(ctx *Context) {
 
 		err = metric_publish.Publish(metrics)
 		if err != nil {
-			log.Error(3, "failed to publush metrics. %s", err)
+			log.Error(3, "failed to publish metrics. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
@@ -83,7 +83,7 @@ func metricsBinary(ctx *Context, compressed bool) {
 	if ctx.Req.Request.Body != nil {
 		body, err := ioutil.ReadAll(body)
 		if err != nil {
-			log.Error(3, "unable to read requst body. %s", err)
+			log.Error(3, "unable to read request body. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
@@ -122,7 +122,7 @@ func metricsBinary(ctx *Context, compressed bool) {
 
 		err = metric_publish.Publish(metricData.Metrics)
 		if err != nil {
-			log.Error(3, "failed to publush metrics. %s", err)
+			log.Error(3, "failed to publish metrics. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
