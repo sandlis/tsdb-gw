@@ -25,6 +25,7 @@ cp ${BUILD_ROOT}/tsdb-gw ${BUILD}/usr/bin/
 fpm -s dir -t deb \
   -v ${VERSION} -n tsdb-gw -a ${ARCH} --description "HTTP gateway service for metrictank TSDB" \
   --deb-upstart ${BASE}/config/upstart/tsdb-gw \
+  --replaces tsdb \
   -C ${BUILD} -p ${PACKAGE_NAME} .
 
 ## ubuntu 16.04, Debian 8, CentOS 7
@@ -43,6 +44,7 @@ fpm -s dir -t deb \
   -v ${VERSION} -n tsdb-gw -a ${ARCH} --description "HTTP gateway service for metrictank TSDB" \
   --config-files /etc/raintank/ \
   -m "Raintank Inc. <hello@raintank.io>" --vendor "raintank.io" \
+  --replaces tsdb \
   --license "Apache2.0" -C ${BUILD} -p ${PACKAGE_NAME} .
 
 BUILD=${BUILD_ROOT}/systemd-centos7
@@ -62,6 +64,7 @@ fpm -s dir -t rpm \
   -v ${VERSION} -n tsdb-gw -a ${ARCH} --description "HTTP gateway service for metrictank TSDB" \
   --config-files /etc/raintank/ \
   -m "Raintank Inc. <hello@raintank.io>" --vendor "raintank.io" \
+  --replaces tsdb \
   --license "Apache2.0" -C ${BUILD} -p ${PACKAGE_NAME} .
 
 ## CentOS 6
@@ -79,4 +82,5 @@ cp ${BASE}/config/upstart-0.6.5/tsdb-gw.conf $BUILD/etc/init
 
 fpm -s dir -t rpm \
   -v ${VERSION} -n tsdb-gw -a ${ARCH} --description "HTTP gateway service for metrictank TSDB" \
+  --replaces tsdb \
   -C ${BUILD} -p ${PACKAGE_NAME} .
