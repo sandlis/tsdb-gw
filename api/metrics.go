@@ -104,6 +104,13 @@ func metricsBinary(ctx *Context, compressed bool) {
 
 		if ctx.IsAdmin {
 			for _, m := range metricData.Metrics {
+				if m.Metric == "" {
+					m.Metric = m.Name
+				}
+				if m.Mtype == "" {
+					m.Mtype = "gauge"
+				}
+
 				if err := m.Validate(); err != nil {
 					ctx.JSON(400, err.Error())
 					return
@@ -112,6 +119,12 @@ func metricsBinary(ctx *Context, compressed bool) {
 		} else {
 			for _, m := range metricData.Metrics {
 				m.OrgId = int(ctx.OrgId)
+				if m.Metric == "" {
+					m.Metric = m.Name
+				}
+				if m.Mtype == "" {
+					m.Mtype = "gauge"
+				}
 				if err := m.Validate(); err != nil {
 					ctx.JSON(400, err.Error())
 					return
