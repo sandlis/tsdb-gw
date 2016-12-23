@@ -33,7 +33,7 @@ func eventsJson(ctx *Context) {
 	if ctx.Req.Request.Body != nil {
 		body, err := ioutil.ReadAll(ctx.Req.Request.Body)
 		if err != nil {
-			log.Error(3, "unable to read requst body. %s", err)
+			log.Error(3, "unable to read request body. %s", err)
 		}
 		event := new(schema.ProbeEvent)
 		err = json.Unmarshal(body, event)
@@ -50,7 +50,7 @@ func eventsJson(ctx *Context) {
 
 		err = event_publish.Publish(event)
 		if err != nil {
-			log.Error(3, "failed to publush event. %s", err)
+			log.Error(3, "failed to publish event. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
@@ -71,7 +71,7 @@ func eventsBinary(ctx *Context, compressed bool) {
 	if ctx.Req.Request.Body != nil {
 		body, err := ioutil.ReadAll(body)
 		if err != nil {
-			log.Error(3, "unable to read requst body. %s", err)
+			log.Error(3, "unable to read request body. %s", err)
 		}
 		ms, err := msg.ProbeEventFromMsg(body)
 		if err != nil {
@@ -94,7 +94,7 @@ func eventsBinary(ctx *Context, compressed bool) {
 
 		err = event_publish.Publish(ms.Event)
 		if err != nil {
-			log.Error(3, "failed to publush Event. %s", err)
+			log.Error(3, "failed to publish Event. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
