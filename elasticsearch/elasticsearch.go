@@ -112,6 +112,7 @@ type esSearch struct {
 }
 
 type esQuery struct {
+	Bool     esBool     `json:"bool,omitempty"`
 	Filtered esFiltered `json:"filtered"`
 }
 
@@ -130,7 +131,7 @@ type esBool struct {
 
 func transformSearch(orgId int64, search []byte) ([]byte, error) {
 	s := esSearch{}
-	if err := json.Unmarshal(search, &s); err != nil {
+	if err := json.Unmarshal(bytes.Replace(search, []byte("epoch_millis"), []byte(""), -1), &s); err != nil {
 		return nil, err
 	}
 

@@ -20,3 +20,7 @@ _testmain.go
 *.prof
 
 build/
+
+.bundle/
+Gemfile.lock
+vendor/
