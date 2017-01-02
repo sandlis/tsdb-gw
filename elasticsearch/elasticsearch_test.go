@@ -86,6 +86,6 @@ func TestElasticsearch(t *testing.T) {
 	Convey("When transforming a search request", t, func() {
 		transformed, err := transformSearch(orgId, rawSearch)
 		So(err, ShouldBeNil)
-		So(string(transformed), ShouldEqual, `{"size":0,"query":{"bool":{"must":[{"range":{"timestamp":{"format":"","gte":"1482791304618","lte":"1483396104619"}}},{"query_string":{"analyze_wildcard":true,"query":"tags.endpoint:(\"\\~google_com_demo\") AND tags.collector:(\"amsterdam\") AND tags.monitor_type:(\"dns\") AND severity:(\"ERROR\" OR \"OK\")"}}]},"filtered":{"query":null,"filter":{"bool":{"must":[{"term":{"org_id":1234}}]}}}},"aggs":{"3":{"aggs":{"2":{"aggs":{},"date_histogram":{"extended_bounds":{"max":"1483396104619","min":"1482791304618"},"field":"timestamp","format":"","interval":"6h","min_doc_count":0}}},"terms":{"field":"severity","order":{"_term":"asc"},"size":500}}}}`)
+		So(string(transformed), ShouldEqual, `{"size":0,"query":{"bool":{"must":[{"range":{"timestamp":{"format":"","gte":"1482791304618","lte":"1483396104619"}}},{"query_string":{"analyze_wildcard":true,"query":"tags.endpoint:(\"\\~google_com_demo\") AND tags.collector:(\"amsterdam\") AND tags.monitor_type:(\"dns\") AND severity:(\"ERROR\" OR \"OK\")"}}]},"filtered":{"filter":{"bool":{"must":[{"term":{"org_id":1234}}]}}}},"aggs":{"3":{"aggs":{"2":{"aggs":{},"date_histogram":{"extended_bounds":{"max":"1483396104619","min":"1482791304618"},"field":"timestamp","format":"","interval":"6h","min_doc_count":0}}},"terms":{"field":"severity","order":{"_term":"asc"},"size":500}}}}`)
 	})
 }

@@ -112,12 +112,12 @@ type esSearch struct {
 }
 
 type esQuery struct {
-	Bool     esBool     `json:"bool,omitempty"`
-	Filtered esFiltered `json:"filtered"`
+	Bool     interface{} `json:"bool,omitempty"`
+	Filtered esFiltered  `json:"filtered"`
 }
 
 type esFiltered struct {
-	Query  interface{} `json:"query"`
+	Query  interface{} `json:"query,omitempty"`
 	Filter esFilter    `json:"filter"`
 }
 
