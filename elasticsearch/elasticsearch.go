@@ -103,7 +103,7 @@ func validateHeader(header []byte) error {
 
 type esSearch struct {
 	Size            int         `json:"size"`
-	Query           esQuery     `json:"query"`
+	Query           interface{} `json:"query"`
 	Sort            interface{} `json:"sort,omitempty"`
 	Fields          interface{} `json:"fields,omitempty"`
 	ScriptFields    interface{} `json:"script_fields,omitempty"`
@@ -111,33 +111,34 @@ type esSearch struct {
 	Aggs            interface{} `json:"aggs,omitempty"`
 }
 
-type esQuery struct {
-	Bool     interface{} `json:"bool,omitempty"`
-	Filtered esFiltered  `json:"filtered"`
-}
-
-type esFiltered struct {
-	Query  interface{} `json:"query,omitempty"`
-	Filter esFilter    `json:"filter"`
-}
-
-type esFilter struct {
-	Bool esBool `json:"bool"`
+type esQueryWrapper struct {
+	Bool   esBool      `json:"bool"`
 }
 
 type esBool struct {
 	Must []interface{} `json:"must"`
+	Filter interface{} `json:"filter"`
 }
 
 func transformSearch(orgId int64, search []byte) ([]byte, error) {
+	// remove all "format": "epoch_millis" entries, since our timestamp isn't a date
+	re := regexp.MustCompile(`,\s*"format"\s*:\s*"epoch_millis"`)
+	cleanSearch := re.ReplaceAllLiteral(search, []byte(""))
+	re = regexp.MustCompile(`"format"\s*:\s*"epoch_millis"\s*,`)
+	cleanSearch = re.ReplaceAllLiteral(cleanSearch, []byte(""))
+
 	s := esSearch{}
-	if err := json.Unmarshal(bytes.Replace(search, []byte("epoch_millis"), []byte(""), -1), &s); err != nil {
+	if err := json.Unmarshal(cleanSearch, &s); err != nil {
 		return nil, err
 	}
 
+	// wrap provided query in a bool query with a filter clause restricting matches to the specified org
 	orgCondition := map[string]map[string]int64{"term": {"org_id": orgId}}
 
-	s.Query.Filtered.Filter.Bool.Must = append(s.Query.Filtered.Filter.Bool.Must, orgCondition)
+	Query := &esQueryWrapper{}
+	Query.Bool.Must = append(Query.Bool.Must, s.Query)
+	Query.Bool.Filter = orgCondition
+	s.Query = Query
 
 	return json.Marshal(s)
 }

@@ -4,7 +4,7 @@ function usage() {
 	echo "$0 --addr <ES Address> --org <OrgId> --endpoint <endpointSlug> --probe <probeSlug> --type <type (ping|dns|http|https)> --count <count of events>" 
 }
 
-LONG=addr:,org:,endpoint:,probe:
+LONG=addr:,org:,endpoint:,probe:,type:,count:
 
 PARSED=`getopt -o h --longoptions $LONG --name "$0" -- "$@"`
 if [ $? -ne 0 ]; then
