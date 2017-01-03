@@ -40,12 +40,12 @@ func getCompression(codec string) sarama.CompressionCodec {
 	}
 }
 
-func Init(metrics met.Backend, t, broker, codec string, enabled bool, partitionBy string) {
+func Init(metrics met.Backend, t, broker, codec string, enabled bool, partitionScheme string) {
 	if !enabled {
 		return
 	}
 	var err error
-	partitioner, err = cluster.NewKafkaPartitioner(partitionBy)
+	partitioner, err = cluster.NewKafkaPartitioner(partitionScheme)
 	if err != nil {
 		log.Fatal(4, "failed to initialize partitioner. %s", err)
 	}
