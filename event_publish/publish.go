@@ -48,6 +48,7 @@ func Init(metrics met.Backend, t, broker, codec string, enabled bool) {
 	config.Producer.RequiredAcks = sarama.WaitForAll // Wait for all in-sync replicas to ack the message
 	config.Producer.Retry.Max = 10                   // Retry up to 10 times to produce the message
 	config.Producer.Compression = getCompression(codec)
+	config.Producer.Return.Successes = true
 	err := config.Validate()
 	if err != nil {
 		log.Fatal(4, "failed to validate kafka config. %s", err)

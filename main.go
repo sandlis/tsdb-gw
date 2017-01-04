@@ -34,6 +34,7 @@ var (
 	publishMetrics   = flag.Bool("publish-metrics", false, "enable metric publishing")
 	eventTopic       = flag.String("event-topic", "events", "NSQ topic for events")
 	publishEvents    = flag.Bool("publish-events", false, "enable event publishing")
+	partitionScheme  = flag.String("partition-scheme", "bySeries", "method used for paritioning metrics. (byOrg|bySeries)")
 
 	addr     = flag.String("addr", "localhost:80", "http service address")
 	ssl      = flag.Bool("ssl", false, "use https")
@@ -105,7 +106,7 @@ func main() {
 		log.Fatal(4, "failed to initialize statsd. %s", err)
 	}
 
-	metric_publish.Init(stats, *metricTopic, *broker, *kafkaCompression, *publishMetrics)
+	metric_publish.Init(stats, *metricTopic, *broker, *kafkaCompression, *publishMetrics, *partitionScheme)
 	event_publish.Init(stats, *eventTopic, *broker, *kafkaCompression, *publishEvents)
 
 	m := macaron.Classic()
