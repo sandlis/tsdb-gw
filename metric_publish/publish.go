@@ -1,11 +1,11 @@
 package metric_publish
 
 import (
-	"encoding/binary"
 	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/raintank/met"
+	"github.com/raintank/metrictank/cluster"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/raintank/schema.v1"
 )
@@ -22,6 +22,8 @@ var (
 	publishDuration   met.Timer
 	sendErrProducer   met.Count
 	sendErrOther      met.Count
+
+	partitioner *cluster.KafkaPartitioner
 )
 
 func getCompression(codec string) sarama.CompressionCodec {
@@ -38,10 +40,16 @@ func getCompression(codec string) sarama.CompressionCodec {
 	}
 }
 
-func Init(metrics met.Backend, t, broker, codec string, enabled bool) {
+func Init(metrics met.Backend, t, broker, codec string, enabled bool, partitionScheme string) {
 	if !enabled {
 		return
 	}
+	var err error
+	partitioner, err = cluster.NewKafkaPartitioner(partitionScheme)
+	if err != nil {
+		log.Fatal(4, "failed to initialize partitioner. %s", err)
+	}
+
 	// We are looking for strong consistency semantics.
 	// Because we don't change the flush settings, sarama will try to produce messages
 	// as fast as possible to keep latency low.
@@ -50,7 +58,7 @@ func Init(metrics met.Backend, t, broker, codec string, enabled bool) {
 	config.Producer.Retry.Max = 10                   // Retry up to 10 times to produce the message
 	config.Producer.Compression = getCompression(codec)
 	config.Producer.Return.Successes = true
-	err := config.Validate()
+	err = config.Validate()
 	if err != nil {
 		log.Fatal(4, "failed to validate kafka config. %s", err)
 	}
@@ -91,13 +99,10 @@ func Publish(metrics []*schema.MetricData) error {
 			return err
 		}
 
-		// partition by organisation: metrics for the same org should go to the same
-		// partition/MetricTank (optimize for locality~performance)
-		// the extra 4B (now initialized with zeroes) is to later enable a smooth transition
-		// to a more fine-grained partitioning scheme where
-		// large organisations can go to several partitions instead of just one.
-		key := make([]byte, 8)
-		binary.LittleEndian.PutUint32(key, uint32(metric.OrgId))
+		key, err := partitioner.GetPartitionKey(metric, nil)
+		if err != nil {
+			return err
+		}
 		payload[i] = &sarama.ProducerMessage{
 			Key:   sarama.ByteEncoder(key),
 			Topic: topic,
