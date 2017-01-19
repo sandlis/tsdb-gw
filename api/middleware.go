@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/base64"
 	"strings"
+	"time"
 
 	"github.com/Unknwon/macaron"
 	"github.com/raintank/raintank-apps/pkg/auth"
@@ -76,4 +77,27 @@ func getApiKey(c *Context) (string, error) {
 	}
 
 	return "", nil
+}
+
+// RequestStats returns a middleware that tracks request metrics.
+func RequestStats() macaron.Handler {
+	return func(ctx *macaron.Context) {
+		start := time.Now()
+		rw := ctx.Resp.(macaron.ResponseWriter)
+		ctx.Next()
+
+		status := rw.Status()
+		switch {
+		case status >= 200 && status < 300:
+			response2xx.Inc(1)
+		case status >= 300 && status < 400:
+			response3xx.Inc(1)
+		case status >= 400 && status < 500:
+			response4xx.Inc(1)
+		case status >= 500:
+			response5xx.Inc(1)
+		}
+		requestLatency.Value(time.Since(start))
+		requestSize.Value(int64(rw.Size()))
+	}
 }

@@ -112,7 +112,7 @@ func main() {
 	m := macaron.Classic()
 	m.Use(macaron.Renderer())
 
-	api.InitRoutes(m, *adminKey)
+	api.InitRoutes(stats, m, *adminKey)
 
 	if err := graphite.Init(*graphiteUrl, *worldpingUrl); err != nil {
 		log.Fatal(4, err.Error())
