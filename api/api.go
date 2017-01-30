@@ -19,6 +19,7 @@ func InitRoutes(metrics met.Backend, m *macaron.Macaron, adminKey string) {
 	m.Use(RequestStats())
 
 	m.Get("/", index)
+	m.Post("/metrics/delete", Auth(adminKey), MetrictankProxy)
 	m.Post("/metrics", Auth(adminKey), Metrics)
 	m.Post("/events", Auth(adminKey), Events)
 	m.Any("/graphite/*", Auth(adminKey), GraphiteProxy)
