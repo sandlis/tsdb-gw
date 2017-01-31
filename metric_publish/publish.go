@@ -1,6 +1,7 @@
 package metric_publish
 
 import (
+	"flag"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -13,7 +14,6 @@ import (
 var (
 	config            *sarama.Config
 	producer          sarama.SyncProducer
-	topic             string
 	brokers           []string
 	metricsPublished  met.Count
 	messagesPublished met.Count
@@ -23,8 +23,23 @@ var (
 	sendErrProducer   met.Count
 	sendErrOther      met.Count
 
-	partitioner *p.Kafka
+	partitioner     *p.Kafka
+	topic           string
+	codec           string
+	enabled         bool
+	partitionScheme string
+	flushFreq       time.Duration
+	maxMessages     int
 )
+
+func init() {
+	flag.StringVar(&topic, "metrics-topic", "mdm", "topic for metrics")
+	flag.StringVar(&codec, "metrics-kafka-comp", "snappy", "compression: none|gzip|snappy")
+	flag.BoolVar(&enabled, "metrics-publish", false, "enable metric publishing")
+	flag.StringVar(&partitionScheme, "metrics-partition-scheme", "bySeries", "method used for paritioning metrics. (byOrg|bySeries)")
+	flag.DurationVar(&flushFreq, "metrics-flush-freq", time.Millisecond*50, "The best-effort frequency of flushes to kafka")
+	flag.IntVar(&maxMessages, "metrics-max-messages", 5000, "The maximum number of messages the producer will send in a single request")
+}
 
 func getCompression(codec string) sarama.CompressionCodec {
 	switch codec {
@@ -40,7 +55,7 @@ func getCompression(codec string) sarama.CompressionCodec {
 	}
 }
 
-func Init(metrics met.Backend, t, broker, codec string, enabled bool, partitionScheme string) {
+func Init(metrics met.Backend, broker string) {
 	if !enabled {
 		return
 	}
@@ -58,12 +73,13 @@ func Init(metrics met.Backend, t, broker, codec string, enabled bool, partitionS
 	config.Producer.Retry.Max = 10                   // Retry up to 10 times to produce the message
 	config.Producer.Compression = getCompression(codec)
 	config.Producer.Return.Successes = true
+	config.Producer.Flush.Frequency = flushFreq
+	config.Producer.Flush.MaxMessages = maxMessages
 	err = config.Validate()
 	if err != nil {
 		log.Fatal(4, "failed to validate kafka config. %s", err)
 	}
 
-	topic = t
 	brokers = []string{broker}
 
 	producer, err = sarama.NewSyncProducer(brokers, config)
