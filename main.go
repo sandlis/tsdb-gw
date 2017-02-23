@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/Unknwon/macaron"
 	"github.com/raintank/met/helper"
@@ -51,6 +52,9 @@ var (
 	worldpingUrl     = flag.String("worldping-url", "http://localhost/", "worldping-api address")
 	elasticsearchUrl = flag.String("elasticsearch-url", "http://localhost:9200", "elasticsearch server address")
 	esIndex          = flag.String("es-index", "events", "elasticsearch index name")
+
+	graphiteDialTimeout   = flag.Duration("graphite-dial-timeout", 30*time.Second, "timeout value for graphite proxy. If Graphite takes longer, we return 502 Bad Gateway")
+	metrictankDialTimeout = flag.Duration("metrictank-dial-timeout", 30*time.Second, "timeout value for metrictank proxy. If Metrictank takes longer, we return 502 Bad Gateway")
 
 	adminKey = flag.String("admin-key", "not_very_secret_key", "Admin Secret Key")
 )
@@ -116,10 +120,10 @@ func main() {
 
 	api.InitRoutes(stats, m, *adminKey)
 
-	if err := graphite.Init(*graphiteUrl, *worldpingUrl); err != nil {
+	if err := graphite.Init(*graphiteUrl, *worldpingUrl, *graphiteDialTimeout); err != nil {
 		log.Fatal(4, err.Error())
 	}
-	if err := metrictank.Init(*metrictankUrl); err != nil {
+	if err := metrictank.Init(*metrictankUrl, *metrictankDialTimeout); err != nil {
 		log.Fatal(4, err.Error())
 	}
 	if err := elasticsearch.Init(*elasticsearchUrl, *esIndex); err != nil {

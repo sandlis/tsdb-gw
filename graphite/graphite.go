@@ -1,11 +1,14 @@
 package graphite
 
 import (
+	"errors"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/raintank/tsdb-gw/util"
 )
@@ -13,16 +16,41 @@ import (
 var (
 	GraphiteUrl  *url.URL
 	WorldpingUrl *url.URL
+
+	graphiteTransport http.RoundTripper
 )
 
-func Init(graphiteUrl, worldpingUrl string) error {
+func Init(graphiteUrl, worldpingUrl string, graphiteDialTimeout time.Duration) error {
 	var err error
+
 	GraphiteUrl, err = url.Parse(graphiteUrl)
 	if err != nil {
 		return err
 	}
+
 	WorldpingUrl, err = url.Parse(worldpingUrl)
-	return err
+	if err != nil {
+		return err
+	}
+
+	if graphiteDialTimeout == 0 {
+		return errors.New("graphite-dial-timeout must be a valid non-zero duration")
+	}
+
+	graphiteTransport = &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   graphiteDialTimeout,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+
+	return nil
 }
 
 func Proxy(orgId int64, proxyPath string, request *http.Request) *httputil.ReverseProxy {
@@ -48,5 +76,8 @@ func Proxy(orgId int64, proxyPath string, request *http.Request) *httputil.Rever
 		req.URL.Path = util.JoinUrlFragments(GraphiteUrl.Path, proxyPath)
 	}
 
-	return &httputil.ReverseProxy{Director: director}
+	return &httputil.ReverseProxy{
+		Transport: graphiteTransport,
+		Director:  director,
+	}
 }
