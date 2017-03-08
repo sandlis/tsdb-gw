@@ -5,7 +5,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/raintank/met"
-	"github.com/raintank/metrictank/cluster"
+	p "github.com/raintank/metrictank/cluster/partitioner"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/raintank/schema.v1"
 )
@@ -23,7 +23,7 @@ var (
 	sendErrProducer   met.Count
 	sendErrOther      met.Count
 
-	partitioner *cluster.KafkaPartitioner
+	partitioner *p.Kafka
 )
 
 func getCompression(codec string) sarama.CompressionCodec {
@@ -45,7 +45,7 @@ func Init(metrics met.Backend, t, broker, codec string, enabled bool, partitionS
 		return
 	}
 	var err error
-	partitioner, err = cluster.NewKafkaPartitioner(partitionScheme)
+	partitioner, err = p.NewKafka(partitionScheme)
 	if err != nil {
 		log.Fatal(4, "failed to initialize partitioner. %s", err)
 	}
