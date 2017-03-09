@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/go-macaron/macaron"
+	"gopkg.in/macaron.v1"
 	"github.com/raintank/met"
 )
 

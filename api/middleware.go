@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-macaron/macaron"
+	"gopkg.in/macaron.v1"
 	"github.com/raintank/raintank-apps/pkg/auth"
 	"github.com/raintank/worldping-api/pkg/log"
 )
