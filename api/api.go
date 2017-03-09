@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/Unknwon/macaron"
+	"github.com/go-macaron/macaron"
 	"github.com/raintank/met"
 )
 
