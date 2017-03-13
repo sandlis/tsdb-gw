@@ -7,5 +7,5 @@ import (
 func MetrictankProxy(c *Context) {
 	// currently the only action on metrictank is delete
 	proxy := metrictank.ProxyDelete(c.OrgId)
-	proxy.ServeHTTP(c.RW(), c.Req.Request)
+	proxy.ServeHTTP(c.Resp, c.Req.Request)
 }

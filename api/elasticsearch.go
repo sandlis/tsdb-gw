@@ -21,7 +21,7 @@ func ElasticsearchProxy(c *Context) {
 			c.JSON(400, err.Error())
 			return
 		}
-		proxy.ServeHTTP(c.RW(), c.Req.Request)
+		proxy.ServeHTTP(c.Resp, c.Req.Request)
 		return
 	}
 	c.JSON(404, "Not Found")

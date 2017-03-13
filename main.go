@@ -11,7 +11,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/Unknwon/macaron"
+	"gopkg.in/macaron.v1"
 	"github.com/raintank/met/helper"
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/elasticsearch"
