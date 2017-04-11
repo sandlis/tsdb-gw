@@ -43,6 +43,12 @@ func metricsJson(ctx *Context) {
 
 		if ctx.IsAdmin {
 			for _, m := range metrics {
+				if m.Metric == "" {
+					m.Metric = m.Name
+				}
+				if m.Mtype == "" {
+					m.Mtype = "gauge"
+				}
 				if err := m.Validate(); err != nil {
 					ctx.JSON(400, err.Error())
 					return
@@ -51,6 +57,12 @@ func metricsJson(ctx *Context) {
 		} else {
 			for _, m := range metrics {
 				m.OrgId = int(ctx.OrgId)
+				if m.Metric == "" {
+					m.Metric = m.Name
+				}
+				if m.Mtype == "" {
+					m.Mtype = "gauge"
+				}
 				if err := m.Validate(); err != nil {
 					ctx.JSON(400, err.Error())
 					return
