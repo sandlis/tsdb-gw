@@ -7,6 +7,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/raintank/met"
 	p "github.com/raintank/metrictank/cluster/partitioner"
+	"github.com/raintank/tsdb-gw/util"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/raintank/schema.v1"
 )
@@ -30,6 +31,8 @@ var (
 	partitionScheme string
 	flushFreq       time.Duration
 	maxMessages     int
+
+	bufferPool = util.NewBufferPool()
 )
 
 func init() {
@@ -109,8 +112,8 @@ func Publish(metrics []*schema.MetricData) error {
 	pre := time.Now()
 
 	for i, metric := range metrics {
-		var data []byte
-		data, err = metric.MarshalMsg(data[:])
+		data := bufferPool.Get()
+		data, err = metric.MarshalMsg(data)
 		if err != nil {
 			return err
 		}
@@ -126,6 +129,14 @@ func Publish(metrics []*schema.MetricData) error {
 		}
 		messagesSize.Value(int64(len(data)))
 	}
+	// return buffers to the bufferPool
+	defer func() {
+		var buf []byte
+		for _, msg := range payload {
+			buf, _ = msg.Value.Encode()
+			bufferPool.Put(buf)
+		}
+	}()
 	err = producer.SendMessages(payload)
 	if err != nil {
 		if errors, ok := err.(sarama.ProducerErrors); ok {
