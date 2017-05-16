@@ -112,12 +112,12 @@ type esSearch struct {
 }
 
 type esQueryWrapper struct {
-	Bool   esBool      `json:"bool"`
+	Bool esBool `json:"bool"`
 }
 
 type esBool struct {
-	Must []interface{} `json:"must"`
-	Filter interface{} `json:"filter"`
+	Must   []interface{} `json:"must"`
+	Filter interface{}   `json:"filter"`
 }
 
 func transformSearch(orgId int64, search []byte) ([]byte, error) {

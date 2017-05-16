@@ -81,7 +81,7 @@ func Init(metrics met.Backend, t, broker, codec string, enabled bool, partitionS
 
 func Publish(metrics []*schema.MetricData) error {
 	if producer == nil {
-		log.Debug("droping %d metrics as publishing is disabled", len(metrics))
+		log.Debug("dropping %d metrics as publishing is disabled", len(metrics))
 		return nil
 	}
 	if len(metrics) == 0 {

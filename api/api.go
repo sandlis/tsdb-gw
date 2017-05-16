@@ -1,8 +1,8 @@
 package api
 
 import (
-	"gopkg.in/macaron.v1"
 	"github.com/raintank/met"
+	"gopkg.in/macaron.v1"
 )
 
 var (

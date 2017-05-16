@@ -70,7 +70,7 @@ func Init(metrics met.Backend, t, broker, codec string, enabled bool) {
 
 func Publish(event *schema.ProbeEvent) error {
 	if producer == nil {
-		log.Debug("droping event as publishing is disabled")
+		log.Debug("dropping event as publishing is disabled")
 		return nil
 	}
 

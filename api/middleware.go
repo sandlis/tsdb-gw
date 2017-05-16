@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/macaron.v1"
 	"github.com/raintank/raintank-apps/pkg/auth"
 	"github.com/raintank/worldping-api/pkg/log"
+	"gopkg.in/macaron.v1"
 )
 
 type Context struct {
