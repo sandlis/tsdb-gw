@@ -23,5 +23,6 @@ mkdir -p ${GOPATH}/src/${ORG_PATH}
 ln -s ${CHECKOUT} ${GOPATH}/src/${REPO_PATH}
 
 cd ${GOPATH}/src/${REPO_PATH}
+go get -u github.com/kisielk/og-rek
 go get -u gopkg.in/raintank/schema.v1
 go get -t ./...

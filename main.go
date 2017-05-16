@@ -11,16 +11,17 @@ import (
 	"runtime"
 	"strings"
 
-	"gopkg.in/macaron.v1"
 	"github.com/raintank/met/helper"
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/elasticsearch"
 	"github.com/raintank/tsdb-gw/event_publish"
 	"github.com/raintank/tsdb-gw/graphite"
+	"github.com/raintank/tsdb-gw/input"
 	"github.com/raintank/tsdb-gw/metric_publish"
 	"github.com/raintank/tsdb-gw/metrictank"
 	"github.com/raintank/worldping-api/pkg/log"
 	"github.com/rakyll/globalconf"
+	"gopkg.in/macaron.v1"
 )
 
 var (
@@ -51,6 +52,9 @@ var (
 	worldpingUrl     = flag.String("worldping-url", "http://localhost/", "worldping-api address")
 	elasticsearchUrl = flag.String("elasticsearch-url", "http://localhost:9200", "elasticsearch server address")
 	esIndex          = flag.String("es-index", "events", "elasticsearch index name")
+
+	listenAddrPlain  = flag.String("listen-addr-plain", "", "listen address for plain carbon")
+	listenAddrPickle = flag.String("listen-addr-pickle", "", "listen address for pickled carbon")
 
 	adminKey = flag.String("admin-key", "not_very_secret_key", "Admin Secret Key")
 )
@@ -130,7 +134,26 @@ func main() {
 	signal.Notify(interrupt, os.Interrupt)
 
 	log.Info("starting up")
-	// define our own listner so we can call Close on it
+
+	if *listenAddrPlain != "" {
+		log.Info("listening for plain carbon on %s", *listenAddrPlain)
+		_, err = input.NewPlain(*listenAddrPlain)
+		if err != nil {
+			log.Error(3, err.Error())
+			os.Exit(1)
+		}
+	}
+
+	if *listenAddrPickle != "" {
+		log.Info("listening for pickled carbon on %s", *listenAddrPickle)
+		_, err = input.NewPickle(*listenAddrPickle)
+		if err != nil {
+			log.Error(3, err.Error())
+			os.Exit(1)
+		}
+	}
+
+	// define our own listener so we can call Close on it
 	l, err := net.Listen("tcp", *addr)
 	if err != nil {
 		log.Fatal(4, err.Error())
@@ -159,6 +182,7 @@ func main() {
 	if err != nil {
 		log.Info(err.Error())
 	}
+
 	<-done
 }
 
