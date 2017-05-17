@@ -5,7 +5,5 @@ import (
 )
 
 func GraphiteProxy(c *Context) {
-	proxyPath := c.Params("*")
-	proxy := graphite.Proxy(c.OrgId, proxyPath, c.Req.Request)
-	proxy.ServeHTTP(c.Resp, c.Req.Request)
+	graphite.Proxy(c.OrgId, c.Context)
 }
