@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/raintank/tsdb-gw/util"
+	"gopkg.in/macaron.v1"
 )
 
 var (
@@ -41,19 +42,21 @@ func Init(graphiteUrl, worldpingUrl string) error {
 	return nil
 }
 
-func Proxy(orgId int64, proxyPath string, request *http.Request) *httputil.ReverseProxy {
+func Proxy(orgId int64, c *macaron.Context) {
+	proxyPath := c.Params("*")
 
-	// check if this is a special raintank_db requests then proxy to the worldping-api service.
+	// check if this is a special raintank_db c.Req.Requests then proxy to the worldping-api service.
 	if proxyPath == "metrics/find" {
-		query := request.FormValue("query")
+		query := c.Req.Request.FormValue("query")
 		if strings.HasPrefix(query, "raintank_db") {
-			request.URL.Path = util.JoinUrlFragments(WorldpingUrl.Path, "/api/graphite/"+proxyPath)
-			return &wpProxy
+			c.Req.Request.URL.Path = util.JoinUrlFragments(WorldpingUrl.Path, "/api/graphite/"+proxyPath)
+			wpProxy.ServeHTTP(c.Resp, c.Req.Request)
+			return
 		}
 	}
 
-	request.Header.Del("X-Org-Id")
-	request.Header.Add("X-Org-Id", strconv.FormatInt(orgId, 10))
-	request.URL.Path = util.JoinUrlFragments(GraphiteUrl.Path, proxyPath)
-	return &gProxy
+	c.Req.Request.Header.Del("X-Org-Id")
+	c.Req.Request.Header.Add("X-Org-Id", strconv.FormatInt(orgId, 10))
+	c.Req.Request.URL.Path = util.JoinUrlFragments(GraphiteUrl.Path, proxyPath)
+	gProxy.ServeHTTP(c.Resp, c.Req.Request)
 }
