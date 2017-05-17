@@ -13,6 +13,8 @@ import (
 var (
 	GraphiteUrl  *url.URL
 	WorldpingUrl *url.URL
+	wpProxy      httputil.ReverseProxy
+	gProxy       httputil.ReverseProxy
 )
 
 func Init(graphiteUrl, worldpingUrl string) error {
@@ -31,16 +33,16 @@ func Proxy(orgId int64, proxyPath string, request *http.Request) *httputil.Rever
 	if proxyPath == "metrics/find" {
 		query := request.FormValue("query")
 		if strings.HasPrefix(query, "raintank_db") {
-			director := func(req *http.Request) {
+			wpProxy.Director = func(req *http.Request) {
 				req.URL.Scheme = WorldpingUrl.Scheme
 				req.URL.Host = WorldpingUrl.Host
 				req.URL.Path = util.JoinUrlFragments(WorldpingUrl.Path, "/api/graphite/"+proxyPath)
 			}
-			return &httputil.ReverseProxy{Director: director}
+			return &wpProxy
 		}
 	}
 
-	director := func(req *http.Request) {
+	gProxy.Director = func(req *http.Request) {
 		req.URL.Scheme = GraphiteUrl.Scheme
 		req.URL.Host = GraphiteUrl.Host
 		req.Header.Del("X-Org-Id")
@@ -48,5 +50,5 @@ func Proxy(orgId int64, proxyPath string, request *http.Request) *httputil.Rever
 		req.URL.Path = util.JoinUrlFragments(GraphiteUrl.Path, proxyPath)
 	}
 
-	return &httputil.ReverseProxy{Director: director}
+	return &gProxy
 }
