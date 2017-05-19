@@ -11,7 +11,6 @@ import (
 	"runtime"
 	"strings"
 
-	"gopkg.in/macaron.v1"
 	"github.com/raintank/met/helper"
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/elasticsearch"
@@ -21,6 +20,7 @@ import (
 	"github.com/raintank/tsdb-gw/metrictank"
 	"github.com/raintank/worldping-api/pkg/log"
 	"github.com/rakyll/globalconf"
+	"gopkg.in/macaron.v1"
 )
 
 var (
@@ -29,20 +29,14 @@ var (
 	logLevel    = flag.Int("log-level", 2, "log level. 0=TRACE|1=DEBUG|2=INFO|3=WARN|4=ERROR|5=CRITICAL|6=FATAL")
 	confFile    = flag.String("config", "/etc/raintank/tsdb.ini", "configuration file path")
 
-	broker           = flag.String("kafka-tcp-addr", "localhost:9092", "kafka tcp address for metrics")
-	metricTopic      = flag.String("metric-topic", "mdm", "topic for metrics")
-	kafkaCompression = flag.String("kafka-comp", "none", "compression: none|gzip|snappy")
-	publishMetrics   = flag.Bool("publish-metrics", false, "enable metric publishing")
-	eventTopic       = flag.String("event-topic", "events", "NSQ topic for events")
-	publishEvents    = flag.Bool("publish-events", false, "enable event publishing")
-	partitionScheme  = flag.String("partition-scheme", "bySeries", "method used for paritioning metrics. (byOrg|bySeries)")
+	broker = flag.String("kafka-tcp-addr", "localhost:9092", "kafka tcp address for metrics")
 
 	addr     = flag.String("addr", "localhost:80", "http service address")
 	ssl      = flag.Bool("ssl", false, "use https")
 	certFile = flag.String("cert-file", "", "SSL certificate file")
 	keyFile  = flag.String("key-file", "", "SSL key file")
 
-	statsEnabled = flag.Bool("stats-enabled", false, "enable statsd metrics")
+	statsEnabled = flag.Bool("statsd-enabled", false, "enable statsd metrics")
 	statsdAddr   = flag.String("statsd-addr", "localhost:8125", "statsd address")
 	statsdType   = flag.String("statsd-type", "standard", "statsd type: standard or datadog")
 
@@ -108,8 +102,8 @@ func main() {
 		log.Fatal(4, "failed to initialize statsd. %s", err)
 	}
 
-	metric_publish.Init(stats, *metricTopic, *broker, *kafkaCompression, *publishMetrics, *partitionScheme)
-	event_publish.Init(stats, *eventTopic, *broker, *kafkaCompression, *publishEvents)
+	metric_publish.Init(stats, *broker)
+	event_publish.Init(stats, *broker)
 
 	m := macaron.Classic()
 	m.Use(macaron.Renderer())

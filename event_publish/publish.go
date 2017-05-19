@@ -2,6 +2,7 @@ package event_publish
 
 import (
 	"encoding/binary"
+	"flag"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -15,6 +16,8 @@ var (
 	config          *sarama.Config
 	producer        sarama.SyncProducer
 	topic           string
+	codec           string
+	enabled         bool
 	brokers         []string
 	eventsPublished met.Count
 	messagesSize    met.Meter
@@ -22,6 +25,12 @@ var (
 	sendErrProducer met.Count
 	sendErrOther    met.Count
 )
+
+func init() {
+	flag.StringVar(&topic, "events-topic", "events", "Kafka topic for events")
+	flag.BoolVar(&enabled, "events-publish", false, "enable event publishing")
+	flag.StringVar(&codec, "events-compression", "none", "compression: none|gzip|snappy")
+}
 
 func getCompression(codec string) sarama.CompressionCodec {
 	switch codec {
@@ -37,7 +46,7 @@ func getCompression(codec string) sarama.CompressionCodec {
 	}
 }
 
-func Init(metrics met.Backend, t, broker, codec string, enabled bool) {
+func Init(metrics met.Backend, broker string) {
 	if !enabled {
 		return
 	}
@@ -54,7 +63,6 @@ func Init(metrics met.Backend, t, broker, codec string, enabled bool) {
 		log.Fatal(4, "failed to validate kafka config. %s", err)
 	}
 
-	topic = t
 	brokers = []string{broker}
 
 	producer, err = sarama.NewSyncProducer(brokers, config)
