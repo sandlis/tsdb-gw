@@ -19,7 +19,7 @@ import (
 	"github.com/raintank/tsdb-gw/metric_publish"
 	"github.com/raintank/tsdb-gw/metrictank"
 	"github.com/raintank/worldping-api/pkg/log"
-	"github.com/rakyll/globalconf"
+	"github.com/grafana/globalconf"
 	"gopkg.in/macaron.v1"
 )
 
