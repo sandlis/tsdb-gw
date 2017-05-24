@@ -7,10 +7,16 @@ import (
 	"io/ioutil"
 
 	"github.com/golang/snappy"
+	"github.com/raintank/metrictank/stats"
 	"github.com/raintank/tsdb-gw/metric_publish"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/raintank/schema.v1"
 	"gopkg.in/raintank/schema.v1/msg"
+)
+
+var (
+	metricsValid    = stats.NewCounter32("metrics.valid")
+	metricsRejected = stats.NewCounter32("metrics.rejected")
 )
 
 func Metrics(ctx *Context) {
@@ -50,6 +56,7 @@ func metricsJson(ctx *Context) {
 					m.Mtype = "gauge"
 				}
 				if err := m.Validate(); err != nil {
+					metricsRejected.Add(len(metrics))
 					ctx.JSON(400, err.Error())
 					return
 				}
@@ -64,13 +71,14 @@ func metricsJson(ctx *Context) {
 					m.Mtype = "gauge"
 				}
 				if err := m.Validate(); err != nil {
+					metricsRejected.Add(len(metrics))
 					ctx.JSON(400, err.Error())
 					return
 				}
 				m.SetId()
 			}
 		}
-
+		metricsValid.Add(len(metrics))
 		err = metric_publish.Publish(metrics)
 		if err != nil {
 			log.Error(3, "failed to publish metrics. %s", err)
@@ -124,6 +132,7 @@ func metricsBinary(ctx *Context, compressed bool) {
 				}
 
 				if err := m.Validate(); err != nil {
+					metricsRejected.Add(len(metricData.Metrics))
 					ctx.JSON(400, err.Error())
 					return
 				}
@@ -138,13 +147,14 @@ func metricsBinary(ctx *Context, compressed bool) {
 					m.Mtype = "gauge"
 				}
 				if err := m.Validate(); err != nil {
+					metricsRejected.Add(len(metricData.Metrics))
 					ctx.JSON(400, err.Error())
 					return
 				}
 				m.SetId()
 			}
 		}
-
+		metricsValid.Add(len(metricData.Metrics))
 		err = metric_publish.Publish(metricData.Metrics)
 		if err != nil {
 			log.Error(3, "failed to publish metrics. %s", err)
