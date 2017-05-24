@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/macaron.v1"
 	"github.com/raintank/raintank-apps/pkg/auth"
 	"github.com/raintank/worldping-api/pkg/log"
+	"gopkg.in/macaron.v1"
 )
 
 type Context struct {
@@ -38,6 +38,7 @@ func Auth(adminKey string) macaron.Handler {
 		key, err := getApiKey(ctx)
 		if err != nil {
 			ctx.JSON(401, "Invalid Authentication header.")
+			return
 		}
 		if key == "" {
 			ctx.JSON(401, "Unauthorized")
@@ -45,11 +46,11 @@ func Auth(adminKey string) macaron.Handler {
 		}
 		user, err := auth.Auth(adminKey, key)
 		if err != nil {
-			if err == auth.ErrInvalidApiKey {
-				ctx.JSON(401, "Unauthorized")
+			if err == auth.ErrInvalidApiKey || err == auth.ErrInvalidOrgId {
+				ctx.JSON(401, err.Error())
 				return
 			}
-			ctx.JSON(500, err)
+			ctx.JSON(500, err.Error())
 			return
 		}
 		ctx.SignedInUser = user
