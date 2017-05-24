@@ -11,7 +11,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/raintank/met/helper"
+	"github.com/gorilla/handlers"
+	"github.com/grafana/globalconf"
+	"github.com/raintank/metrictank/stats"
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/elasticsearch"
 	"github.com/raintank/tsdb-gw/event_publish"
@@ -19,7 +21,6 @@ import (
 	"github.com/raintank/tsdb-gw/metric_publish"
 	"github.com/raintank/tsdb-gw/metrictank"
 	"github.com/raintank/worldping-api/pkg/log"
-	"github.com/grafana/globalconf"
 	"gopkg.in/macaron.v1"
 )
 
@@ -36,9 +37,11 @@ var (
 	certFile = flag.String("cert-file", "", "SSL certificate file")
 	keyFile  = flag.String("key-file", "", "SSL key file")
 
-	statsEnabled = flag.Bool("statsd-enabled", false, "enable statsd metrics")
-	statsdAddr   = flag.String("statsd-addr", "localhost:8125", "statsd address")
-	statsdType   = flag.String("statsd-type", "standard", "statsd type: standard or datadog")
+	statsEnabled    = flag.Bool("stats-enabled", false, "enable sending graphite messages for instrumentation")
+	statsPrefix     = flag.String("stats-prefix", "tsdb-gw.stats.default.$hostname", "stats prefix (will add trailing dot automatically if needed)")
+	statsAddr       = flag.String("stats-addr", "localhost:2003", "graphite address")
+	statsInterval   = flag.Int("stats-interval", 10, "interval in seconds to send statistics")
+	statsBufferSize = flag.Int("stats-buffer-size", 20000, "how many messages (holding all measurements from one interval) to buffer up in case graphite endpoint is unavailable.")
 
 	graphiteUrl      = flag.String("graphite-url", "http://localhost:8080", "graphite-api address")
 	metrictankUrl    = flag.String("metrictank-url", "http://localhost:6060", "metrictank address")
@@ -95,20 +98,23 @@ func main() {
 		log.Fatal(4, "cert-file and key-file must be set when using SSL")
 	}
 
-	hostname, _ := os.Hostname()
-
-	stats, err := helper.New(*statsEnabled, *statsdAddr, *statsdType, "raintank_tsdb", strings.Replace(hostname, ".", "_", -1))
-	if err != nil {
-		log.Fatal(4, "failed to initialize statsd. %s", err)
+	if *statsEnabled {
+		stats.NewMemoryReporter()
+		hostname, _ := os.Hostname()
+		prefix := strings.Replace(*statsPrefix, "$hostname", strings.Replace(hostname, ".", "_", -1), -1)
+		stats.NewGraphite(prefix, *statsAddr, *statsInterval, *statsBufferSize)
+	} else {
+		stats.NewDevnull()
 	}
 
-	metric_publish.Init(stats, *broker)
-	event_publish.Init(stats, *broker)
+	metric_publish.Init(*broker)
+	event_publish.Init(*broker)
 
-	m := macaron.Classic()
+	m := macaron.New()
+	m.Use(macaron.Recovery())
 	m.Use(macaron.Renderer())
 
-	api.InitRoutes(stats, m, *adminKey)
+	api.InitRoutes(m, *adminKey)
 
 	if err := graphite.Init(*graphiteUrl, *worldpingUrl); err != nil {
 		log.Fatal(4, err.Error())
@@ -131,9 +137,12 @@ func main() {
 	}
 	done := make(chan struct{})
 	go handleShutdown(done, interrupt, l)
+
+	// write Request logs in Apache Common Log Format
+	loggedRouter := handlers.LoggingHandler(os.Stdout, m)
 	srv := http.Server{
 		Addr:    *addr,
-		Handler: m,
+		Handler: loggedRouter,
 	}
 	if *ssl {
 		cert, err := tls.LoadX509KeyPair(*certFile, *keyFile)

@@ -5,24 +5,23 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/raintank/met"
 	p "github.com/raintank/metrictank/cluster/partitioner"
+	"github.com/raintank/metrictank/stats"
 	"github.com/raintank/tsdb-gw/util"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/raintank/schema.v1"
 )
 
 var (
-	config            *sarama.Config
-	producer          sarama.SyncProducer
-	brokers           []string
-	metricsPublished  met.Count
-	messagesPublished met.Count
-	messagesSize      met.Meter
-	metricsPerMessage met.Meter
-	publishDuration   met.Timer
-	sendErrProducer   met.Count
-	sendErrOther      met.Count
+	config   *sarama.Config
+	producer sarama.SyncProducer
+	brokers  []string
+
+	metricsPublished = stats.NewCounter32("metrics.published")
+	messagesSize     = stats.NewMeter32("metrics.message_size", false)
+	publishDuration  = stats.NewLatencyHistogram15s32("metrics.publish")
+	sendErrProducer  = stats.NewCounter32("metrics.send_error.producer")
+	sendErrOther     = stats.NewCounter32("metrics.send_error.other")
 
 	partitioner     *p.Kafka
 	topic           string
@@ -58,7 +57,7 @@ func getCompression(codec string) sarama.CompressionCodec {
 	}
 }
 
-func Init(metrics met.Backend, broker string) {
+func Init(broker string) {
 	if !enabled {
 		return
 	}
@@ -89,13 +88,6 @@ func Init(metrics met.Backend, broker string) {
 	if err != nil {
 		log.Fatal(4, "failed to initialize kafka producer. %s", err)
 	}
-	metricsPublished = metrics.NewCount("metricpublisher.metrics-published")
-	messagesPublished = metrics.NewCount("metricpublisher.messages-published")
-	messagesSize = metrics.NewMeter("metricpublisher.message_size", 0)
-	metricsPerMessage = metrics.NewMeter("metricpublisher.metrics_per_message", 0)
-	publishDuration = metrics.NewTimer("metricpublisher.publish_duration", 0)
-	sendErrProducer = metrics.NewCount("metricpublisher.errors.producer")
-	sendErrOther = metrics.NewCount("metricpublisher.errors.other")
 }
 
 func Publish(metrics []*schema.MetricData) error {
@@ -127,7 +119,7 @@ func Publish(metrics []*schema.MetricData) error {
 			Topic: topic,
 			Value: sarama.ByteEncoder(data),
 		}
-		messagesSize.Value(int64(len(data)))
+		messagesSize.Value(len(data))
 	}
 	// return buffers to the bufferPool
 	defer func() {
@@ -140,21 +132,18 @@ func Publish(metrics []*schema.MetricData) error {
 	err = producer.SendMessages(payload)
 	if err != nil {
 		if errors, ok := err.(sarama.ProducerErrors); ok {
-			sendErrProducer.Inc(int64(len(errors)))
+			sendErrProducer.Add(len(errors))
 			for i := 0; i < 10 && i < len(errors); i++ {
 				log.Error(4, "SendMessages ProducerError %d/%d: %s", i, len(errors), errors[i].Error())
 			}
 		} else {
-			sendErrOther.Inc(1)
+			sendErrOther.Inc()
 			log.Error(4, "SendMessages error: %s", err.Error())
 		}
 		return err
 	}
 	publishDuration.Value(time.Since(pre))
-	metricsPublished.Inc(int64(len(metrics)))
-	messagesPublished.Inc(int64(len(metrics)))
-	metricsPerMessage.Value(1)
-
+	metricsPublished.Add(len(metrics))
 	log.Info("published %d metrics", len(metrics))
 	return nil
 }

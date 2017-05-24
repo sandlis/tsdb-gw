@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/raintank/met"
+	"github.com/raintank/metrictank/stats"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/raintank/schema.v1"
 	"gopkg.in/raintank/schema.v1/msg"
@@ -19,11 +19,11 @@ var (
 	codec           string
 	enabled         bool
 	brokers         []string
-	eventsPublished met.Count
-	messagesSize    met.Meter
-	publishDuration met.Timer
-	sendErrProducer met.Count
-	sendErrOther    met.Count
+	eventsPublished = stats.NewCounter32("events.published")
+	messagesSize    = stats.NewMeter32("events.message_size", false)
+	publishDuration = stats.NewLatencyHistogram15s32("events.publish")
+	sendErrProducer = stats.NewCounter32("events.send_error.producer")
+	sendErrOther    = stats.NewCounter32("events.send_error.other")
 )
 
 func init() {
@@ -46,7 +46,7 @@ func getCompression(codec string) sarama.CompressionCodec {
 	}
 }
 
-func Init(metrics met.Backend, broker string) {
+func Init(broker string) {
 	if !enabled {
 		return
 	}
@@ -69,11 +69,6 @@ func Init(metrics met.Backend, broker string) {
 	if err != nil {
 		log.Fatal(4, "failed to initialize kafka producer. %s", err)
 	}
-	eventsPublished = metrics.NewCount("eventpublisher.events-published")
-	messagesSize = metrics.NewMeter("eventpublisher.message_size", 0)
-	publishDuration = metrics.NewTimer("eventpublisher.publish_duration", 0)
-	sendErrProducer = metrics.NewCount("eventpublisher.errors.producer")
-	sendErrOther = metrics.NewCount("eventpublisher.errors.other")
 }
 
 func Publish(event *schema.ProbeEvent) error {
@@ -100,24 +95,24 @@ func Publish(event *schema.ProbeEvent) error {
 		Topic: topic,
 		Value: sarama.ByteEncoder(data),
 	}
-	messagesSize.Value(int64(len(data)))
+	messagesSize.Value(len(data))
 
 	pre := time.Now()
 	err = producer.SendMessages(payload)
 	if err != nil {
 		if errors, ok := err.(sarama.ProducerErrors); ok {
-			sendErrProducer.Inc(int64(len(errors)))
+			sendErrProducer.Add(len(errors))
 			for i := 0; i < 10 && i < len(errors); i++ {
 				log.Error(4, "SendMessages ProducerError %d/%d: %s", i, len(errors), errors[i].Error())
 			}
 		} else {
-			sendErrOther.Inc(1)
+			sendErrOther.Inc()
 			log.Error(4, "SendMessages error: %s", err.Error())
 		}
 		return err
 	}
 	publishDuration.Value(time.Since(pre))
-	eventsPublished.Inc(int64(len(payload)))
+	eventsPublished.Add(len(payload))
 
 	log.Info("published %d events", len(payload))
 	return nil
