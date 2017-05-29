@@ -159,5 +159,5 @@ func pathSlug(p string) string {
 	if slug == "" {
 		slug = "root"
 	}
-	return strings.Replace(slug, "/", "_", -1)
+	return strings.Replace(strings.Replace(slug, "/", "_", -1), ".", "_", -1)
 }
