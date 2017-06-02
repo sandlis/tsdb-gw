@@ -1,20 +1,23 @@
 #!/bin/bash -e
 
 set -x
-
-# GOPATH may have multiple paths, select the first one
-cd $(sed 's/:.*//' <<< "$GOPATH")/src/github.com/raintank/tsdb-gw
+# Find the directory we exist within
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+cd ${DIR}
 
 GITVERSION=`git describe --always`
+SOURCEDIR=${DIR}/..
+BUILDDIR=$SOURCEDIR/build
 
 # Disable CGO for builds.
 export CGO_ENABLED=0
 
 # Make dir
-mkdir -p build
+mkdir -p $BUILDDIR
 
 # Clean build bin dir
-rm -rf build/*
+rm -rf $BUILDDIR/*
 
 # Build binary
-go build -ldflags "-X main.GitHash=$GITVERSION" -o build/tsdb-gw
+cd ../
+go build -ldflags "-X main.GitHash=$GITVERSION" -o $BUILDDIR/tsdb-gw

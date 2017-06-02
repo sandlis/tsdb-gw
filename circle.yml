@@ -3,6 +3,7 @@ machine:
     - docker
   environment:
     GOPATH: "/home/ubuntu/.go_workspace"
+    IMPORTPATH: "/home/ubuntu/.go_workspace/src/github.com/raintank/tsdb-gw"
     GODIST: "go1.8.1.linux-amd64.tar.gz"
   post:
     - mkdir -p download
@@ -11,16 +12,16 @@ machine:
     - sudo tar -C /usr/local -xzf download/$GODIST
 test:
   override:
-    - go test -v -race ./...
-    - go vet ./...
+    - cd $IMPORTPATH && go test -v -race ./...
+    - cd $IMPORTPATH && go vet ./...
   post:
     - scripts/package.sh
 dependencies:
   override:
-    - scripts/depends.sh
-    - scripts/vendor_health.sh
-    - scripts/build.sh
-    - scripts/build_docker.sh
+    - cd $IMPORTPATH && scripts/depends.sh
+    - cd $IMPORTPATH && scripts/vendor_health.sh
+    - cd $IMPORTPATH && scripts/build.sh
+    - cd $IMPORTPATH && scripts/build_docker.sh
 general:
   artifacts:
     - build
