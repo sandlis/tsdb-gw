@@ -54,6 +54,7 @@ func Auth(adminKey string) macaron.Handler {
 				ctx.JSON(401, err.Error())
 				return
 			}
+			log.Error(3, "failed to perform authentication: %q", err.Error())
 			ctx.JSON(500, err.Error())
 			return
 		}
