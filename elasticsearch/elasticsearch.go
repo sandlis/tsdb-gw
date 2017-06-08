@@ -43,6 +43,7 @@ func Proxy(orgId int64, proxyPath string, request *http.Request) (*httputil.Reve
 		req.URL.Scheme = ElasticsearchUrl.Scheme
 		req.URL.Host = ElasticsearchUrl.Host
 		req.URL.Path = util.JoinUrlFragments(ElasticsearchUrl.Path, proxyPath)
+		req.URL.User = ElasticsearchUrl.User
 
 		req.Body = ioutil.NopCloser(bytes.NewReader(searchBody))
 		req.ContentLength = int64(len(searchBody))
@@ -112,12 +113,12 @@ type esSearch struct {
 }
 
 type esQueryWrapper struct {
-	Bool   esBool      `json:"bool"`
+	Bool esBool `json:"bool"`
 }
 
 type esBool struct {
-	Must []interface{} `json:"must"`
-	Filter interface{} `json:"filter"`
+	Must   []interface{} `json:"must"`
+	Filter interface{}   `json:"filter"`
 }
 
 func transformSearch(orgId int64, search []byte) ([]byte, error) {
