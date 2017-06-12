@@ -16,12 +16,7 @@ func ElasticsearchProxy(c *Context) {
 		return
 	}
 	if c.Req.Request.Method == "POST" && proxyPath == "_msearch" {
-		proxy, err := elasticsearch.Proxy(c.OrgId, proxyPath, c.Req.Request)
-		if err != nil {
-			c.JSON(400, err.Error())
-			return
-		}
-		proxy.ServeHTTP(c.Resp, c.Req.Request)
+		elasticsearch.Proxy(c.OrgId, c.Context)
 		return
 	}
 	c.JSON(404, "Not Found")

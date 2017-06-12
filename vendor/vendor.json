@@ -144,54 +144,6 @@
 			"revisionTime": "2017-05-23T17:28:40Z"
 		},
 		{
-			"checksumSHA1": "s9T/5ZUnAXuiolo84S8fWJ3W+8M=",
-			"path": "github.com/raintank/tsdb-gw",
-			"revision": "5f62244600e97800a32cd1d81179b5ac89dd21ad",
-			"revisionTime": "2017-06-02T12:48:02Z"
-		},
-		{
-			"checksumSHA1": "47Gi5Kq4wIpFQWgsJZXovwfl6OU=",
-			"path": "github.com/raintank/tsdb-gw/api",
-			"revision": "5f62244600e97800a32cd1d81179b5ac89dd21ad",
-			"revisionTime": "2017-06-02T12:48:02Z"
-		},
-		{
-			"checksumSHA1": "YltHxSFrP8L/XLg8U3bZR4aEEBI=",
-			"path": "github.com/raintank/tsdb-gw/elasticsearch",
-			"revision": "5f62244600e97800a32cd1d81179b5ac89dd21ad",
-			"revisionTime": "2017-06-02T12:48:02Z"
-		},
-		{
-			"checksumSHA1": "xW737DCXh8b88vI9PhRSIHbD8ys=",
-			"path": "github.com/raintank/tsdb-gw/event_publish",
-			"revision": "5f62244600e97800a32cd1d81179b5ac89dd21ad",
-			"revisionTime": "2017-06-02T12:48:02Z"
-		},
-		{
-			"checksumSHA1": "jeTHm8z1YR0QD9fwhb+7FLDDBAc=",
-			"path": "github.com/raintank/tsdb-gw/graphite",
-			"revision": "5f62244600e97800a32cd1d81179b5ac89dd21ad",
-			"revisionTime": "2017-06-02T12:48:02Z"
-		},
-		{
-			"checksumSHA1": "Wi5lTInxtMeocMRXA0UTQ1Y8pKk=",
-			"path": "github.com/raintank/tsdb-gw/metric_publish",
-			"revision": "5f62244600e97800a32cd1d81179b5ac89dd21ad",
-			"revisionTime": "2017-06-02T12:48:02Z"
-		},
-		{
-			"checksumSHA1": "FttnOM/zrB+gb7ZeuOrkLuacF2c=",
-			"path": "github.com/raintank/tsdb-gw/metrictank",
-			"revision": "5f62244600e97800a32cd1d81179b5ac89dd21ad",
-			"revisionTime": "2017-06-02T12:48:02Z"
-		},
-		{
-			"checksumSHA1": "+bZrhJoVcq/Se7ij8MTBxMV47p0=",
-			"path": "github.com/raintank/tsdb-gw/util",
-			"revision": "5f62244600e97800a32cd1d81179b5ac89dd21ad",
-			"revisionTime": "2017-06-02T12:48:02Z"
-		},
-		{
 			"checksumSHA1": "oCMADD0xqElYRIXBgNkBGHXGQyk=",
 			"path": "github.com/raintank/worldping-api/pkg/log",
 			"revision": "7902b21a7c4f303430c83b2c155c57d6d7dca62d",

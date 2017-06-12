@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/raintank/tsdb-gw/util"
 	"github.com/raintank/worldping-api/pkg/log"
+	"gopkg.in/macaron.v1"
 )
 
 var (
@@ -28,30 +27,42 @@ func Init(elasticsearchUrl, indexName string) error {
 	return err
 }
 
-func Proxy(orgId int64, proxyPath string, request *http.Request) (*httputil.ReverseProxy, error) {
-	body, err := ioutil.ReadAll(request.Body)
+func Proxy(orgId int64, c *macaron.Context) {
+	proxyPath := c.Params("*")
+	body, err := ioutil.ReadAll(c.Req.Request.Body)
 	if err != nil {
-		return nil, fmt.Errorf("unable to read request body. %s", err)
+		c.JSON(http.StatusBadRequest, fmt.Sprintf("unable to read request body. %s", err))
+		return
 	}
 	searchBody, err := restrictSearch(orgId, body)
 	if err != nil {
-		return nil, fmt.Errorf("unable to read request body. %s", err)
+		c.JSON(http.StatusBadRequest, fmt.Sprintf("unable to read request body. %s", err))
+		return
 	}
 	log.Debug("search body is: %s", string(searchBody))
 
-	director := func(req *http.Request) {
-		req.URL.Scheme = ElasticsearchUrl.Scheme
-		req.URL.Host = ElasticsearchUrl.Host
-		req.URL.Path = util.JoinUrlFragments(ElasticsearchUrl.Path, proxyPath)
-		req.URL.User = ElasticsearchUrl.User
-
-		req.Body = ioutil.NopCloser(bytes.NewReader(searchBody))
-		req.ContentLength = int64(len(searchBody))
-		req.Header.Set("Content-Length", strconv.FormatInt(req.ContentLength, 10))
+	var url *url.URL
+	*url = *ElasticsearchUrl
+	url.Path = util.JoinUrlFragments(ElasticsearchUrl.Path, proxyPath)
+	url.RawQuery = c.Req.URL.RawQuery
+	request := http.Request{
+		Method: "POST",
+		URL:    url,
+		Body:   ioutil.NopCloser(bytes.NewReader(searchBody)),
 	}
 
-	proxy := &httputil.ReverseProxy{Director: director}
-	return proxy, nil
+	resp, err := http.DefaultClient.Do(&request)
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, err.Error())
+		return
+	}
+
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, err.Error())
+	}
+	c.WriteHeader(resp.StatusCode)
+	c.Write(respBody)
 }
 
 func restrictSearch(orgId int64, body []byte) ([]byte, error) {
