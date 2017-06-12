@@ -41,7 +41,7 @@ func Proxy(orgId int64, c *macaron.Context) {
 	}
 	log.Debug("search body is: %s", string(searchBody))
 
-	var url *url.URL
+	url := new(url.URL)
 	*url = *ElasticsearchUrl
 	url.Path = util.JoinUrlFragments(ElasticsearchUrl.Path, proxyPath)
 	url.RawQuery = c.Req.URL.RawQuery
