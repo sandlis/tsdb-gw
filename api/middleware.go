@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"path"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -57,6 +58,16 @@ func Auth(adminKey string) macaron.Handler {
 			log.Error(3, "failed to perform authentication: %q", err.Error())
 			ctx.JSON(500, err.Error())
 			return
+		}
+		// allow admin users to impersonate other orgs.
+		if user.IsAdmin {
+			header := ctx.Req.Header.Get("X-Tsdb-Org")
+			if header != "" {
+				orgId, err := strconv.ParseInt(header, 10, 64)
+				if err == nil && orgId != 0 {
+					user.OrgId = orgId
+				}
+			}
 		}
 		ctx.SignedInUser = user
 	}
