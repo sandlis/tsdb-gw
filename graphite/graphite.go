@@ -1,6 +1,8 @@
 package graphite
 
 import (
+	"bytes"
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -8,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/raintank/tsdb-gw/util"
+	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/macaron.v1"
 )
 
@@ -17,6 +20,42 @@ var (
 	wpProxy      httputil.ReverseProxy
 	gProxy       httputil.ReverseProxy
 )
+
+type proxyRetryTransport struct {
+	transport http.RoundTripper
+}
+
+func NewProxyRetrytransport() *proxyRetryTransport {
+	return &proxyRetryTransport{
+		transport: http.DefaultTransport,
+	}
+}
+
+func (t *proxyRetryTransport) RoundTrip(outreq *http.Request) (*http.Response, error) {
+	attempts := 0
+	var res *http.Response
+	body, err := ioutil.ReadAll(outreq.Body)
+	if err != nil {
+		return res, err
+	}
+
+	for {
+		attempts++
+		outreq.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+		res, err = t.transport.RoundTrip(outreq)
+		if err == nil {
+			break
+		}
+
+		if attempts <= 3 {
+			log.Info("graphiteProxy: request failed, will retry. %s", err)
+		} else {
+			log.Error(3, "graphiteProxy: request failed 3 times. Giving up. %s", err)
+			break
+		}
+	}
+	return res, err
+}
 
 func Init(graphiteUrl, worldpingUrl string) error {
 	var err error
@@ -38,6 +77,7 @@ func Init(graphiteUrl, worldpingUrl string) error {
 		req.URL.Scheme = GraphiteUrl.Scheme
 		req.URL.Host = GraphiteUrl.Host
 	}
+	gProxy.Transport = NewProxyRetrytransport()
 
 	return nil
 }
