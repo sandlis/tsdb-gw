@@ -34,14 +34,21 @@ func NewProxyRetrytransport() *proxyRetryTransport {
 func (t *proxyRetryTransport) RoundTrip(outreq *http.Request) (*http.Response, error) {
 	attempts := 0
 	var res *http.Response
-	body, err := ioutil.ReadAll(outreq.Body)
-	if err != nil {
-		return res, err
+	hasBody := false
+	var body []byte
+	var err error
+	if outreq.Body != nil {
+		body, err = ioutil.ReadAll(outreq.Body)
+		if err != nil {
+			return res, err
+		}
 	}
 
 	for {
 		attempts++
-		outreq.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+		if hasBody {
+			outreq.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+		}
 		res, err = t.transport.RoundTrip(outreq)
 		if err == nil {
 			break
