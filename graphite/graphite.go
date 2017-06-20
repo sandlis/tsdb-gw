@@ -42,6 +42,7 @@ func (t *proxyRetryTransport) RoundTrip(outreq *http.Request) (*http.Response, e
 		if err != nil {
 			return res, err
 		}
+		hasBody = true
 	}
 
 	for {
