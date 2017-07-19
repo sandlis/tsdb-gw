@@ -21,3 +21,5 @@ rm -rf $BUILDDIR/*
 # Build binary
 cd ../
 go build -ldflags "-X main.GitHash=$GITVERSION" -o $BUILDDIR/tsdb-gw
+cd cmd/tsdb-usage
+go build -ldflags "-X main.GitHash=$GITVERSION" -o $BUILDDIR/tsdb-usage

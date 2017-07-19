@@ -7,6 +7,7 @@ import (
 	"github.com/Shopify/sarama"
 	p "github.com/raintank/metrictank/cluster/partitioner"
 	"github.com/raintank/metrictank/stats"
+	"github.com/raintank/tsdb-gw/usage"
 	"github.com/raintank/tsdb-gw/util"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/raintank/schema.v1"
@@ -144,6 +145,9 @@ func Publish(metrics []*schema.MetricData) error {
 	}
 	publishDuration.Value(time.Since(pre))
 	metricsPublished.Add(len(metrics))
-	log.Info("published %d metrics", len(metrics))
+	log.Debug("published %d metrics", len(metrics))
+	for _, metric := range metrics {
+		usage.LogDataPoint(metric.Id)
+	}
 	return nil
 }

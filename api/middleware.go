@@ -11,6 +11,7 @@ import (
 
 	"github.com/raintank/metrictank/stats"
 	"github.com/raintank/raintank-apps/pkg/auth"
+	"github.com/raintank/tsdb-gw/usage"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/macaron.v1"
 )
@@ -103,7 +104,8 @@ type requestStats struct {
 	sizeMeters        map[string]*stats.Meter32
 }
 
-func (r *requestStats) PathStatusCount(path string, status int) {
+func (r *requestStats) PathStatusCount(ctx *Context, path string, status int) {
+	metricKey := fmt.Sprintf("api.request.%s.status.%d", path, status)
 	r.Lock()
 	p, ok := r.responseCounts[path]
 	if !ok {
@@ -112,14 +114,15 @@ func (r *requestStats) PathStatusCount(path string, status int) {
 	}
 	c, ok := p[status]
 	if !ok {
-		c = stats.NewCounter32(fmt.Sprintf("api.request.%s.status.%d", path, status))
+		c = stats.NewCounter32(metricKey)
 		p[status] = c
 	}
 	r.Unlock()
 	c.Inc()
+	usage.LogRequest(ctx.OrgId, metricKey)
 }
 
-func (r *requestStats) PathLatency(path string, dur time.Duration) {
+func (r *requestStats) PathLatency(ctx *Context, path string, dur time.Duration) {
 	r.Lock()
 	p, ok := r.latencyHistograms[path]
 	if !ok {
@@ -130,7 +133,7 @@ func (r *requestStats) PathLatency(path string, dur time.Duration) {
 	p.Value(dur)
 }
 
-func (r *requestStats) PathSize(path string, size int) {
+func (r *requestStats) PathSize(ctx *Context, path string, size int) {
 	r.Lock()
 	p, ok := r.sizeMeters[path]
 	if !ok {
@@ -149,7 +152,7 @@ func RequestStats() macaron.Handler {
 		sizeMeters:        make(map[string]*stats.Meter32),
 	}
 
-	return func(ctx *macaron.Context) {
+	return func(ctx *Context) {
 		start := time.Now()
 		rw := ctx.Resp.(macaron.ResponseWriter)
 		// call next handler. This will return after all handlers
@@ -157,11 +160,11 @@ func RequestStats() macaron.Handler {
 		ctx.Next()
 		status := rw.Status()
 		path := pathSlug(ctx.Req.URL.Path)
-		stats.PathStatusCount(path, status)
-		stats.PathLatency(path, time.Since(start))
+		stats.PathStatusCount(ctx, path, status)
+		stats.PathLatency(ctx, path, time.Since(start))
 		// only record the request size if the request succeeded.
 		if status < 300 {
-			stats.PathSize(path, rw.Size())
+			stats.PathSize(ctx, path, rw.Size())
 		}
 	}
 }

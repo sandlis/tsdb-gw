@@ -20,6 +20,7 @@ import (
 	"github.com/raintank/tsdb-gw/graphite"
 	"github.com/raintank/tsdb-gw/metric_publish"
 	"github.com/raintank/tsdb-gw/metrictank"
+	"github.com/raintank/tsdb-gw/usage"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/macaron.v1"
 )
@@ -48,6 +49,9 @@ var (
 	worldpingUrl     = flag.String("worldping-url", "http://localhost/", "worldping-api address")
 	elasticsearchUrl = flag.String("elasticsearch-url", "http://localhost:9200", "elasticsearch server address")
 	esIndex          = flag.String("es-index", "events", "elasticsearch index name")
+
+	tsdbStatsEnabled = flag.Bool("tsdb-stats-enabled", false, "enable collecting usage stats")
+	tsdbStatsAddr    = flag.String("tsdb-stats-addr", "localhost:2004", "tsdb-usage server address")
 
 	adminKey = flag.String("admin-key", "not_very_secret_key", "Admin Secret Key")
 )
@@ -105,6 +109,13 @@ func main() {
 		stats.NewGraphite(prefix, *statsAddr, *statsInterval, *statsBufferSize)
 	} else {
 		stats.NewDevnull()
+	}
+
+	if *tsdbStatsEnabled {
+		err := usage.Init(*tsdbStatsAddr)
+		if err != nil {
+			log.Fatal(4, "failed to initialize usage stats. %s", err.Error())
+		}
 	}
 
 	metric_publish.Init(*broker)
