@@ -95,14 +95,15 @@ func emitStats(flushChan chan TsdbStats) {
 		metrics := make([]*schema.MetricData, 0)
 		for org, s := range totals.Orgs {
 			glog.V(4).Infof("org %d has %d active series and rate of %f", org, s.ActiveSeries, s.Rate)
-			if org < 0 {
+			if org <= 0 {
+				// dont emit metrics for the "public" org (-1) or metrics that have no org (0)
 				continue
 			}
 			metrics = append(metrics, &schema.MetricData{
 				Metric:   "hosted-metrics.usage.active_series",
 				Name:     "hosted-metrics.usage.active_series",
 				Interval: int(flushInterval.Seconds()),
-				Mtype:    "guage",
+				Mtype:    "gauge",
 				OrgId:    int(org),
 				Value:    float64(s.ActiveSeries),
 				Time:     ts.Unix(),
@@ -126,6 +127,9 @@ func emitStats(flushChan chan TsdbStats) {
 					Time:     ts.Unix(),
 				})
 			}
+		}
+		for _, m := range metrics {
+			m.SetId()
 		}
 		if err := metric_publish.Publish(metrics); err != nil {
 			glog.Errorf("failed to publish metrics. %v", err)
