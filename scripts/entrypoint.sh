@@ -19,6 +19,6 @@ for endpoint in $(echo $WAIT_HOSTS | tr "," "\n"); do
   done
 done
 
-exec /usr/bin/tsdb-gw $@
+exec $@
 
 

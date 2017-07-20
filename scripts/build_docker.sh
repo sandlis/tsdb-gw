@@ -8,7 +8,7 @@ cd ${DIR}
 VERSION=`git describe --always`
 
 mkdir build
-cp ../build/tsdb-gw build/
+cp ../build/* build/
 
 docker build -t raintank/tsdb-gw:$VERSION .
 docker tag raintank/tsdb-gw:$VERSION raintank/tsdb-gw:latest
