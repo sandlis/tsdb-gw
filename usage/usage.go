@@ -164,6 +164,7 @@ func (t *TsdbUsage) reconnect(deadline time.Time) bool {
 			connected = true
 			break
 		}
+		t.conn = nil
 		log.Error(3, "failed to connect to tsdb-usage server. %v", err)
 		time.Sleep(time.Second)
 	}
