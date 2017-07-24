@@ -183,7 +183,7 @@ func shardIndexer(shard int, flushChan chan TsdbStats) {
 			}
 
 		case <-cleanUpTicker.C:
-			old := uint32(time.Now().Add(flushInterval * time.Duration(-1)).Unix())
+			old := uint32(time.Now().Add(metricMaxStale * time.Duration(-1)).Unix())
 			for org, stats := range idx.Orgs {
 				for id, lastSeen := range stats.ActiveSeries {
 					if lastSeen < old {
