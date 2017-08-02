@@ -46,7 +46,7 @@ var (
 
 	graphiteUrl      = flag.String("graphite-url", "http://localhost:8080", "graphite-api address")
 	metrictankUrl    = flag.String("metrictank-url", "http://localhost:6060", "metrictank address")
-	worldpingUrl     = flag.String("worldping-url", "http://localhost/", "worldping-api address")
+	worldpingUrl     = flag.String("worldping-url", "", "worldping-api address")
 	elasticsearchUrl = flag.String("elasticsearch-url", "http://localhost:9200", "elasticsearch server address")
 	esIndex          = flag.String("es-index", "events", "elasticsearch index name")
 

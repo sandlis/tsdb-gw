@@ -19,6 +19,8 @@ var (
 	WorldpingUrl *url.URL
 	wpProxy      httputil.ReverseProxy
 	gProxy       httputil.ReverseProxy
+
+	worldpingHack bool
 )
 
 type proxyRetryTransport struct {
@@ -71,14 +73,17 @@ func Init(graphiteUrl, worldpingUrl string) error {
 	if err != nil {
 		return err
 	}
-	WorldpingUrl, err = url.Parse(worldpingUrl)
-	if err != nil {
-		return err
-	}
+	if worldpingUrl != "" {
+		worldpingHack = true
+		WorldpingUrl, err = url.Parse(worldpingUrl)
+		if err != nil {
+			return err
+		}
 
-	wpProxy.Director = func(req *http.Request) {
-		req.URL.Scheme = WorldpingUrl.Scheme
-		req.URL.Host = WorldpingUrl.Host
+		wpProxy.Director = func(req *http.Request) {
+			req.URL.Scheme = WorldpingUrl.Scheme
+			req.URL.Host = WorldpingUrl.Host
+		}
 	}
 
 	gProxy.Director = func(req *http.Request) {
@@ -94,7 +99,7 @@ func Proxy(orgId int64, c *macaron.Context) {
 	proxyPath := c.Params("*")
 
 	// check if this is a special raintank_db c.Req.Requests then proxy to the worldping-api service.
-	if proxyPath == "metrics/find" {
+	if worldpingHack && proxyPath == "metrics/find" && c.Req.Method == "GET" {
 		query := c.Req.Request.FormValue("query")
 		if strings.HasPrefix(query, "raintank_db") {
 			c.Req.Request.URL.Path = util.JoinUrlFragments(WorldpingUrl.Path, "/api/graphite/"+proxyPath)
