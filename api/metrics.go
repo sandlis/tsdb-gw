@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	metricsValid    = stats.NewCounter32("metrics.valid")
-	metricsRejected = stats.NewCounter32("metrics.rejected")
+	metricsValid    = stats.NewCounter32("metrics.http.valid")
+	metricsRejected = stats.NewCounter32("metrics.http.rejected")
 )
 
 func Metrics(ctx *Context) {

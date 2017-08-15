@@ -8,10 +8,12 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/grafana/globalconf"
 	"github.com/raintank/metrictank/stats"
 	"github.com/raintank/tsdb-gw/api"
+	"github.com/raintank/tsdb-gw/carbon"
 	"github.com/raintank/tsdb-gw/elasticsearch"
 	"github.com/raintank/tsdb-gw/event_publish"
 	"github.com/raintank/tsdb-gw/graphite"
@@ -117,11 +119,11 @@ func main() {
 	}
 	inputs := make([]Stopable, 0)
 	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
 	log.Info("starting up")
 	done := make(chan struct{})
-	inputs = append(inputs, api.InitApi())
+	inputs = append(inputs, api.InitApi(), carbon.InitCarbon())
 	go handleShutdown(done, interrupt, inputs)
 
 	<-done
@@ -137,10 +139,10 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopa
 	var wg sync.WaitGroup
 	for _, input := range inputs {
 		wg.Add(1)
-		go func() {
-			input.Stop()
+		go func(plugin Stopable) {
+			plugin.Stop()
 			wg.Done()
-		}()
+		}(input)
 	}
 	wg.Wait()
 	close(done)
