@@ -42,7 +42,7 @@ func eventsJson(ctx *Context) {
 			return
 		}
 		if !ctx.IsAdmin {
-			event.OrgId = ctx.OrgId
+			event.OrgId = int64(ctx.OrgId)
 		}
 
 		u := uuid.NewUUID()
@@ -87,7 +87,7 @@ func eventsBinary(ctx *Context, compressed bool) {
 			return
 		}
 		if !ctx.IsAdmin {
-			ms.Event.OrgId = ctx.OrgId
+			ms.Event.OrgId = int64(ctx.OrgId)
 		}
 		u := uuid.NewUUID()
 		ms.Event.Id = u.String()

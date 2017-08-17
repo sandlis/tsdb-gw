@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/raintank/metrictank/stats"
-	"github.com/raintank/raintank-apps/pkg/auth"
+	"github.com/raintank/tsdb-gw/auth"
 	"github.com/raintank/tsdb-gw/usage"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/macaron.v1"
@@ -18,14 +18,14 @@ import (
 
 type Context struct {
 	*macaron.Context
-	*auth.SignedInUser
+	*auth.User
 }
 
 func GetContextHandler() macaron.Handler {
 	return func(c *macaron.Context) {
 		ctx := &Context{
-			Context:      c,
-			SignedInUser: &auth.SignedInUser{},
+			Context: c,
+			User:    &auth.User{},
 		}
 		c.Map(ctx)
 	}
@@ -39,7 +39,7 @@ func RequireAdmin() macaron.Handler {
 	}
 }
 
-func Auth(adminKey string) macaron.Handler {
+func (a *Api) Auth() macaron.Handler {
 	return func(ctx *Context) {
 		key, err := getApiKey(ctx)
 		if err != nil {
@@ -50,9 +50,9 @@ func Auth(adminKey string) macaron.Handler {
 			ctx.JSON(401, "Unauthorized")
 			return
 		}
-		user, err := auth.Auth(adminKey, key)
+		user, err := a.authPlugin.Auth(key)
 		if err != nil {
-			if err == auth.ErrInvalidApiKey || err == auth.ErrInvalidOrgId {
+			if err == auth.ErrInvalidKey || err == auth.ErrInvalidOrgId {
 				ctx.JSON(401, err.Error())
 				return
 			}
@@ -66,11 +66,11 @@ func Auth(adminKey string) macaron.Handler {
 			if header != "" {
 				orgId, err := strconv.ParseInt(header, 10, 64)
 				if err == nil && orgId != 0 {
-					user.OrgId = orgId
+					user.OrgId = int(orgId)
 				}
 			}
 		}
-		ctx.SignedInUser = user
+		ctx.User = user
 	}
 }
 

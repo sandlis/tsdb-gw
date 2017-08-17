@@ -8,42 +8,46 @@ import (
 	"os"
 
 	"github.com/gorilla/handlers"
+	"github.com/raintank/tsdb-gw/auth"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/macaron.v1"
 )
 
 var (
-	addr     = flag.String("addr", "localhost:80", "http service address")
-	ssl      = flag.Bool("ssl", false, "use https")
-	certFile = flag.String("cert-file", "", "SSL certificate file")
-	keyFile  = flag.String("key-file", "", "SSL key file")
-	adminKey = flag.String("admin-key", "not_very_secret_key", "Admin Secret Key")
+	addr       = flag.String("addr", "localhost:80", "http service address")
+	ssl        = flag.Bool("ssl", false, "use https")
+	certFile   = flag.String("cert-file", "", "SSL certificate file")
+	keyFile    = flag.String("key-file", "", "SSL key file")
+	authPlugin = flag.String("api-auth-plugin", "grafana", "auth plugin to use. (grafana|file)")
 )
 
 type Api struct {
-	l    net.Listener
-	done chan struct{}
+	l          net.Listener
+	done       chan struct{}
+	authPlugin auth.AuthPlugin
 }
 
 func InitApi() *Api {
 	if *ssl && (*certFile == "" || *keyFile == "") {
 		log.Fatal(4, "cert-file and key-file must be set when using SSL")
 	}
+	a := &Api{
+		done:       make(chan struct{}),
+		authPlugin: auth.GetAuthPlugin(*authPlugin),
+	}
 
 	m := macaron.New()
 	m.Use(macaron.Recovery())
 	m.Use(macaron.Renderer())
 
-	InitRoutes(m, *adminKey)
 	// define our own listner so we can call Close on it
 	l, err := net.Listen("tcp", *addr)
 	if err != nil {
 		log.Fatal(4, err.Error())
 	}
-	a := &Api{
-		l:    l,
-		done: make(chan struct{}),
-	}
+	a.l = l
+
+	a.InitRoutes(m)
 
 	// write Request logs in Apache Combined Log Format
 	loggedRouter := handlers.CombinedLoggingHandler(os.Stdout, m)
@@ -80,16 +84,16 @@ func (a *Api) Stop() {
 	<-a.done
 }
 
-func InitRoutes(m *macaron.Macaron, adminKey string) {
+func (a *Api) InitRoutes(m *macaron.Macaron) {
 	m.Use(GetContextHandler())
 	m.Use(RequestStats())
 
 	m.Get("/", index)
-	m.Post("/metrics/delete", Auth(adminKey), MetrictankProxy)
-	m.Post("/metrics", Auth(adminKey), Metrics)
-	m.Post("/events", Auth(adminKey), Events)
-	m.Any("/graphite/*", Auth(adminKey), GraphiteProxy)
-	m.Any("/elasticsearch/*", Auth(adminKey), ElasticsearchProxy)
+	m.Post("/metrics/delete", a.Auth(), MetrictankProxy)
+	m.Post("/metrics", a.Auth(), Metrics)
+	m.Post("/events", a.Auth(), Events)
+	m.Any("/graphite/*", a.Auth(), GraphiteProxy)
+	m.Any("/elasticsearch/*", a.Auth(), ElasticsearchProxy)
 }
 
 func index(ctx *macaron.Context) {

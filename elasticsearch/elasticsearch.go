@@ -27,7 +27,7 @@ func Init(elasticsearchUrl, indexName string) error {
 	return err
 }
 
-func Proxy(orgId int64, c *macaron.Context) {
+func Proxy(orgId int, c *macaron.Context) {
 	proxyPath := c.Params("*")
 	body, err := ioutil.ReadAll(c.Req.Request.Body)
 	if err != nil {
@@ -65,7 +65,7 @@ func Proxy(orgId int64, c *macaron.Context) {
 	c.Write(respBody)
 }
 
-func restrictSearch(orgId int64, body []byte) ([]byte, error) {
+func restrictSearch(orgId int, body []byte) ([]byte, error) {
 	var newBody bytes.Buffer
 
 	lines := strings.Split(string(body), "\n")
@@ -132,7 +132,7 @@ type esBool struct {
 	Filter interface{}   `json:"filter"`
 }
 
-func transformSearch(orgId int64, search []byte) ([]byte, error) {
+func transformSearch(orgId int, search []byte) ([]byte, error) {
 	// remove all "format": "epoch_millis" entries, since our timestamp isn't a date
 	re := regexp.MustCompile(`,\s*"format"\s*:\s*"epoch_millis"`)
 	cleanSearch := re.ReplaceAllLiteral(search, []byte(""))
@@ -145,7 +145,7 @@ func transformSearch(orgId int64, search []byte) ([]byte, error) {
 	}
 
 	// wrap provided query in a bool query with a filter clause restricting matches to the specified org
-	orgCondition := map[string]map[string]int64{"term": {"org_id": orgId}}
+	orgCondition := map[string]map[string]int{"term": {"org_id": orgId}}
 
 	Query := &esQueryWrapper{}
 	Query.Bool.Must = append(Query.Bool.Must, s.Query)

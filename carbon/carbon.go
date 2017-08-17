@@ -12,6 +12,7 @@ import (
 	"github.com/lomik/go-carbon/persister"
 	m20 "github.com/metrics20/go-metrics20/carbon20"
 	"github.com/raintank/metrictank/stats"
+	"github.com/raintank/tsdb-gw/auth"
 	"github.com/raintank/tsdb-gw/metric_publish"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/raintank/schema.v1"
@@ -27,13 +28,14 @@ var (
 
 	carbonConnections = stats.NewGauge32("carbon.connections")
 
-	Enabled       bool
-	addr          string
-	schemasConf   string
-	concurrency   int
-	bufferSize    int
-	flushInterval time.Duration
-	authFile      string
+	Enabled           bool
+	addr              string
+	schemasConf       string
+	concurrency       int
+	bufferSize        int
+	flushInterval     time.Duration
+	nonBlockingBuffer bool
+	authPlugin        string
 
 	metricPool = NewMetricDataPool()
 )
@@ -42,19 +44,21 @@ func init() {
 	flag.StringVar(&addr, "carbon-addr", "0.0.0.0:2003", "listen address for carbon input")
 	flag.BoolVar(&Enabled, "carbon-enabled", false, "enable carbon input")
 	flag.StringVar(&schemasConf, "schemas-file", "/etc/storage-schemas.conf", "path to carbon storage-schemas.conf file")
-	flag.StringVar(&authFile, "carbon-auth-file", "/etc/carbon-auth", "path to carbon auth file")
 	flag.DurationVar(&flushInterval, "carbon-flush-interval", time.Second, "maximum time between flushs to kafka")
 	flag.IntVar(&concurrency, "carbon-concurrency", 1, "number of goroutines for handling metrics")
 	flag.IntVar(&bufferSize, "carbon-buffer-size", 100000, "number of metrics to hold in an input buffer. Once this buffer fills metrics will be dropped")
+	flag.BoolVar(&nonBlockingBuffer, "carbon-non-blocking-buffer", false, "dont block trying to write to the input buffer, just drop metrics.")
+	flag.StringVar(&authPlugin, "carbon-auth-plugin", "file", "auth plugin to use. (grafana|file)")
 }
 
 type Carbon struct {
-	udp      net.Conn
-	tcp      net.Listener
-	listenWg sync.WaitGroup
-	schemas  persister.WhisperSchemas
-	buf      chan []byte
-	flushWg  sync.WaitGroup
+	udp        net.Conn
+	tcp        net.Listener
+	listenWg   sync.WaitGroup
+	schemas    persister.WhisperSchemas
+	buf        chan []byte
+	flushWg    sync.WaitGroup
+	authPlugin auth.AuthPlugin
 }
 
 func InitCarbon() *Carbon {
@@ -62,10 +66,9 @@ func InitCarbon() *Carbon {
 	if !Enabled {
 		return c
 	}
-	err := InitAuth(authFile)
-	if err != nil {
-		log.Fatal(4, "failed to load authFile. %s", err)
-	}
+
+	c.authPlugin = auth.GetAuthPlugin(authPlugin)
+
 	log.Info("Carbon input listening on %s", addr)
 	c.buf = make(chan []byte, bufferSize)
 
@@ -102,7 +105,7 @@ func InitCarbon() *Carbon {
 	c.listenWg.Add(1)
 	// this chan will never be closed, but the UDP connection will be closed when Stop() is called.
 	shutdown := make(chan struct{})
-	go c.handleRequest(c.udp, shutdown, &c.listenWg)
+	go c.handleConn(c.udp, shutdown, &c.listenWg)
 
 	for i := 0; i < concurrency; i++ {
 		c.flushWg.Add(1)
@@ -121,7 +124,7 @@ func (c *Carbon) Stop() {
 	c.listenWg.Wait()
 	// all listeners are closed, so we can close the input Buf
 	close(c.buf)
-	c.listenWg.Wait()
+	c.flushWg.Wait()
 }
 
 func (c *Carbon) listen() {
@@ -137,7 +140,7 @@ func (c *Carbon) listen() {
 		}
 		// Handle connections in a new goroutine.
 		wg.Add(1)
-		go c.handleRequest(conn, shutdown, &wg)
+		go c.handleConn(conn, shutdown, &wg)
 	}
 	close(shutdown)
 	wg.Wait()
@@ -146,7 +149,7 @@ func (c *Carbon) listen() {
 	return
 }
 
-func (c *Carbon) handleRequest(conn net.Conn, shutdown chan struct{}, wg *sync.WaitGroup) {
+func (c *Carbon) handleConn(conn net.Conn, shutdown chan struct{}, wg *sync.WaitGroup) {
 	carbonConnections.Inc()
 	if conn.RemoteAddr() != nil {
 		log.Info("handling connection from %s", conn.RemoteAddr().String())
@@ -180,12 +183,16 @@ func (c *Carbon) handleRequest(conn net.Conn, shutdown chan struct{}, wg *sync.W
 		}
 		if len(line) > 0 {
 			metricsReceived.Inc()
-			select {
-			case c.buf <- line:
-			default:
-				metricsDroppedBufferFull.Inc()
-				log.Debug("metric dropped due to full buffer")
-				// maybe we should just close the connection here
+			if nonBlockingBuffer {
+				select {
+				case c.buf <- line:
+				default:
+					metricsDroppedBufferFull.Inc()
+					log.Debug("metric dropped due to full buffer")
+					// maybe we should just close the connection here
+				}
+			} else {
+				c.buf <- line
 			}
 		}
 	}
@@ -222,13 +229,13 @@ func (c *Carbon) flush() {
 			}
 
 			parts := bytes.SplitN(b, []byte("."), 2)
-			orgId, ok := AuthKeys[string(parts[0])]
-			if !ok {
+			user, err := c.authPlugin.Auth(string(parts[0]))
+			if err != nil {
 				log.Debug("invalid auth key. %s", b)
 				metricsDroppedAuthFail.Inc()
 				continue
 			}
-			md, err := parseMetric(parts[1], c.schemas, orgId)
+			md, err := parseMetric(parts[1], c.schemas, user.OrgId)
 			if err != nil {
 				log.Error(3, "could not parse metric. %s", err)
 				metricsRejected.Inc()
