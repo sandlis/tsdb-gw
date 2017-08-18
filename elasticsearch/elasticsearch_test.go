@@ -8,7 +8,7 @@ import (
 )
 
 func TestElasticsearch(t *testing.T) {
-	orgId := int64(1234)
+	orgId := int(1234)
 
 	rawSearchHeader := []byte(`{
 	"search_type":"count",

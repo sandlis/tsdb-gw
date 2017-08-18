@@ -72,7 +72,7 @@ func LogDataPoint(id string) {
 	}
 }
 
-func LogRequest(org int64, request string) {
+func LogRequest(org int, request string) {
 	if usage != nil {
 		usage.In <- fmt.Sprintf("%c%d.%s", ApiRequest, org, request)
 	}

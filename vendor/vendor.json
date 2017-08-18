@@ -23,10 +23,22 @@
 			"revisionTime": "2017-05-08T18:36:27Z"
 		},
 		{
+			"checksumSHA1": "htjvdG/znrHmFYRQBqA2vHrJsF4=",
+			"path": "github.com/Sirupsen/logrus",
+			"revision": "cd7d1bbe41066b6c1f19780f895901052150a575",
+			"revisionTime": "2016-04-25T09:32:37Z"
+		},
+		{
 			"checksumSHA1": "7HXb3cry6luicWeJM9Uxwzfo9Rs=",
 			"path": "github.com/Unknwon/com",
 			"revision": "0db4a625e949e956314d7d1adea9bf82384cc10c",
 			"revisionTime": "2017-02-13T07:20:14Z"
+		},
+		{
+			"checksumSHA1": "acGG5NV9NBtjspVlWZ86Zzg8pW8=",
+			"path": "github.com/alyu/configparser",
+			"revision": "26b2fe18bee125de2a3090d6fadb7e280e63eba6",
+			"revisionTime": "2015-11-25T02:12:32Z"
 		},
 		{
 			"checksumSHA1": "n6WHmaVaxufQthaT1tYnqTmtSsY=",
@@ -108,10 +120,46 @@
 			"revisionTime": "2017-05-23T21:16:22Z"
 		},
 		{
+			"checksumSHA1": "IJBXyoVO+uyqCrCYiNO/djnlcNk=",
+			"path": "github.com/hydrogen18/stalecucumber",
+			"revision": "9b38526d4bdf8e197c31344777fc28f7f48d250d",
+			"revisionTime": "2015-11-02T14:43:22Z"
+		},
+		{
 			"checksumSHA1": "Js/yx9fZ3+wH1wZpHNIxSTMIaCg=",
 			"path": "github.com/jtolds/gls",
 			"revision": "77f18212c9c7edc9bd6a33d383a7b545ce62f064",
 			"revisionTime": "2017-05-03T22:40:06Z"
+		},
+		{
+			"checksumSHA1": "wxF2QM5J2Q5EleD8R43dpsD8fWI=",
+			"path": "github.com/lomik/go-carbon/helper",
+			"revision": "88784d1a3499a333a93e640e7c1e31eb7e65480d",
+			"revisionTime": "2016-06-30T22:02:17Z"
+		},
+		{
+			"checksumSHA1": "eXXSyNEcJ1/cd9433icwB6SME4I=",
+			"path": "github.com/lomik/go-carbon/persister",
+			"revision": "88784d1a3499a333a93e640e7c1e31eb7e65480d",
+			"revisionTime": "2016-06-30T22:02:17Z"
+		},
+		{
+			"checksumSHA1": "QhIV0ZGviP8XU4Nd8CxDD6j6cqc=",
+			"path": "github.com/lomik/go-carbon/points",
+			"revision": "88784d1a3499a333a93e640e7c1e31eb7e65480d",
+			"revisionTime": "2016-06-30T22:02:17Z"
+		},
+		{
+			"checksumSHA1": "FWzBDjjSx/OaoGNNK/MTamWEr8M=",
+			"path": "github.com/lomik/go-whisper",
+			"revision": "537ebed0a597c2262dfe1b2eaa1ac68efd5804fb",
+			"revisionTime": "2016-05-05T07:06:08Z"
+		},
+		{
+			"checksumSHA1": "j4CCNdvlzHLOMA7gyS7wzIfwBTw=",
+			"path": "github.com/metrics20/go-metrics20/carbon20",
+			"revision": "55e770486f161cc83baf4e7178f7bb928dbc5716",
+			"revisionTime": "2017-08-11T09:14:05Z"
 		},
 		{
 			"checksumSHA1": "mbhJnsNwGAwkTQH5c2hVRO9YmxA=",
@@ -208,6 +256,12 @@
 			"path": "golang.org/x/crypto/pbkdf2",
 			"revision": "e1a4589e7d3ea14a3352255d04b6f1a418845e5e",
 			"revisionTime": "2017-05-23T23:42:09Z"
+		},
+		{
+			"checksumSHA1": "0rKHZVlseYn90YkiSIsMKrSBtxA=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "9c60d1c508f5134d1ca726b4641db998f2523357",
+			"revisionTime": "2015-09-01T11:51:02Z"
 		},
 		{
 			"checksumSHA1": "3omqeYpo6tkP7q8f3bfzX6uYem8=",

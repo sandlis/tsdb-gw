@@ -1,20 +1,19 @@
 package main
 
 import (
-	"crypto/tls"
 	"flag"
 	"fmt"
-	"net"
-	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
 	"strings"
+	"sync"
+	"syscall"
 
-	"github.com/gorilla/handlers"
 	"github.com/grafana/globalconf"
 	"github.com/raintank/metrictank/stats"
 	"github.com/raintank/tsdb-gw/api"
+	"github.com/raintank/tsdb-gw/carbon"
 	"github.com/raintank/tsdb-gw/elasticsearch"
 	"github.com/raintank/tsdb-gw/event_publish"
 	"github.com/raintank/tsdb-gw/graphite"
@@ -22,7 +21,6 @@ import (
 	"github.com/raintank/tsdb-gw/metrictank"
 	"github.com/raintank/tsdb-gw/usage"
 	"github.com/raintank/worldping-api/pkg/log"
-	"gopkg.in/macaron.v1"
 )
 
 var (
@@ -32,11 +30,6 @@ var (
 	confFile    = flag.String("config", "/etc/raintank/tsdb.ini", "configuration file path")
 
 	broker = flag.String("kafka-tcp-addr", "localhost:9092", "kafka tcp address for metrics")
-
-	addr     = flag.String("addr", "localhost:80", "http service address")
-	ssl      = flag.Bool("ssl", false, "use https")
-	certFile = flag.String("cert-file", "", "SSL certificate file")
-	keyFile  = flag.String("key-file", "", "SSL key file")
 
 	statsEnabled    = flag.Bool("stats-enabled", false, "enable sending graphite messages for instrumentation")
 	statsPrefix     = flag.String("stats-prefix", "tsdb-gw.stats.default.$hostname", "stats prefix (will add trailing dot automatically if needed)")
@@ -52,8 +45,6 @@ var (
 
 	tsdbStatsEnabled = flag.Bool("tsdb-stats-enabled", false, "enable collecting usage stats")
 	tsdbStatsAddr    = flag.String("tsdb-stats-addr", "localhost:2004", "tsdb-usage server address")
-
-	adminKey = flag.String("admin-key", "not_very_secret_key", "Admin Secret Key")
 )
 
 func main() {
@@ -98,10 +89,6 @@ func main() {
 		return
 	}
 
-	if *ssl && (*certFile == "" || *keyFile == "") {
-		log.Fatal(4, "cert-file and key-file must be set when using SSL")
-	}
-
 	if *statsEnabled {
 		stats.NewMemoryReporter()
 		hostname, _ := os.Hostname()
@@ -121,12 +108,6 @@ func main() {
 	metric_publish.Init(*broker)
 	event_publish.Init(*broker)
 
-	m := macaron.New()
-	m.Use(macaron.Recovery())
-	m.Use(macaron.Renderer())
-
-	api.InitRoutes(m, *adminKey)
-
 	if err := graphite.Init(*graphiteUrl, *worldpingUrl); err != nil {
 		log.Fatal(4, err.Error())
 	}
@@ -136,49 +117,33 @@ func main() {
 	if err := elasticsearch.Init(*elasticsearchUrl, *esIndex); err != nil {
 		log.Fatal(4, err.Error())
 	}
-
+	inputs := make([]Stopable, 0)
 	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
 	log.Info("starting up")
-	// define our own listner so we can call Close on it
-	l, err := net.Listen("tcp", *addr)
-	if err != nil {
-		log.Fatal(4, err.Error())
-	}
 	done := make(chan struct{})
-	go handleShutdown(done, interrupt, l)
+	inputs = append(inputs, api.InitApi(), carbon.InitCarbon())
+	go handleShutdown(done, interrupt, inputs)
 
-	// write Request logs in Apache Common Log Format
-	loggedRouter := handlers.LoggingHandler(os.Stdout, m)
-	srv := http.Server{
-		Addr:    *addr,
-		Handler: loggedRouter,
-	}
-	if *ssl {
-		cert, err := tls.LoadX509KeyPair(*certFile, *keyFile)
-		if err != nil {
-			log.Fatal(4, "Fail to start server: %v", err)
-		}
-		srv.TLSConfig = &tls.Config{
-			Certificates: []tls.Certificate{cert},
-			NextProtos:   []string{"http/1.1"},
-		}
-		tlsListener := tls.NewListener(l, srv.TLSConfig)
-		err = srv.Serve(tlsListener)
-	} else {
-		err = srv.Serve(l)
-	}
-
-	if err != nil {
-		log.Info(err.Error())
-	}
 	<-done
 }
 
-func handleShutdown(done chan struct{}, interrupt chan os.Signal, l net.Listener) {
+type Stopable interface {
+	Stop()
+}
+
+func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopable) {
 	<-interrupt
 	log.Info("shutdown started.")
-	l.Close()
+	var wg sync.WaitGroup
+	for _, input := range inputs {
+		wg.Add(1)
+		go func(plugin Stopable) {
+			plugin.Stop()
+			wg.Done()
+		}(input)
+	}
+	wg.Wait()
 	close(done)
 }

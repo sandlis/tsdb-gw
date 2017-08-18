@@ -95,7 +95,7 @@ func Init(graphiteUrl, worldpingUrl string) error {
 	return nil
 }
 
-func Proxy(orgId int64, c *macaron.Context) {
+func Proxy(orgId int, c *macaron.Context) {
 	proxyPath := c.Params("*")
 
 	// check if this is a special raintank_db c.Req.Requests then proxy to the worldping-api service.
@@ -109,7 +109,7 @@ func Proxy(orgId int64, c *macaron.Context) {
 	}
 
 	c.Req.Request.Header.Del("X-Org-Id")
-	c.Req.Request.Header.Add("X-Org-Id", strconv.FormatInt(orgId, 10))
+	c.Req.Request.Header.Add("X-Org-Id", strconv.FormatInt(int64(orgId), 10))
 	c.Req.Request.URL.Path = util.JoinUrlFragments(GraphiteUrl.Path, proxyPath)
 	gProxy.ServeHTTP(c.Resp, c.Req.Request)
 }

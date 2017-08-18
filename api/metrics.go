@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	metricsValid    = stats.NewCounter32("metrics.valid")
-	metricsRejected = stats.NewCounter32("metrics.rejected")
+	metricsValid    = stats.NewCounter32("metrics.http.valid")
+	metricsRejected = stats.NewCounter32("metrics.http.rejected")
 )
 
 func Metrics(ctx *Context) {
@@ -63,7 +63,7 @@ func metricsJson(ctx *Context) {
 			}
 		} else {
 			for _, m := range metrics {
-				m.OrgId = int(ctx.OrgId)
+				m.OrgId = ctx.OrgId
 				if m.Metric == "" {
 					m.Metric = m.Name
 				}
@@ -139,7 +139,7 @@ func metricsBinary(ctx *Context, compressed bool) {
 			}
 		} else {
 			for _, m := range metricData.Metrics {
-				m.OrgId = int(ctx.OrgId)
+				m.OrgId = ctx.OrgId
 				if m.Metric == "" {
 					m.Metric = m.Name
 				}
