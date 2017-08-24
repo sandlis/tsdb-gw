@@ -109,7 +109,7 @@ func main() {
 		}
 	}
 
-	tracer, traceCloser, err := util.GetTracer(*tracingEnabled, *tracingAddr)
+	_, traceCloser, err := util.GetTracer(*tracingEnabled, *tracingAddr)
 	if err != nil {
 		log.Fatal(4, "Could not initialize jaeger tracer: %s", err.Error())
 	}
@@ -118,7 +118,7 @@ func main() {
 	metric_publish.Init(*broker)
 	event_publish.Init(*broker)
 
-	if err := graphite.Init(*graphiteUrl, *worldpingUrl, tracer); err != nil {
+	if err := graphite.Init(*graphiteUrl, *worldpingUrl); err != nil {
 		log.Fatal(4, err.Error())
 	}
 	if err := metrictank.Init(*metrictankUrl); err != nil {
