@@ -22,6 +22,7 @@ var (
 	gProxy       httputil.ReverseProxy
 
 	worldpingHack bool
+	tracer        opentracing.Tracer
 )
 
 type proxyRetryTransport struct {
@@ -35,10 +36,9 @@ func NewProxyRetrytransport() *proxyRetryTransport {
 }
 
 func (t *proxyRetryTransport) RoundTrip(outreq *http.Request) (*http.Response, error) {
-	span, _ := opentracing.StartSpanFromContext(outreq.Context(), "graphite_round_trip")
-	if span != nil {
-		defer span.Finish()
-	}
+	span, ctx := opentracing.StartSpanFromContext(outreq.Context(), "graphite_round_trip")
+	defer span.Finish()
+	outreq = outreq.WithContext(opentracing.ContextWithSpan(ctx, span))
 
 	attempts := 0
 	var res *http.Response
@@ -77,7 +77,8 @@ func (t *proxyRetryTransport) RoundTrip(outreq *http.Request) (*http.Response, e
 	return res, err
 }
 
-func Init(graphiteUrl, worldpingUrl string) error {
+func Init(graphiteUrl, worldpingUrl string, t opentracing.Tracer) error {
+	tracer = t
 	var err error
 	GraphiteUrl, err = url.Parse(graphiteUrl)
 	if err != nil {
