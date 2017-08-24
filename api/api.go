@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/gorilla/handlers"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/raintank/tsdb-gw/auth"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/macaron.v1"
@@ -27,7 +28,7 @@ type Api struct {
 	authPlugin auth.AuthPlugin
 }
 
-func InitApi() *Api {
+func InitApi(tracer opentracing.Tracer) *Api {
 	if *ssl && (*certFile == "" || *keyFile == "") {
 		log.Fatal(4, "cert-file and key-file must be set when using SSL")
 	}
@@ -39,6 +40,7 @@ func InitApi() *Api {
 	m := macaron.New()
 	m.Use(macaron.Recovery())
 	m.Use(macaron.Renderer())
+	m.Use(Tracer(tracer))
 
 	// define our own listner so we can call Close on it
 	l, err := net.Listen("tcp", *addr)

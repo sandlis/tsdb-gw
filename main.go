@@ -133,7 +133,7 @@ func main() {
 
 	log.Info("starting up")
 	done := make(chan struct{})
-	inputs = append(inputs, api.InitApi(), carbon.InitCarbon())
+	inputs = append(inputs, api.InitApi(tracer), carbon.InitCarbon())
 	go handleShutdown(done, interrupt, inputs)
 
 	<-done
