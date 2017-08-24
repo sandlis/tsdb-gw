@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/raintank/tsdb-gw/util"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/macaron.v1"
@@ -19,6 +20,7 @@ var (
 	WorldpingUrl *url.URL
 	wpProxy      httputil.ReverseProxy
 	gProxy       httputil.ReverseProxy
+	tracer       opentracing.Tracer
 
 	worldpingHack bool
 )
@@ -34,6 +36,12 @@ func NewProxyRetrytransport() *proxyRetryTransport {
 }
 
 func (t *proxyRetryTransport) RoundTrip(outreq *http.Request) (*http.Response, error) {
+	span := opentracing.SpanFromContext(outreq.Context())
+	if span != nil {
+		span = tracer.StartSpan("graphite_round_trip", opentracing.ChildOf(span.Context()))
+	}
+	defer span.Finish()
+
 	attempts := 0
 	var res *http.Response
 	hasBody := false
@@ -67,7 +75,7 @@ func (t *proxyRetryTransport) RoundTrip(outreq *http.Request) (*http.Response, e
 	return res, err
 }
 
-func Init(graphiteUrl, worldpingUrl string) error {
+func Init(graphiteUrl, worldpingUrl string, t opentracing.Tracer) error {
 	var err error
 	GraphiteUrl, err = url.Parse(graphiteUrl)
 	if err != nil {
@@ -91,6 +99,8 @@ func Init(graphiteUrl, worldpingUrl string) error {
 		req.URL.Host = GraphiteUrl.Host
 	}
 	gProxy.Transport = NewProxyRetrytransport()
+
+	tracer = t
 
 	return nil
 }
