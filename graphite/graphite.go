@@ -23,7 +23,6 @@ var (
 	gProxy       httputil.ReverseProxy
 
 	worldpingHack bool
-	tracer        opentracing.Tracer
 )
 
 type proxyRetryTransport struct {
@@ -42,7 +41,7 @@ func (t *proxyRetryTransport) RoundTrip(outreq *http.Request) (*http.Response, e
 	defer span.Finish()
 
 	carrier := opentracing.HTTPHeadersCarrier(outreq.Header)
-	err := tracer.Inject(span.Context(), opentracing.HTTPHeaders, carrier)
+	err := opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
 	if err != nil {
 		log.Error(3, "CLU failed to inject span into headers: %s", err)
 	}
@@ -83,8 +82,7 @@ func (t *proxyRetryTransport) RoundTrip(outreq *http.Request) (*http.Response, e
 	return res, err
 }
 
-func Init(graphiteUrl, worldpingUrl string, t opentracing.Tracer) error {
-	tracer = t
+func Init(graphiteUrl, worldpingUrl string) error {
 	var err error
 	GraphiteUrl, err = url.Parse(graphiteUrl)
 	if err != nil {
