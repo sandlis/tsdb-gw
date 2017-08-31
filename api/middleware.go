@@ -227,7 +227,6 @@ func Tracer() macaron.Handler {
 				ext.Error.Set(span, true)
 			}
 		}
-		// TODO: else write error msg?
 		span.Finish()
 	}
 }
