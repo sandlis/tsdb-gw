@@ -23,12 +23,6 @@
 			"revisionTime": "2017-05-08T18:36:27Z"
 		},
 		{
-			"checksumSHA1": "htjvdG/znrHmFYRQBqA2vHrJsF4=",
-			"path": "github.com/Sirupsen/logrus",
-			"revision": "cd7d1bbe41066b6c1f19780f895901052150a575",
-			"revisionTime": "2016-04-25T09:32:37Z"
-		},
-		{
 			"checksumSHA1": "7HXb3cry6luicWeJM9Uxwzfo9Rs=",
 			"path": "github.com/Unknwon/com",
 			"revision": "0db4a625e949e956314d7d1adea9bf82384cc10c",
@@ -53,11 +47,32 @@
 			"revisionTime": "2016-10-29T20:57:26Z"
 		},
 		{
+			"checksumSHA1": "vwGGesK6k8uQgnwew609k9Jvcb8=",
+			"origin": "github.com/raintank/metrictank/vendor/github.com/dgryski/go-bits",
+			"path": "github.com/dgryski/go-bits",
+			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
+			"revisionTime": "2017-08-31T15:46:53Z"
+		},
+		{
 			"checksumSHA1": "e4U50WUz2ycziirb3+JAVz3t49w=",
 			"origin": "github.com/raintank/metrictank/vendor/github.com/dgryski/go-linlog",
 			"path": "github.com/dgryski/go-linlog",
 			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
 			"revisionTime": "2017-06-01T08:43:28Z"
+		},
+		{
+			"checksumSHA1": "bJkM/x02zeuwA6avbGn2yvqjp20=",
+			"origin": "github.com/raintank/metrictank/vendor/github.com/dgryski/go-tsz",
+			"path": "github.com/dgryski/go-tsz",
+			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
+			"revisionTime": "2017-08-31T15:46:53Z"
+		},
+		{
+			"checksumSHA1": "dn4hgSC9vkkMREpbcoMihPGCA88=",
+			"origin": "github.com/raintank/metrictank/vendor/github.com/dgryski/go-tsz/testdata",
+			"path": "github.com/dgryski/go-tsz/testdata",
+			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
+			"revisionTime": "2017-08-31T15:46:53Z"
 		},
 		{
 			"checksumSHA1": "y2Kh4iPlgCPXSGTCcFpzePYdzzg=",
@@ -120,40 +135,10 @@
 			"revisionTime": "2017-05-23T21:16:22Z"
 		},
 		{
-			"checksumSHA1": "IJBXyoVO+uyqCrCYiNO/djnlcNk=",
-			"path": "github.com/hydrogen18/stalecucumber",
-			"revision": "9b38526d4bdf8e197c31344777fc28f7f48d250d",
-			"revisionTime": "2015-11-02T14:43:22Z"
-		},
-		{
 			"checksumSHA1": "Js/yx9fZ3+wH1wZpHNIxSTMIaCg=",
 			"path": "github.com/jtolds/gls",
 			"revision": "77f18212c9c7edc9bd6a33d383a7b545ce62f064",
 			"revisionTime": "2017-05-03T22:40:06Z"
-		},
-		{
-			"checksumSHA1": "wxF2QM5J2Q5EleD8R43dpsD8fWI=",
-			"path": "github.com/lomik/go-carbon/helper",
-			"revision": "88784d1a3499a333a93e640e7c1e31eb7e65480d",
-			"revisionTime": "2016-06-30T22:02:17Z"
-		},
-		{
-			"checksumSHA1": "eXXSyNEcJ1/cd9433icwB6SME4I=",
-			"path": "github.com/lomik/go-carbon/persister",
-			"revision": "88784d1a3499a333a93e640e7c1e31eb7e65480d",
-			"revisionTime": "2016-06-30T22:02:17Z"
-		},
-		{
-			"checksumSHA1": "QhIV0ZGviP8XU4Nd8CxDD6j6cqc=",
-			"path": "github.com/lomik/go-carbon/points",
-			"revision": "88784d1a3499a333a93e640e7c1e31eb7e65480d",
-			"revisionTime": "2016-06-30T22:02:17Z"
-		},
-		{
-			"checksumSHA1": "FWzBDjjSx/OaoGNNK/MTamWEr8M=",
-			"path": "github.com/lomik/go-whisper",
-			"revision": "537ebed0a597c2262dfe1b2eaa1ac68efd5804fb",
-			"revisionTime": "2016-05-05T07:06:08Z"
 		},
 		{
 			"checksumSHA1": "j4CCNdvlzHLOMA7gyS7wzIfwBTw=",
@@ -180,16 +165,40 @@
 			"revisionTime": "2016-01-12T16:53:51Z"
 		},
 		{
+			"checksumSHA1": "XEelmF21xs8SaseO6IX++VnXHwI=",
+			"path": "github.com/raintank/dur",
+			"revision": "783f098260f36002ce9ab0f77dc1a1b344032b42",
+			"revisionTime": "2017-07-09T09:05:02Z"
+		},
+		{
 			"checksumSHA1": "JjEvruL5CkxDFwQFCp6nk7ik864=",
 			"path": "github.com/raintank/metrictank/cluster/partitioner",
 			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
 			"revisionTime": "2017-06-01T08:43:28Z"
 		},
 		{
+			"checksumSHA1": "SPHLt6V8DpIwSnSUu8GEd1DxxJ4=",
+			"path": "github.com/raintank/metrictank/conf",
+			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
+			"revisionTime": "2017-08-31T15:46:53Z"
+		},
+		{
+			"checksumSHA1": "hK4POSb6q8utNbjmIIiSQiwgobA=",
+			"path": "github.com/raintank/metrictank/mdata/chunk",
+			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
+			"revisionTime": "2017-08-31T15:46:53Z"
+		},
+		{
 			"checksumSHA1": "z8tyaX1kWYzQELcDNg/sPZtMnbs=",
 			"path": "github.com/raintank/metrictank/stats",
 			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
 			"revisionTime": "2017-06-01T08:43:28Z"
+		},
+		{
+			"checksumSHA1": "s9JuMhR0PcshihIiHbwcVzPI/EU=",
+			"path": "github.com/raintank/metrictank/util",
+			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
+			"revisionTime": "2017-08-31T15:46:53Z"
 		},
 		{
 			"checksumSHA1": "YP5MOKpfFQiS6F12th9I8hlI5EE=",
@@ -256,12 +265,6 @@
 			"path": "golang.org/x/crypto/pbkdf2",
 			"revision": "e1a4589e7d3ea14a3352255d04b6f1a418845e5e",
 			"revisionTime": "2017-05-23T23:42:09Z"
-		},
-		{
-			"checksumSHA1": "0rKHZVlseYn90YkiSIsMKrSBtxA=",
-			"path": "golang.org/x/sys/unix",
-			"revision": "9c60d1c508f5134d1ca726b4641db998f2523357",
-			"revisionTime": "2015-09-01T11:51:02Z"
 		},
 		{
 			"checksumSHA1": "3omqeYpo6tkP7q8f3bfzX6uYem8=",
