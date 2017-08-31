@@ -2,6 +2,7 @@ package graphite
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
@@ -9,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/raintank/tsdb-gw/util"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/macaron.v1"
@@ -34,11 +36,15 @@ func NewProxyRetrytransport() *proxyRetryTransport {
 }
 
 func (t *proxyRetryTransport) RoundTrip(outreq *http.Request) (*http.Response, error) {
+	span := opentracing.SpanFromContext(outreq.Context())
+	span = span.Tracer().StartSpan("graphiteProxy.RoundTrip", opentracing.ChildOf(span.Context()))
+	defer span.Finish()
+
 	attempts := 0
 	var res *http.Response
+	var err error
 	hasBody := false
 	var body []byte
-	var err error
 	if outreq.Body != nil {
 		body, err = ioutil.ReadAll(outreq.Body)
 		if err != nil {
@@ -52,7 +58,15 @@ func (t *proxyRetryTransport) RoundTrip(outreq *http.Request) (*http.Response, e
 		if hasBody {
 			outreq.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 		}
+		attempt_span := span.Tracer().StartSpan(fmt.Sprintf("attempt %d", attempts), opentracing.ChildOf(span.Context()))
+		carrier := opentracing.HTTPHeadersCarrier(outreq.Header)
+		err = opentracing.GlobalTracer().Inject(attempt_span.Context(), opentracing.HTTPHeaders, carrier)
+		if err != nil {
+			log.Error(3, "CLU failed to inject span into headers: %s", err)
+		}
+
 		res, err = t.transport.RoundTrip(outreq)
+		attempt_span.Finish()
 		if err == nil {
 			break
 		}
@@ -64,6 +78,8 @@ func (t *proxyRetryTransport) RoundTrip(outreq *http.Request) (*http.Response, e
 			break
 		}
 	}
+
+	span.SetTag("attempts", attempts)
 	return res, err
 }
 
