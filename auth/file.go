@@ -46,12 +46,15 @@ func NewFileAuth() *FileAuth {
 	keys := conf.GetSections()
 
 	for _, key := range keys {
-		orgId, ok := conf.GetInt(key, "orgId")
+		if key == "" {
+			continue
+		}
+		orgId, ok := conf.GetInt(key, "orgid")
 		if !ok {
 			log.Error(3, "auth.file: no orgId defined for key %s", key)
 			continue
 		}
-		isAdmin, _ := conf.GetBool(key, "isAdmin")
+		isAdmin, _ := conf.GetBool(key, "isadmin")
 		a.keys[key] = &User{
 			OrgId:   orgId,
 			IsAdmin: isAdmin,
