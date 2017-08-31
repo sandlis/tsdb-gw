@@ -39,6 +39,7 @@ func InitApi() *Api {
 	m := macaron.New()
 	m.Use(macaron.Recovery())
 	m.Use(macaron.Renderer())
+	m.Use(Tracer())
 
 	// define our own listner so we can call Close on it
 	l, err := net.Listen("tcp", *addr)

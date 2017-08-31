@@ -20,6 +20,7 @@ import (
 	"github.com/raintank/tsdb-gw/metric_publish"
 	"github.com/raintank/tsdb-gw/metrictank"
 	"github.com/raintank/tsdb-gw/usage"
+	"github.com/raintank/tsdb-gw/util"
 	"github.com/raintank/worldping-api/pkg/log"
 )
 
@@ -45,6 +46,9 @@ var (
 
 	tsdbStatsEnabled = flag.Bool("tsdb-stats-enabled", false, "enable collecting usage stats")
 	tsdbStatsAddr    = flag.String("tsdb-stats-addr", "localhost:2004", "tsdb-usage server address")
+
+	tracingEnabled = flag.Bool("tracing-enabled", false, "enable/disable distributed opentracing via jaeger")
+	tracingAddr    = flag.String("tracing-addr", "localhost:6831", "address of the jaeger agent to send data to")
 )
 
 func main() {
@@ -105,6 +109,12 @@ func main() {
 		}
 	}
 
+	_, traceCloser, err := util.GetTracer(*tracingEnabled, *tracingAddr)
+	if err != nil {
+		log.Fatal(4, "Could not initialize jaeger tracer: %s", err.Error())
+	}
+	defer traceCloser.Close()
+
 	metric_publish.Init(*broker)
 	event_publish.Init(*broker)
 
@@ -117,7 +127,7 @@ func main() {
 	if err := elasticsearch.Init(*elasticsearchUrl, *esIndex); err != nil {
 		log.Fatal(4, err.Error())
 	}
-	inputs := make([]Stopable, 0)
+	inputs := make([]Stoppable, 0)
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
@@ -129,17 +139,17 @@ func main() {
 	<-done
 }
 
-type Stopable interface {
+type Stoppable interface {
 	Stop()
 }
 
-func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopable) {
+func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stoppable) {
 	<-interrupt
 	log.Info("shutdown started.")
 	var wg sync.WaitGroup
 	for _, input := range inputs {
 		wg.Add(1)
-		go func(plugin Stopable) {
+		go func(plugin Stoppable) {
 			plugin.Stop()
 			wg.Done()
 		}(input)
