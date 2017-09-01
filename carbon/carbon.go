@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lomik/go-carbon/persister"
 	m20 "github.com/metrics20/go-metrics20/carbon20"
+	"github.com/raintank/metrictank/conf"
 	"github.com/raintank/metrictank/stats"
 	"github.com/raintank/tsdb-gw/auth"
 	"github.com/raintank/tsdb-gw/metric_publish"
@@ -55,7 +55,7 @@ type Carbon struct {
 	udp        net.Conn
 	tcp        net.Listener
 	listenWg   sync.WaitGroup
-	schemas    persister.WhisperSchemas
+	schemas    *conf.Schemas
 	buf        chan []byte
 	flushWg    sync.WaitGroup
 	authPlugin auth.AuthPlugin
