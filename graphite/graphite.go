@@ -72,9 +72,9 @@ func (t *proxyRetryTransport) RoundTrip(outreq *http.Request) (*http.Response, e
 		}
 
 		if attempts <= 3 {
-			log.Info("graphiteProxy: request failed, will retry. %s", err)
+			log.Info("graphiteProxy: request to %v failed, will retry: %s", outreq.URL.Host, err)
 		} else {
-			log.Error(3, "graphiteProxy: request failed 3 times. Giving up. %s", err)
+			log.Error(3, "graphiteProxy: request to %v failed 3 times. Giving up: %s", outreq.URL.Host, err)
 			break
 		}
 	}
