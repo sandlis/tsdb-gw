@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/golang/glog"
 	"github.com/grafana/globalconf"
@@ -78,6 +79,7 @@ func listen(l net.Listener) {
 			glog.Infof("listener error. %v", err)
 			break
 		}
+		conn.SetReadDeadline(time.Now().Add(2 * time.Minute))
 		// Handle connections in a new goroutine.
 		wg.Add(1)
 		go handleRequest(conn, shutdown, &wg)
