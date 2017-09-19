@@ -11,8 +11,7 @@ import (
 )
 
 func GetTracer(enabled bool, addr string) (opentracing.Tracer, io.Closer, error) {
-	// Sample configuration for testing. Use constant sampling to sample every trace
-	// and enable LogSpan to log every span via configured Logger.
+	//  We use constant sampling to sample every trace, until we need better
 	cfg := jaegercfg.Configuration{
 		Disabled: !enabled,
 		Sampler: &jaegercfg.SamplerConfig{
@@ -20,7 +19,7 @@ func GetTracer(enabled bool, addr string) (opentracing.Tracer, io.Closer, error)
 			Param: 1,
 		},
 		Reporter: &jaegercfg.ReporterConfig{
-			LogSpans:           true,
+			LogSpans:           false,
 			LocalAgentHostPort: addr,
 		},
 	}
