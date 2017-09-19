@@ -79,7 +79,6 @@ func listen(l net.Listener) {
 			glog.Infof("listener error. %v", err)
 			break
 		}
-		conn.SetReadDeadline(time.Now().Add(2 * time.Minute))
 		// Handle connections in a new goroutine.
 		wg.Add(1)
 		go handleRequest(conn, shutdown, &wg)
@@ -106,6 +105,7 @@ func handleRequest(conn net.Conn, shutdown chan struct{}, wg *sync.WaitGroup) {
 	r := bufio.NewReaderSize(conn, 4096)
 	var org int64
 	for {
+		conn.SetReadDeadline(time.Now().Add(2 * time.Minute))
 		buf, _, err := r.ReadLine()
 		if err != nil {
 			if err == io.EOF {
