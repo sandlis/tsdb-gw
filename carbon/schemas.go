@@ -30,19 +30,7 @@ func parseMetric(buf []byte, schemas *conf.Schemas, orgId int) (*schema.MetricDa
 		return nil, fmt.Errorf(errFmt3Fields, msg)
 	}
 
-	metric := strings.SplitN(elements[0], ";", 2)
-
-	tags := []string{}
-
-	if len(metric) > 1 {
-		for _, v := range strings.Split(metric[1], ";") {
-			if v != "" && strings.Contains(v, "=") && v[0] != '=' {
-				tags = append(tags, v)
-			} else {
-				return nil, fmt.Errorf(errFmt, msg, "unable to format tag")
-			}
-		}
-	}
+	name := elements[0]
 
 	val, err := strconv.ParseFloat(elements[1], 64)
 	if err != nil {
@@ -54,25 +42,19 @@ func parseMetric(buf []byte, schemas *conf.Schemas, orgId int) (*schema.MetricDa
 		return nil, fmt.Errorf(errFmt, msg, err)
 	}
 
-	_, s := schemas.Match(metric[0], 0)
+	_, s := schemas.Match(name, 0)
 	md := metricPool.Get()
 	*md = schema.MetricData{
-		Name:     metric[0],
-		Metric:   metric[0],
+		Name:     name,
+		Metric:   name,
 		Interval: s.Retentions[0].SecondsPerPoint,
 		Value:    val,
 		Unit:     "unknown",
 		Time:     int64(timestamp),
 		Mtype:    "gauge",
-		Tags:     tags,
+		Tags:     []string{},
 		OrgId:    orgId,
 	}
 	md.SetId()
-
-	err = md.Validate()
-	if err != nil {
-		return nil, err
-
-	}
 	return md, nil
 }
