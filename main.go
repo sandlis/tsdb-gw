@@ -17,6 +17,7 @@ import (
 	"github.com/raintank/tsdb-gw/graphite"
 	"github.com/raintank/tsdb-gw/metric_publish"
 	"github.com/raintank/tsdb-gw/metrictank"
+	"github.com/raintank/tsdb-gw/prometheus"
 	"github.com/raintank/tsdb-gw/usage"
 	"github.com/raintank/tsdb-gw/util"
 	"github.com/raintank/worldping-api/pkg/log"
@@ -124,7 +125,7 @@ func main() {
 
 	log.Info("starting up")
 	done := make(chan struct{})
-	inputs = append(inputs, api.InitApi(), carbon.InitCarbon())
+	inputs = append(inputs, api.InitApi(), carbon.InitCarbon(), prometheus.InitPrometheusWriter())
 	go handleShutdown(done, interrupt, inputs)
 
 	<-done
