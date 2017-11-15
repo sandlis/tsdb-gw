@@ -150,7 +150,7 @@ func (p *PrometheusWriter) flush() {
 							Interval: s.Retentions[0].SecondsPerPoint,
 							Value:    sample.Value,
 							Unit:     "unknown",
-							Time:     (sample.Timestamp * 1000),
+							Time:     (sample.Timestamp / 1000),
 							Mtype:    "gauge",
 							Tags:     tagSet,
 							OrgId:    orgID,
