@@ -14,8 +14,6 @@ import (
 	"github.com/raintank/metrictank/stats"
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/carbon"
-	"github.com/raintank/tsdb-gw/elasticsearch"
-	"github.com/raintank/tsdb-gw/event_publish"
 	"github.com/raintank/tsdb-gw/graphite"
 	"github.com/raintank/tsdb-gw/metric_publish"
 	"github.com/raintank/tsdb-gw/metrictank"
@@ -38,11 +36,8 @@ var (
 	statsInterval   = flag.Int("stats-interval", 10, "interval in seconds to send statistics")
 	statsBufferSize = flag.Int("stats-buffer-size", 20000, "how many messages (holding all measurements from one interval) to buffer up in case graphite endpoint is unavailable.")
 
-	graphiteUrl      = flag.String("graphite-url", "http://localhost:8080", "graphite-api address")
-	metrictankUrl    = flag.String("metrictank-url", "http://localhost:6060", "metrictank address")
-	worldpingUrl     = flag.String("worldping-url", "", "worldping-api address")
-	elasticsearchUrl = flag.String("elasticsearch-url", "http://localhost:9200", "elasticsearch server address")
-	esIndex          = flag.String("es-index", "events", "elasticsearch index name")
+	graphiteUrl   = flag.String("graphite-url", "http://localhost:8080", "graphite-api address")
+	metrictankUrl = flag.String("metrictank-url", "http://localhost:6060", "metrictank address")
 
 	tsdbStatsEnabled = flag.Bool("tsdb-stats-enabled", false, "enable collecting usage stats")
 	tsdbStatsAddr    = flag.String("tsdb-stats-addr", "localhost:2004", "tsdb-usage server address")
@@ -116,15 +111,11 @@ func main() {
 	defer traceCloser.Close()
 
 	metric_publish.Init(*broker)
-	event_publish.Init(*broker)
 
-	if err := graphite.Init(*graphiteUrl, *worldpingUrl); err != nil {
+	if err := graphite.Init(*graphiteUrl); err != nil {
 		log.Fatal(4, err.Error())
 	}
 	if err := metrictank.Init(*metrictankUrl); err != nil {
-		log.Fatal(4, err.Error())
-	}
-	if err := elasticsearch.Init(*elasticsearchUrl, *esIndex); err != nil {
 		log.Fatal(4, err.Error())
 	}
 	inputs := make([]Stoppable, 0)

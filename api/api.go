@@ -92,9 +92,7 @@ func (a *Api) InitRoutes(m *macaron.Macaron) {
 	m.Get("/", index)
 	m.Post("/metrics/delete", a.Auth(), MetrictankProxy)
 	m.Post("/metrics", a.Auth(), Metrics)
-	m.Post("/events", a.Auth(), Events)
 	m.Any("/graphite/*", a.Auth(), GraphiteProxy)
-	m.Any("/elasticsearch/*", a.Auth(), ElasticsearchProxy)
 }
 
 func index(ctx *macaron.Context) {
