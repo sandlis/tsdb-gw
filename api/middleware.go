@@ -206,7 +206,9 @@ func Tracer() macaron.Handler {
 		ext.HTTPUrl.Set(span, macCtx.Req.URL.String())
 		ext.Component.Set(span, "tsdb-gw/api")
 
-		macCtx.Req = macaron.Request{macCtx.Req.WithContext(opentracing.ContextWithSpan(macCtx.Req.Context(), span))}
+		macCtx.Req = macaron.Request{
+			Request: macCtx.Req.WithContext(opentracing.ContextWithSpan(macCtx.Req.Context(), span)),
+		}
 		macCtx.Resp = &TracingResponseWriter{
 			ResponseWriter: macCtx.Resp,
 		}
