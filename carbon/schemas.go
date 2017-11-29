@@ -37,11 +37,17 @@ func parseMetric(buf []byte, schemas *conf.Schemas, orgId int) (*schema.MetricDa
 
 	if len(metric) > 1 {
 		for _, v := range metric[1:] {
-			if v != "" && strings.Contains(v, "=") && v[0] != '=' {
-				tags = append(tags, v)
-			} else {
-				return nil, fmt.Errorf(errFmt, msg, "unable to format tag")
+			tagset := strings.Split(v, "=")
+			if len(tagset) != 2 {
+				return nil, fmt.Errorf(errFmt, msg, "unable to parse tag, more than one '=' character")
 			}
+			if tagset[0] == "" {
+				return nil, fmt.Errorf(errFmt, msg, "unable to parse tag, no key")
+			}
+			if tagset[1] == "" {
+				return nil, fmt.Errorf(errFmt, msg, "unable to parse tag, no value")
+			}
+			tags = append(tags, v)
 		}
 	}
 
