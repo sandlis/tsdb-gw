@@ -87,7 +87,7 @@ func Test_parseMetric(t *testing.T) {
 		{
 			name: "no key tag metric",
 			args: args{
-				buf:     []byte("test.metric.value;=1 10 10"),
+				buf:     []byte("test.metric.value;=test 10 10"),
 				schemas: &schemas,
 				orgID:   1,
 			},
@@ -96,11 +96,13 @@ func Test_parseMetric(t *testing.T) {
 		{
 			name: "no value tag metric",
 			args: args{
-				buf:     []byte("test.metric.value;1= 10 10"),
+				buf:     []byte("test.metric.value;tag1= 10 10"),
 				schemas: &schemas,
 				orgID:   1,
 			},
-			wantErr: true,
+			wantName: "test.metric.value",
+			wantTags: []string{"tag1="},
+			wantErr:  false,
 		},
 	}
 	for _, tt := range tests {

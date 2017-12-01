@@ -2,12 +2,19 @@ package carbon
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/raintank/metrictank/conf"
 	"gopkg.in/raintank/schema.v1"
 )
+
+var tagMatcher *regexp.Regexp
+
+func init() {
+	tagMatcher = regexp.MustCompile("^[^;=]+=[^;]*$")
+}
 
 func getSchemas(file string) (*conf.Schemas, error) {
 	schemas, err := conf.ReadSchemas(file)
@@ -37,15 +44,8 @@ func parseMetric(buf []byte, schemas *conf.Schemas, orgId int) (*schema.MetricDa
 
 	if len(metric) > 1 {
 		for _, v := range metric[1:] {
-			tagset := strings.Split(v, "=")
-			if len(tagset) != 2 {
-				return nil, fmt.Errorf(errFmt, msg, "unable to parse tag, more than one '=' character")
-			}
-			if tagset[0] == "" {
-				return nil, fmt.Errorf(errFmt, msg, "unable to parse tag, no key")
-			}
-			if tagset[1] == "" {
-				return nil, fmt.Errorf(errFmt, msg, "unable to parse tag, no value")
+			if !tagMatcher.MatchString(v) {
+				return nil, fmt.Errorf(errFmt, msg, "unable to parse tag")
 			}
 			tags = append(tags, v)
 		}
