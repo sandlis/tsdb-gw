@@ -22,11 +22,11 @@ func Init(metrictankUrl string) error {
 	return err
 }
 
-func ProxyDelete(orgId int) *httputil.ReverseProxy {
+func Proxy(orgId int, path string) *httputil.ReverseProxy {
 	director := func(req *http.Request) {
 		req.URL.Scheme = MetrictankUrl.Scheme
 		req.URL.Host = MetrictankUrl.Host
-		req.URL.Path = util.JoinUrlFragments(MetrictankUrl.Path, "/metrics/delete")
+		req.URL.Path = util.JoinUrlFragments(MetrictankUrl.Path, path)
 		req.Header.Del("X-Org-Id")
 		req.Header.Add("X-Org-Id", strconv.FormatInt(int64(orgId), 10))
 	}

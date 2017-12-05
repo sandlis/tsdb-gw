@@ -90,8 +90,10 @@ func (a *Api) InitRoutes(m *macaron.Macaron) {
 	m.Use(RequestStats())
 
 	m.Get("/", index)
-	m.Post("/metrics/delete", a.Auth(), MetrictankProxy)
+	m.Post("/metrics/delete", a.Auth(), MetrictankProxy("/metrics/delete"))
 	m.Post("/metrics", a.Auth(), Metrics)
+	m.Get("/metrics/index.json", a.Auth(), MetrictankProxy("/metrics/index.json"))
+	m.Get("/graphite/metrics/index.json", a.Auth(), MetrictankProxy("/metrics/index.json"))
 	m.Any("/graphite/*", a.Auth(), GraphiteProxy)
 }
 
