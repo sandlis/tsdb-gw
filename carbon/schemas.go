@@ -32,15 +32,14 @@ func parseMetric(buf []byte, schemas *conf.Schemas, orgId int) (*schema.MetricDa
 
 	metric := strings.Split(elements[0], ";")
 	name := metric[0]
-
 	var tags []string
 
 	if len(metric) > 1 {
-		for _, v := range metric[1:] {
+		tags = metric[1:]
+		for _, v := range tags {
 			if v == "" || !strings.Contains(v, "=") || v[0] == '=' {
 				return nil, fmt.Errorf(errFmt, msg, "unable to parse tag")
 			}
-			tags = append(tags, v)
 		}
 	}
 
