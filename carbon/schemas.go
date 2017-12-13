@@ -30,7 +30,15 @@ func parseMetric(buf []byte, schemas *conf.Schemas, orgId int) (*schema.MetricDa
 		return nil, fmt.Errorf(errFmt3Fields, msg)
 	}
 
-	name := elements[0]
+	metric := strings.Split(elements[0], ";")
+	name := metric[0]
+
+	tags := metric[1:]
+	for _, v := range tags {
+		if v == "" || !strings.Contains(v, "=") || v[0] == '=' {
+			return nil, fmt.Errorf(errFmt, msg, "unable to parse tag")
+		}
+	}
 
 	val, err := strconv.ParseFloat(elements[1], 64)
 	if err != nil {
@@ -52,9 +60,10 @@ func parseMetric(buf []byte, schemas *conf.Schemas, orgId int) (*schema.MetricDa
 		Unit:     "unknown",
 		Time:     int64(timestamp),
 		Mtype:    "gauge",
-		Tags:     []string{},
+		Tags:     tags,
 		OrgId:    orgId,
 	}
 	md.SetId()
+
 	return md, nil
 }
