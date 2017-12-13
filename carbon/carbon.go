@@ -237,7 +237,7 @@ func (c *Carbon) flush() {
 			}
 			md, err := parseMetric(parts[1], c.schemas, user.OrgId)
 			if err != nil {
-				log.Error(3, "could not parse metric. %s", err)
+				log.Error(3, "could not parse metric %q: %s", string(parts[1]), err)
 				metricsRejected.Inc()
 				continue
 			}
