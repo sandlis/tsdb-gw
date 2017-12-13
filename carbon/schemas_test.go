@@ -104,6 +104,39 @@ func Test_parseMetric(t *testing.T) {
 			wantTags: []string{"tag1="},
 			wantErr:  false,
 		},
+		{
+			name: "simple metric with two tags, one has multi equals",
+			args: args{
+				buf:     []byte("test.metric.value;tag1=test;tag2=test=foobar 10 10"),
+				schemas: &schemas,
+				orgID:   1,
+			},
+			wantName: "test.metric.value",
+			wantTags: []string{"tag1=test", "tag2=test=foobar"},
+			wantErr:  false,
+		},
+		{
+			name: "simple metric with two tags, one has multi equals 2",
+			args: args{
+				buf:     []byte("test.metric.value;tag1=test;tag2==foobar 10 10"),
+				schemas: &schemas,
+				orgID:   1,
+			},
+			wantName: "test.metric.value",
+			wantTags: []string{"tag1=test", "tag2==foobar"},
+			wantErr:  false,
+		},
+		{
+			name: "simple metric with two tags, one has multi equals 3",
+			args: args{
+				buf:     []byte("test.metric.value;tag1=test;tag2==foobar= 10 10"),
+				schemas: &schemas,
+				orgID:   1,
+			},
+			wantName: "test.metric.value",
+			wantTags: []string{"tag1=test", "tag2==foobar="},
+			wantErr:  false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
