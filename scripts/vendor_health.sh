@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if ! echo $PATH | grep $GOPATH/bin >/dev/null; then
+if grep -q $GOPATH/bin <<< $PATH ; then
   export PATH="$PATH:$GOPATH/bin"
 fi
 
