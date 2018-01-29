@@ -1,0 +1,55 @@
+version: 2
+jobs:
+  build:
+    working_directory: /go/src/github.com/raintank/tsdb-gw
+    docker:
+      - image: circleci/golang:1.9.3
+    steps:
+      - checkout
+      - run: scripts/build.sh
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build
+
+  test:
+    working_directory: /go/src/github.com/raintank/tsdb-gw
+    docker:
+      - image: circleci/golang:1.9.3
+    steps:
+      - checkout
+      - run: go test -v -race ./...
+      - run: go vet ./...
+      - run: scripts/vendor_health.sh
+
+  deploy:
+    docker:
+      - image: circleci/ruby:2.3
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - setup_remote_docker
+      - run: bundle install
+      - run: scripts/build_docker.sh
+      - run: scripts/package.sh
+      - store_artifacts:
+          path: build
+      - deploy:
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              scripts/deploy.sh
+              docker login -u $DOCKER_USER -p $DOCKER_PASS
+              scripts/deploy_docker.sh
+            fi
+
+workflows:
+  version: 2
+  build_accept_deploy:
+    jobs:
+      - build
+      - test
+      - deploy:
+          requires:
+            - build
+            - test

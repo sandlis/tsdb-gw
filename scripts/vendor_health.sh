@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if ! echo $PATH | grep $GOPATH/bin >/dev/null; then
+  export PATH="$PATH:$GOPATH/bin"
+fi
+
 if ! which govendor >/dev/null; then
 	go get github.com/kardianos/govendor || exit 1
 fi
