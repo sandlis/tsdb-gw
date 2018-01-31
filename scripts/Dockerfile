@@ -21,7 +21,6 @@ RUN apk add openssl cyrus-sasl
 
 RUN mkdir -p /etc/raintank
 COPY scripts/config/tsdb.ini /etc/raintank/tsdb.ini
-COPY scripts/config/tsdb.ini /etc/raintank/tsdb.ini
 COPY scripts/entrypoint.sh /usr/bin/
 
 # copy the built binaries from the build image
