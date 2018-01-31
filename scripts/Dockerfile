@@ -4,8 +4,7 @@ ARG BASE_PATH=/go/src/github.com/raintank/tsdb-gw
 FROM golang:1.9.3-alpine3.7 AS build
 ARG BASE_PATH
 
-RUN apk --update add ca-certificates
-RUN apk add build-base linux-headers openssl-dev cyrus-sasl-dev bash python git
+RUN apk --update add build-base linux-headers openssl-dev cyrus-sasl-dev bash python git
 
 COPY . $BASE_PATH/
 RUN $BASE_PATH/scripts/build.sh
