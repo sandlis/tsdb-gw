@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if grep -q $GOPATH/bin <<< $PATH ; then
+if ! grep -q $GOPATH/bin <<< $PATH ; then
   export PATH="$PATH:$GOPATH/bin"
 fi
 
