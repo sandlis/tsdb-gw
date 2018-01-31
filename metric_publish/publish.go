@@ -143,7 +143,7 @@ func Publish(metrics []*schema.MetricData) error {
 
 		msg := &kafka.Message{
 			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: part},
-			Value:          []byte(data),
+			Value:          data,
 			Key:            key,
 		}
 
