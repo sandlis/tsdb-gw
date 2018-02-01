@@ -32,7 +32,7 @@ var (
 	partitionScheme string
 	flushFreq       time.Duration
 	partitioner     Partitioner
-	maxMessages     int
+	maxInFlight     int
 )
 
 type Partitioner interface {
@@ -84,7 +84,7 @@ func init() {
 	flag.BoolVar(&enabled, "metrics-publish", false, "enable metric publishing")
 	flag.StringVar(&partitionScheme, "metrics-partition-scheme", "bySeries", "method used for paritioning metrics. (byOrg|bySeries)")
 	flag.DurationVar(&flushFreq, "metrics-flush-freq", time.Millisecond*50, "The best-effort frequency of flushes to kafka")
-	flag.IntVar(&maxMessages, "metrics-max-messages", 5000, "The maximum number of messages the producer will send in a single request")
+	flag.IntVar(&maxInFlight, "metrics-max-in-flight", 1000000, "The maximum number of messages in flight per broker connection")
 }
 
 func Init(broker string) {
@@ -98,6 +98,7 @@ func Init(broker string) {
 	config.SetKey("message.send.max.retries", "10")
 	config.SetKey("bootstrap.servers", broker)
 	config.SetKey("compression.codec", codec)
+	config.SetKey("max.in.flight", maxInFlight)
 
 	producer, err = kafka.NewProducer(&config)
 	if err != nil {
