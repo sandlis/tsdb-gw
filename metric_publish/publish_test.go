@@ -30,9 +30,14 @@ func TestPartitioning(t *testing.T) {
 		for _, m := range testData {
 			data, _ = m.MarshalMsg(data)
 			res_old, _ := part_old.Partition(&m, partitions)
-			res_new, _, _ := part_new.partition(&m)
+			key_old, _ := part_old.GetPartitionKey(&m, nil)
+			res_new, key_new, _ := part_new.partition(&m)
 			if res_old != res_new {
 				t.Fatalf("results did not match with %d partitions for %+v", partitions, m)
+			}
+
+			if string(key_old) != string(key_new) {
+				t.Fatalf("keys did not match with %d partitions for %+v", partitions, m)
 			}
 		}
 	}
