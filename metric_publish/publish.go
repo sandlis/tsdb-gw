@@ -1,6 +1,7 @@
 package metric_publish
 
 import (
+	"errors"
 	"flag"
 	"hash"
 	"hash/fnv"
@@ -156,20 +157,35 @@ func Publish(metrics []*schema.MetricData) error {
 	}
 
 	msgCount := 0
+	var errCount int
+	var finalErr error
 	for e := range deliveryChan {
 		msgCount++
 
+		err = nil
 		m, ok := e.(*kafka.Message)
 		if !ok || e == nil {
-			sendErrOther.Inc()
+			err = errors.New("Invalid acknowledgement")
 		} else if m.TopicPartition.Error != nil {
+			err = m.TopicPartition.Error
+		}
+
+		if err != nil {
+			errCount++
 			sendErrOther.Inc()
-			log.Error(4, "SendMessages error%v\n", m.TopicPartition.Error)
+			if finalErr == nil {
+				finalErr = err
+			}
 		}
 
 		if msgCount >= len(metrics) {
 			close(deliveryChan)
 		}
+	}
+
+	if finalErr != nil {
+		log.Error(4, "Got %d errors when sending %d messages, such as: %s", errCount, len(metrics), finalErr)
+		return finalErr
 	}
 
 	publishDuration.Value(time.Since(pre))
