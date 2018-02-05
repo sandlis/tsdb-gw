@@ -11,6 +11,7 @@ import (
 	p "github.com/raintank/metrictank/cluster/partitioner"
 	"github.com/raintank/metrictank/stats"
 	"github.com/raintank/tsdb-gw/usage"
+	"github.com/raintank/tsdb-gw/util"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/raintank/schema.v1"
 )
@@ -33,6 +34,8 @@ var (
 	flushFreq       time.Duration
 	partitioner     Partitioner
 	maxInFlight     int
+
+	bufferPool = util.NewBufferPool()
 )
 
 type Partitioner interface {
@@ -128,11 +131,13 @@ func Publish(metrics []*schema.MetricData) error {
 		return nil
 	}
 	var err error
+
+	payload := make([]*kafka.Message, len(metrics))
 	pre := time.Now()
 	deliveryChan := make(chan kafka.Event)
 
-	var data []byte
-	for _, metric := range metrics {
+	for i, metric := range metrics {
+		data := bufferPool.Get()
 		data, err = metric.MarshalMsg(data)
 		if err != nil {
 			return err
@@ -143,7 +148,7 @@ func Publish(metrics []*schema.MetricData) error {
 			return err
 		}
 
-		msg := &kafka.Message{
+		payload[i] = &kafka.Message{
 			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: part},
 			Value:          data,
 			Key:            key,
@@ -151,11 +156,20 @@ func Publish(metrics []*schema.MetricData) error {
 
 		messagesSize.Value(len(data))
 
-		err = producer.Produce(msg, deliveryChan)
+		err = producer.Produce(payload[i], deliveryChan)
 		if err != nil {
 			return err
 		}
 	}
+
+	// return buffers to the bufferPool
+	defer func() {
+		var buf []byte
+		for _, msg := range payload {
+			buf = msg.Value
+			bufferPool.Put(buf)
+		}
+	}()
 
 	msgCount := 0
 	var errCount int
