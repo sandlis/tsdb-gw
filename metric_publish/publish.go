@@ -131,8 +131,8 @@ func Publish(metrics []*schema.MetricData) error {
 	pre := time.Now()
 	deliveryChan := make(chan kafka.Event)
 
+	var data []byte
 	for _, metric := range metrics {
-		var data []byte
 		data, err = metric.MarshalMsg(data)
 		if err != nil {
 			return err
@@ -159,13 +159,14 @@ func Publish(metrics []*schema.MetricData) error {
 
 	msgCount := 0
 	var errCount int
-	var finalErr error
+	var firstErr error
 	for e := range deliveryChan {
 		msgCount++
 
 		err = nil
 		m, ok := e.(*kafka.Message)
 		if !ok || e == nil {
+			log.Error(4, "unexpected delivery report of type %T: %v", e, e)
 			err = errors.New("Invalid acknowledgement")
 		} else if m.TopicPartition.Error != nil {
 			err = m.TopicPartition.Error
@@ -174,8 +175,8 @@ func Publish(metrics []*schema.MetricData) error {
 		if err != nil {
 			errCount++
 			sendErrOther.Inc()
-			if finalErr == nil {
-				finalErr = err
+			if firstErr == nil {
+				firstErr = err
 			}
 		}
 
@@ -184,9 +185,9 @@ func Publish(metrics []*schema.MetricData) error {
 		}
 	}
 
-	if finalErr != nil {
-		log.Error(4, "Got %d errors when sending %d messages, such as: %s", errCount, len(metrics), finalErr)
-		return finalErr
+	if firstErr != nil {
+		log.Error(4, "Got %d errors when sending %d messages, the first was: %s", errCount, len(metrics), firstErr)
+		return firstErr
 	}
 
 	publishDuration.Value(time.Since(pre))
