@@ -3,12 +3,9 @@
 set -x
 # Find the directory we exist within
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-cd ${DIR}
+cd ${DIR}/..
 
-VERSION=`git describe --always`
+export GITVERSION=`git describe --always`
 
-mkdir build
-cp ../build/* build/
-
-docker build -t raintank/tsdb-gw:$VERSION .
-docker tag raintank/tsdb-gw:$VERSION raintank/tsdb-gw:latest
+docker build -f scripts/Dockerfile -t raintank/tsdb-gw:$GITVERSION .
+docker tag raintank/tsdb-gw:$GITVERSION raintank/tsdb-gw:latest
