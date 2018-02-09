@@ -1,6 +1,7 @@
 package api
 
 import (
+	"flag"
 	"io/ioutil"
 
 	"github.com/gogo/protobuf/proto"
@@ -15,8 +16,20 @@ import (
 )
 
 var (
-	metricPool = metricpool.NewMetricDataPool()
+	metricPool  = metricpool.NewMetricDataPool()
+	schemas     *conf.Schemas
+	schemasConf string
 )
+
+func init() {
+	var err error
+	flag.StringVar(&schemasConf, "prom-schemas-file", "/etc/storage-schemas.conf", "path to carbon storage-schemas.conf file for prom metrics")
+
+	schemas, err = getSchemas(schemasConf)
+	if err != nil {
+		log.Fatal(4, "failed to load schemas config. %s", err)
+	}
+}
 
 func getSchemas(file string) (*conf.Schemas, error) {
 	schemas, err := conf.ReadSchemas(file)
@@ -51,10 +64,11 @@ func PrometheusWrite(ctx *Context) {
 		}
 
 		buf := make([]*schema.MetricData, 0)
-
 		for _, ts := range req.Timeseries {
 			var name string
 			var tagSet []string
+
+			_, s := schemas.Match(name, 0)
 
 			for _, l := range ts.Labels {
 				if l.Name == model.MetricNameLabel {
@@ -67,14 +81,15 @@ func PrometheusWrite(ctx *Context) {
 				for _, sample := range ts.Samples {
 					md := metricPool.Get()
 					*md = schema.MetricData{
-						Name:   name,
-						Metric: name,
-						Value:  sample.Value,
-						Unit:   "unknown",
-						Time:   (sample.Timestamp / 1000),
-						Mtype:  "gauge",
-						Tags:   tagSet,
-						OrgId:  ctx.OrgId,
+						Name:     name,
+						Metric:   name,
+						Interval: s.Retentions[0].SecondsPerPoint,
+						Value:    sample.Value,
+						Unit:     "unknown",
+						Time:     (sample.Timestamp / 1000),
+						Mtype:    "gauge",
+						Tags:     tagSet,
+						OrgId:    ctx.OrgId,
 					}
 					md.SetId()
 					buf = append(buf, md)
