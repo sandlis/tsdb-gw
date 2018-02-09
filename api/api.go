@@ -95,7 +95,7 @@ func (a *Api) InitRoutes(m *macaron.Macaron) {
 	m.Get("/metrics/index.json", a.Auth(), MetrictankProxy("/metrics/index.json"))
 	m.Get("/graphite/metrics/index.json", a.Auth(), MetrictankProxy("/metrics/index.json"))
 	m.Any("/graphite/*", a.Auth(), GraphiteProxy)
-	m.Any("/prometheus/receive", a.Auth(), PrometheusWrite)
+	m.Any("/prometheus/write", a.Auth(), PrometheusWrite)
 }
 
 func index(ctx *macaron.Context) {
