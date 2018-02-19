@@ -11,10 +11,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/grafana/metrictank/stats"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	otLog "github.com/opentracing/opentracing-go/log"
-	"github.com/raintank/metrictank/stats"
 	"github.com/raintank/tsdb-gw/auth"
 	"github.com/raintank/tsdb-gw/usage"
 	"github.com/raintank/worldping-api/pkg/log"

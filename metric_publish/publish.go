@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
-	p "github.com/raintank/metrictank/cluster/partitioner"
-	"github.com/raintank/metrictank/stats"
+	p "github.com/grafana/metrictank/cluster/partitioner"
+	"github.com/grafana/metrictank/stats"
 	"github.com/raintank/tsdb-gw/usage"
 	"github.com/raintank/tsdb-gw/util"
 	"github.com/raintank/worldping-api/pkg/log"
