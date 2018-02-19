@@ -123,6 +123,12 @@
 			"revisionTime": "2016-06-27T17:00:12Z"
 		},
 		{
+			"checksumSHA1": "wn2shNJMwRZpvuvkf1s7h0wvqHI=",
+			"path": "github.com/gogo/protobuf/proto",
+			"revision": "160de10b2537169b5ae3e7e221d28269ef40d311",
+			"revisionTime": "2018-01-04T10:21:28Z"
+		},
+		{
 			"checksumSHA1": "URsJa4y/sUUw/STmbeYx9EKqaYE=",
 			"path": "github.com/golang/glog",
 			"revision": "44145f04b68cf362d9c4df2182967c2275eaefed",
@@ -169,6 +175,18 @@
 			"path": "github.com/pierrec/xxHash/xxHash32",
 			"revision": "5a004441f897722c627870a981d02b29924215fa",
 			"revisionTime": "2016-01-12T16:53:51Z"
+		},
+		{
+			"checksumSHA1": "YU+/K48IMawQnToO4ETE6a+hhj4=",
+			"path": "github.com/prometheus/common/model",
+			"revision": "2e54d0b93cba2fd133edc32211dcc32c06ef72ca",
+			"revisionTime": "2017-11-17T16:30:51Z"
+		},
+		{
+			"checksumSHA1": "aX06s2EJI0BPloEQOgkK/A08XRc=",
+			"path": "github.com/prometheus/prometheus/prompb",
+			"revision": "a9c93b8918eff08b47bef9dd7ade80dc04ff9d24",
+			"revisionTime": "2018-02-16T13:48:28Z"
 		},
 		{
 			"checksumSHA1": "XEelmF21xs8SaseO6IX++VnXHwI=",
