@@ -4,14 +4,14 @@
 	"package": [
 		{
 			"checksumSHA1": "vPAHn6NQfXwZmzal7YBN93Fnd6I=",
-			"origin": "github.com/raintank/metrictank/vendor/github.com/Dieterbe/artisanalhistogram/hist12h",
+			"origin": "github.com/grafana/metrictank/vendor/github.com/Dieterbe/artisanalhistogram/hist12h",
 			"path": "github.com/Dieterbe/artisanalhistogram/hist12h",
 			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
 			"revisionTime": "2017-06-01T08:43:28Z"
 		},
 		{
 			"checksumSHA1": "1XTRa3K5n8OmWeUBsG8MHyHzDGM=",
-			"origin": "github.com/raintank/metrictank/vendor/github.com/Dieterbe/artisanalhistogram/hist15s",
+			"origin": "github.com/grafana/metrictank/vendor/github.com/Dieterbe/artisanalhistogram/hist15s",
 			"path": "github.com/Dieterbe/artisanalhistogram/hist15s",
 			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
 			"revisionTime": "2017-06-01T08:43:28Z"
@@ -48,28 +48,28 @@
 		},
 		{
 			"checksumSHA1": "vwGGesK6k8uQgnwew609k9Jvcb8=",
-			"origin": "github.com/raintank/metrictank/vendor/github.com/dgryski/go-bits",
+			"origin": "github.com/grafana/metrictank/vendor/github.com/dgryski/go-bits",
 			"path": "github.com/dgryski/go-bits",
 			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
 			"revisionTime": "2017-08-31T15:46:53Z"
 		},
 		{
 			"checksumSHA1": "e4U50WUz2ycziirb3+JAVz3t49w=",
-			"origin": "github.com/raintank/metrictank/vendor/github.com/dgryski/go-linlog",
+			"origin": "github.com/grafana/metrictank/vendor/github.com/dgryski/go-linlog",
 			"path": "github.com/dgryski/go-linlog",
 			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
 			"revisionTime": "2017-06-01T08:43:28Z"
 		},
 		{
 			"checksumSHA1": "bJkM/x02zeuwA6avbGn2yvqjp20=",
-			"origin": "github.com/raintank/metrictank/vendor/github.com/dgryski/go-tsz",
+			"origin": "github.com/grafana/metrictank/vendor/github.com/dgryski/go-tsz",
 			"path": "github.com/dgryski/go-tsz",
 			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
 			"revisionTime": "2017-08-31T15:46:53Z"
 		},
 		{
 			"checksumSHA1": "dn4hgSC9vkkMREpbcoMihPGCA88=",
-			"origin": "github.com/raintank/metrictank/vendor/github.com/dgryski/go-tsz/testdata",
+			"origin": "github.com/grafana/metrictank/vendor/github.com/dgryski/go-tsz/testdata",
 			"path": "github.com/dgryski/go-tsz/testdata",
 			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
 			"revisionTime": "2017-08-31T15:46:53Z"
@@ -207,6 +207,12 @@
 			"revisionTime": "2017-05-23T21:16:22Z"
 		},
 		{
+			"checksumSHA1": "KKmDpHQD1VK6ryXdZFBud8asZ/E=",
+			"path": "github.com/grafana/metrictank/cluster/partitioner",
+			"revision": "442188119462913f5a43c93a90453b17397d9202",
+			"revisionTime": "2018-02-16T14:53:10Z"
+		},
+		{
 			"checksumSHA1": "NtQWChpiBA3CIGvTfp4jBnooBzs=",
 			"path": "github.com/grafana/metrictank/conf",
 			"revision": "442188119462913f5a43c93a90453b17397d9202",
@@ -292,31 +298,31 @@
 		},
 		{
 			"checksumSHA1": "JjEvruL5CkxDFwQFCp6nk7ik864=",
-			"path": "github.com/raintank/metrictank/cluster/partitioner",
+			"path": "github.com/grafana/metrictank/cluster/partitioner",
 			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
 			"revisionTime": "2017-06-01T08:43:28Z"
 		},
 		{
 			"checksumSHA1": "SPHLt6V8DpIwSnSUu8GEd1DxxJ4=",
-			"path": "github.com/raintank/metrictank/conf",
+			"path": "github.com/grafana/metrictank/conf",
 			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
 			"revisionTime": "2017-08-31T15:46:53Z"
 		},
 		{
 			"checksumSHA1": "hK4POSb6q8utNbjmIIiSQiwgobA=",
-			"path": "github.com/raintank/metrictank/mdata/chunk",
+			"path": "github.com/grafana/metrictank/mdata/chunk",
 			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
 			"revisionTime": "2017-08-31T15:46:53Z"
 		},
 		{
 			"checksumSHA1": "z8tyaX1kWYzQELcDNg/sPZtMnbs=",
-			"path": "github.com/raintank/metrictank/stats",
+			"path": "github.com/grafana/metrictank/stats",
 			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
 			"revisionTime": "2017-06-01T08:43:28Z"
 		},
 		{
 			"checksumSHA1": "s9JuMhR0PcshihIiHbwcVzPI/EU=",
-			"path": "github.com/raintank/metrictank/util",
+			"path": "github.com/grafana/metrictank/util",
 			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
 			"revisionTime": "2017-08-31T15:46:53Z"
 		},
