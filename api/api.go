@@ -48,6 +48,7 @@ func InitApi() *Api {
 	}
 	a.l = l
 
+	PrometheusInit()
 	a.InitRoutes(m)
 
 	// write Request logs in Apache Combined Log Format

@@ -16,32 +16,27 @@ import (
 )
 
 var (
-	metricPool  = metricpool.NewMetricDataPool()
-	schemas     *conf.Schemas
-	schemasConf string
+	metricPool = metricpool.NewMetricDataPool()
+	schemas    *conf.Schemas
+	schemaFile = flag.String("prom-schemas-file", "/etc/storage-schemas.conf", "path to carbon storage-schemas.conf file for prom metrics")
+	enabled    = flag.Bool("prometheus-enabled", false, "enable prometheus input")
 )
 
-func init() {
-	var err error
-	flag.StringVar(&schemasConf, "prom-schemas-file", "/etc/storage-schemas.conf", "path to carbon storage-schemas.conf file for prom metrics")
-
-	schemas, err = getSchemas(schemasConf)
-	if err != nil {
-		log.Fatal(4, "failed to load schemas config. %s", err)
+func PrometheusInit() {
+	if !*enabled {
+		return
 	}
-}
-
-func getSchemas(file string) (*conf.Schemas, error) {
-	schemas, err := conf.ReadSchemas(file)
+	log.Info("prometheus input enabled")
+	s, err := conf.ReadSchemas(*schemaFile)
 	if err != nil {
-		return nil, err
+		log.Fatal(4, "failed to load prometheus schemas config. %s", err)
 	}
-	return &schemas, nil
+	schemas = &s
 }
 
 func PrometheusWrite(ctx *Context) {
-	defer ctx.Req.Request.Body.Close()
 	if ctx.Req.Request.Body != nil {
+		defer ctx.Req.Request.Body.Close()
 		compressed, err := ioutil.ReadAll(ctx.Req.Request.Body)
 
 		if err != nil {
