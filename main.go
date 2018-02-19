@@ -11,7 +11,7 @@ import (
 	"syscall"
 
 	"github.com/grafana/globalconf"
-	"github.com/raintank/metrictank/stats"
+	"github.com/grafana/metrictank/stats"
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/carbon"
 	"github.com/raintank/tsdb-gw/graphite"

@@ -3,7 +3,7 @@ package carbon
 import (
 	"testing"
 
-	"github.com/raintank/metrictank/conf"
+	"github.com/grafana/metrictank/conf"
 )
 
 var (
