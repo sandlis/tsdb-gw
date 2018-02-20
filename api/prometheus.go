@@ -16,17 +16,20 @@ import (
 )
 
 var (
-	metricPool = metricpool.NewMetricDataPool()
-	schemas    *conf.Schemas
-	schemaFile = flag.String("prom-schemas-file", "/etc/storage-schemas.conf", "path to carbon storage-schemas.conf file for prom metrics")
-	enabled    = flag.Bool("prometheus-enabled", false, "enable prometheus input")
+	metricPool             = metricpool.NewMetricDataPool()
+	schemas                *conf.Schemas
+	schemaFile             = flag.String("prometheus-schemas-file", "/etc/storage-schemas.conf", "path to carbon storage-schemas.conf file for prom metrics")
+	prometheusWriteEnabled = flag.Bool("prometheus-enabled", false, "enable prometheus input")
 )
 
 func PrometheusInit() {
-	if !*enabled {
+	if !*prometheusWriteEnabled {
 		return
 	}
 	log.Info("prometheus input enabled")
+	if *schemaFile == "" {
+		log.Fatal(4, "no schema file configured for prometheus importer")
+	}
 	s, err := conf.ReadSchemas(*schemaFile)
 	if err != nil {
 		log.Fatal(4, "failed to load prometheus schemas config. %s", err)
@@ -90,7 +93,9 @@ func PrometheusWrite(ctx *Context) {
 					buf = append(buf, md)
 				}
 			} else {
-				log.Warn("prometheus metric received with empty name")
+				log.Error(3, "prometheus metric received with empty name: %v", ts.String())
+				ctx.JSON(400, "metric written without name label")
+				return
 			}
 		}
 
