@@ -11,6 +11,6 @@ const (
 )
 
 const (
-	FormatProbeEventJson Format = iota
-	FormatProbeEventMsgp
+	FormatMetricData Format = iota
+	FormatMetricPoint
 )

@@ -14,6 +14,7 @@ import (
 	"github.com/raintank/tsdb-gw/util"
 	"github.com/raintank/worldping-api/pkg/log"
 	"gopkg.in/raintank/schema.v1"
+	"gopkg.in/raintank/schema.v1/msg"
 )
 
 var (
@@ -31,11 +32,12 @@ var (
 	codec           string
 	enabled         bool
 	partitionScheme string
-	flushFreq       time.Duration
 	partitioner     Partitioner
 	maxInFlight     int
 
 	bufferPool = util.NewBufferPool()
+
+	tracker *Tracker
 )
 
 type Partitioner interface {
@@ -86,7 +88,6 @@ func init() {
 	flag.StringVar(&codec, "metrics-kafka-comp", "snappy", "compression: none|gzip|snappy")
 	flag.BoolVar(&enabled, "metrics-publish", false, "enable metric publishing")
 	flag.StringVar(&partitionScheme, "metrics-partition-scheme", "bySeries", "method used for paritioning metrics. (byOrg|bySeries)")
-	flag.DurationVar(&flushFreq, "metrics-flush-freq", time.Millisecond*50, "The best-effort frequency of flushes to kafka")
 	flag.IntVar(&maxInFlight, "metrics-max-in-flight", 1000000, "The maximum number of messages in flight per broker connection")
 }
 
@@ -94,6 +95,7 @@ func Init(broker string) {
 	if !enabled {
 		return
 	}
+	tracker = NewTracker()
 	var err error
 
 	config := kafka.ConfigMap{}
@@ -102,6 +104,7 @@ func Init(broker string) {
 	config.SetKey("bootstrap.servers", broker)
 	config.SetKey("compression.codec", codec)
 	config.SetKey("max.in.flight", maxInFlight)
+	config.SetKey("queue.buffering.max.ms", "50")
 
 	producer, err = kafka.NewProducer(&config)
 	if err != nil {
@@ -135,10 +138,20 @@ func Publish(metrics []*schema.MetricData) error {
 	payload := make([]*kafka.Message, len(metrics))
 	pre := time.Now()
 	deliveryChan := make(chan kafka.Event)
-
+	fullMsg := make([]string, 0)
 	for i, metric := range metrics {
 		data := bufferPool.Get()
-		data, err = metric.MarshalMsg(data)
+		if tracker.Current(metric.Id) {
+			m := &schema.MetricPoint{
+				Id:    metric.Id,
+				Value: metric.Value,
+				Time:  uint32(metric.Time),
+			}
+			data, err = msg.DataPointToMsg(m, data)
+		} else {
+			fullMsg = append(fullMsg, metric.Id)
+			data, err = msg.DataPointToMsg(metric, data)
+		}
 		if err != nil {
 			return err
 		}
@@ -209,6 +222,9 @@ func Publish(metrics []*schema.MetricData) error {
 	log.Debug("published %d metrics", len(metrics))
 	for _, metric := range metrics {
 		usage.LogDataPoint(metric.Id)
+	}
+	for _, key := range fullMsg {
+		tracker.Store(key)
 	}
 	return nil
 }
