@@ -94,7 +94,7 @@ func PrometheusWrite(ctx *Context) {
 				}
 			} else {
 				log.Error(3, "prometheus metric received with empty name: %v", ts.String())
-				ctx.JSON(400, "invalid metric recieved: __name__ label can not equal \"\"")
+				ctx.JSON(400, "invalid metric received: __name__ label can not equal \"\"")
 				return
 			}
 		}
