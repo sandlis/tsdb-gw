@@ -19,7 +19,7 @@ var (
 	metricPool             = metricpool.NewMetricDataPool()
 	schemas                *conf.Schemas
 	schemaFile             = flag.String("prometheus-schemas-file", "/etc/storage-schemas.conf", "path to carbon storage-schemas.conf file for prom metrics")
-	prometheusWriteEnabled = flag.Bool("prometheus-enabled", false, "enable prometheus input")
+	prometheusWriteEnabled = flag.Bool("prometheus-enabled", true, "enable prometheus input")
 )
 
 func PrometheusInit() {
@@ -94,7 +94,7 @@ func PrometheusWrite(ctx *Context) {
 				}
 			} else {
 				log.Error(3, "prometheus metric received with empty name: %v", ts.String())
-				ctx.JSON(400, "metric written without name label")
+				ctx.JSON(400, "invalid metric recieved: __name__ label can not equal \"\"")
 				return
 			}
 		}
