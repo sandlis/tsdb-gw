@@ -3,9 +3,13 @@ package carbon
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"net"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -38,6 +42,9 @@ var (
 	authPlugin        string
 
 	metricPool = NewMetricDataPool()
+
+	err3Fields = errors.New("need 3 fields")
+	errBadTag  = errors.New("can't parse tag")
 )
 
 func init() {
@@ -71,12 +78,6 @@ func InitCarbon() *Carbon {
 
 	log.Info("Carbon input listening on %s", addr)
 	c.buf = make(chan []byte, bufferSize)
-
-	schemas, err := getSchemas(schemasConf)
-	if err != nil {
-		log.Fatal(4, "failed to load schemas config. %s", err)
-	}
-	c.schemas = schemas
 
 	laddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
@@ -235,7 +236,7 @@ func (c *Carbon) flush() {
 				metricsDroppedAuthFail.Inc()
 				continue
 			}
-			md, err := parseMetric(parts[1], c.schemas, user.OrgId)
+			md, err := parseMetric(parts[1], user.OrgId)
 			if err != nil {
 				log.Error(3, "could not parse metric %q: %s", string(parts[1]), err)
 				metricsRejected.Inc()
@@ -262,4 +263,51 @@ func (b *MetricDataPool) Get() *schema.MetricData {
 
 func (b *MetricDataPool) Put(m *schema.MetricData) {
 	b.pool.Put(m)
+}
+
+// parseMetric parses a buffer into a MetricData message, using the schemas to deduce the interval of the data.
+// The given orgId will be applied to the MetricData
+func parseMetric(buf []byte, orgId int) (*schema.MetricData, error) {
+	msg := strings.TrimSpace(string(buf))
+
+	elements := strings.Fields(msg)
+	if len(elements) != 3 {
+		return nil, err3Fields
+	}
+
+	metric := strings.Split(elements[0], ";")
+	name := metric[0]
+
+	tags := metric[1:]
+	for _, v := range tags {
+		if v == "" || !strings.Contains(v, "=") || v[0] == '=' {
+			return nil, errBadTag
+		}
+	}
+
+	val, err := strconv.ParseFloat(elements[1], 64)
+	if err != nil {
+		return nil, fmt.Errorf("can't parse value: %s", err)
+	}
+
+	timestamp, err := strconv.ParseUint(elements[2], 10, 32)
+	if err != nil {
+		return nil, fmt.Errorf("can't parse timestamp: %s", err)
+	}
+
+	md := metricPool.Get()
+	*md = schema.MetricData{
+		Name:     name,
+		Metric:   name,
+		Interval: -1,
+		Value:    val,
+		Unit:     "unknown",
+		Time:     int64(timestamp),
+		Mtype:    "gauge",
+		Tags:     tags,
+		OrgId:    orgId,
+	}
+	md.SetId()
+
+	return md, nil
 }
