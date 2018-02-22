@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/raintank/metrictank/conf"
+	"github.com/grafana/metrictank/conf"
 	"gopkg.in/raintank/schema.v1"
 )
 

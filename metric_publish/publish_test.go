@@ -3,7 +3,7 @@ package metric_publish
 import (
 	"testing"
 
-	p "github.com/raintank/metrictank/cluster/partitioner"
+	p "github.com/grafana/metrictank/cluster/partitioner"
 	"gopkg.in/raintank/schema.v1"
 )
 

@@ -48,6 +48,7 @@ func InitApi() *Api {
 	}
 	a.l = l
 
+	PrometheusInit()
 	a.InitRoutes(m)
 
 	// write Request logs in Apache Combined Log Format
@@ -95,6 +96,9 @@ func (a *Api) InitRoutes(m *macaron.Macaron) {
 	m.Get("/metrics/index.json", a.Auth(), MetrictankProxy("/metrics/index.json"))
 	m.Get("/graphite/metrics/index.json", a.Auth(), MetrictankProxy("/metrics/index.json"))
 	m.Any("/graphite/*", a.Auth(), GraphiteProxy)
+	if *prometheusWriteEnabled {
+		m.Any("/prometheus/write", a.Auth(), PrometheusWrite)
+	}
 }
 
 func index(ctx *macaron.Context) {
