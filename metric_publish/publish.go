@@ -27,13 +27,14 @@ var (
 	sendErrProducer  = stats.NewCounter32("metrics.send_error.producer")
 	sendErrOther     = stats.NewCounter32("metrics.send_error.other")
 
-	topic           string
-	codec           string
-	enabled         bool
-	partitionScheme string
-	partitioner     Partitioner
-	maxInFlight     int
-	bufferMaxMs     int
+	topic            string
+	codec            string
+	enabled          bool
+	partitionScheme  string
+	partitioner      Partitioner
+	maxInFlight      int
+	bufferMaxMs      int
+	batchNumMessages int
 
 	bufferPool = util.NewBufferPool()
 )
@@ -88,6 +89,7 @@ func init() {
 	flag.StringVar(&partitionScheme, "metrics-partition-scheme", "bySeries", "method used for paritioning metrics. (byOrg|bySeries)")
 	flag.IntVar(&maxInFlight, "metrics-max-in-flight", 1000000, "The maximum number of messages in flight per broker connection")
 	flag.IntVar(&bufferMaxMs, "metrics-buffer-max-ms", 100, "Delay in milliseconds to wait for messages in the producer queue to accumulate before constructing message batches (MessageSets) to transmit to brokers")
+	flag.IntVar(&batchNumMessages, "batch-num-messages", 10000, "Maximum number of messages batched in one MessageSet")
 }
 
 func Init(broker string) {
@@ -103,6 +105,7 @@ func Init(broker string) {
 	config.SetKey("compression.codec", codec)
 	config.SetKey("max.in.flight", maxInFlight)
 	config.SetKey("queue.buffering.max.ms", bufferMaxMs)
+	config.SetKey("batch.num.messages", batchNumMessages)
 
 	producer, err = kafka.NewProducer(&config)
 	if err != nil {
