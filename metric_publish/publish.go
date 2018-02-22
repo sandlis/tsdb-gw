@@ -34,6 +34,7 @@ var (
 	flushFreq       time.Duration
 	partitioner     Partitioner
 	maxInFlight     int
+	bufferMaxMs     int
 
 	bufferPool = util.NewBufferPool()
 )
@@ -88,6 +89,7 @@ func init() {
 	flag.StringVar(&partitionScheme, "metrics-partition-scheme", "bySeries", "method used for paritioning metrics. (byOrg|bySeries)")
 	flag.DurationVar(&flushFreq, "metrics-flush-freq", time.Millisecond*50, "The best-effort frequency of flushes to kafka")
 	flag.IntVar(&maxInFlight, "metrics-max-in-flight", 1000000, "The maximum number of messages in flight per broker connection")
+	flag.IntVar(&bufferMaxMs, "metrics-buffer-max-ms", 100, "Delay in milliseconds to wait for messages in the producer queue to accumulate before constructing message batches (MessageSets) to transmit to brokers")
 }
 
 func Init(broker string) {
@@ -102,6 +104,7 @@ func Init(broker string) {
 	config.SetKey("bootstrap.servers", broker)
 	config.SetKey("compression.codec", codec)
 	config.SetKey("max.in.flight", maxInFlight)
+	config.SetKey("queue.buffering.max.ms", bufferMaxMs)
 
 	producer, err = kafka.NewProducer(&config)
 	if err != nil {
