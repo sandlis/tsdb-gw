@@ -100,6 +100,9 @@ func PrometheusWrite(ctx *Context) {
 		}
 
 		err = metric_publish.Publish(buf)
+		for _, m := range buf {
+			metricPool.Put(m)
+		}
 		if err != nil {
 			log.Error(3, "failed to publish prom write metrics. %s", err)
 			ctx.JSON(500, err)
