@@ -31,7 +31,6 @@ var (
 	codec           string
 	enabled         bool
 	partitionScheme string
-	flushFreq       time.Duration
 	partitioner     Partitioner
 	maxInFlight     int
 	bufferMaxMs     int
@@ -87,7 +86,6 @@ func init() {
 	flag.StringVar(&codec, "metrics-kafka-comp", "snappy", "compression: none|gzip|snappy")
 	flag.BoolVar(&enabled, "metrics-publish", false, "enable metric publishing")
 	flag.StringVar(&partitionScheme, "metrics-partition-scheme", "bySeries", "method used for paritioning metrics. (byOrg|bySeries)")
-	flag.DurationVar(&flushFreq, "metrics-flush-freq", time.Millisecond*50, "The best-effort frequency of flushes to kafka")
 	flag.IntVar(&maxInFlight, "metrics-max-in-flight", 1000000, "The maximum number of messages in flight per broker connection")
 	flag.IntVar(&bufferMaxMs, "metrics-buffer-max-ms", 100, "Delay in milliseconds to wait for messages in the producer queue to accumulate before constructing message batches (MessageSets) to transmit to brokers")
 }
