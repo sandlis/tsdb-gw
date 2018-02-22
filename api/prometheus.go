@@ -11,6 +11,7 @@ import (
 	"github.com/prometheus/prometheus/prompb"
 	"github.com/raintank/tsdb-gw/metric_publish"
 	"github.com/raintank/tsdb-gw/metricpool"
+	"github.com/raintank/tsdb-gw/metrictank"
 	"github.com/raintank/worldping-api/pkg/log"
 	schema "gopkg.in/raintank/schema.v1"
 )
@@ -112,4 +113,10 @@ func PrometheusWrite(ctx *Context) {
 		return
 	}
 	ctx.JSON(400, "no data included in request.")
+}
+
+func PrometheusProxy(c *Context) {
+	proxyPath := c.Params("*")
+	proxy := metrictank.Proxy(c.OrgId, "/prometheus/"+proxyPath)
+	proxy.ServeHTTP(c.Resp, c.Req.Request)
 }
