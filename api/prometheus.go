@@ -66,8 +66,6 @@ func PrometheusWrite(ctx *Context) {
 			var name string
 			var tagSet []string
 
-			_, s := schemas.Match(name, 0)
-
 			for _, l := range ts.Labels {
 				if l.Name == model.MetricNameLabel {
 					name = l.Value
@@ -76,6 +74,8 @@ func PrometheusWrite(ctx *Context) {
 				}
 			}
 			if name != "" {
+				_, s := schemas.Match(name, 0)
+
 				for _, sample := range ts.Samples {
 					md := metricPool.Get()
 					*md = schema.MetricData{
