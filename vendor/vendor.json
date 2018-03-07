@@ -29,24 +29,6 @@
 			"revisionTime": "2017-02-13T07:20:14Z"
 		},
 		{
-			"checksumSHA1": "KmjnydoAbofMieIWm+it5OWERaM=",
-			"path": "github.com/alecthomas/template",
-			"revision": "a0175ee3bccc567396460bf5acd36800cb10c49c",
-			"revisionTime": "2016-04-05T07:15:01Z"
-		},
-		{
-			"checksumSHA1": "3wt0pTXXeS+S93unwhGoLIyGX/Q=",
-			"path": "github.com/alecthomas/template/parse",
-			"revision": "a0175ee3bccc567396460bf5acd36800cb10c49c",
-			"revisionTime": "2016-04-05T07:15:01Z"
-		},
-		{
-			"checksumSHA1": "fCc3grA7vIxfBru7R3SqjcW+oLI=",
-			"path": "github.com/alecthomas/units",
-			"revision": "2efee857e7cfd4f3d0138cc3cbb1b4966962b93a",
-			"revisionTime": "2015-10-22T06:55:26Z"
-		},
-		{
 			"checksumSHA1": "acGG5NV9NBtjspVlWZ86Zzg8pW8=",
 			"path": "github.com/alyu/configparser",
 			"revision": "26b2fe18bee125de2a3090d6fadb7e280e63eba6",
@@ -231,16 +213,40 @@
 			"revisionTime": "2018-02-16T14:53:10Z"
 		},
 		{
+			"checksumSHA1": "JjEvruL5CkxDFwQFCp6nk7ik864=",
+			"path": "github.com/grafana/metrictank/cluster/partitioner",
+			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
+			"revisionTime": "2017-06-01T08:43:28Z"
+		},
+		{
 			"checksumSHA1": "NtQWChpiBA3CIGvTfp4jBnooBzs=",
 			"path": "github.com/grafana/metrictank/conf",
 			"revision": "442188119462913f5a43c93a90453b17397d9202",
 			"revisionTime": "2018-02-16T14:53:10Z"
 		},
 		{
+			"checksumSHA1": "SPHLt6V8DpIwSnSUu8GEd1DxxJ4=",
+			"path": "github.com/grafana/metrictank/conf",
+			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
+			"revisionTime": "2017-08-31T15:46:53Z"
+		},
+		{
 			"checksumSHA1": "p9Pr2HqLt59P0R1ps1x1bpHRlg4=",
 			"path": "github.com/grafana/metrictank/mdata/chunk",
 			"revision": "442188119462913f5a43c93a90453b17397d9202",
 			"revisionTime": "2018-02-16T14:53:10Z"
+		},
+		{
+			"checksumSHA1": "hK4POSb6q8utNbjmIIiSQiwgobA=",
+			"path": "github.com/grafana/metrictank/mdata/chunk",
+			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
+			"revisionTime": "2017-08-31T15:46:53Z"
+		},
+		{
+			"checksumSHA1": "z8tyaX1kWYzQELcDNg/sPZtMnbs=",
+			"path": "github.com/grafana/metrictank/stats",
+			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
+			"revisionTime": "2017-06-01T08:43:28Z"
 		},
 		{
 			"checksumSHA1": "CN8+3osIDyJeSOGhRPgeubTw0Bs=",
@@ -253,6 +259,12 @@
 			"path": "github.com/grafana/metrictank/util",
 			"revision": "442188119462913f5a43c93a90453b17397d9202",
 			"revisionTime": "2018-02-16T14:53:10Z"
+		},
+		{
+			"checksumSHA1": "s9JuMhR0PcshihIiHbwcVzPI/EU=",
+			"path": "github.com/grafana/metrictank/util",
+			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
+			"revisionTime": "2017-08-31T15:46:53Z"
 		},
 		{
 			"checksumSHA1": "SKfhN3KUiSGwVUoveEhICDrzDGo=",
@@ -313,36 +325,6 @@
 			"path": "github.com/raintank/dur",
 			"revision": "783f098260f36002ce9ab0f77dc1a1b344032b42",
 			"revisionTime": "2017-07-09T09:05:02Z"
-		},
-		{
-			"checksumSHA1": "JjEvruL5CkxDFwQFCp6nk7ik864=",
-			"path": "github.com/grafana/metrictank/cluster/partitioner",
-			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
-			"revisionTime": "2017-06-01T08:43:28Z"
-		},
-		{
-			"checksumSHA1": "SPHLt6V8DpIwSnSUu8GEd1DxxJ4=",
-			"path": "github.com/grafana/metrictank/conf",
-			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
-			"revisionTime": "2017-08-31T15:46:53Z"
-		},
-		{
-			"checksumSHA1": "hK4POSb6q8utNbjmIIiSQiwgobA=",
-			"path": "github.com/grafana/metrictank/mdata/chunk",
-			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
-			"revisionTime": "2017-08-31T15:46:53Z"
-		},
-		{
-			"checksumSHA1": "z8tyaX1kWYzQELcDNg/sPZtMnbs=",
-			"path": "github.com/grafana/metrictank/stats",
-			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
-			"revisionTime": "2017-06-01T08:43:28Z"
-		},
-		{
-			"checksumSHA1": "s9JuMhR0PcshihIiHbwcVzPI/EU=",
-			"path": "github.com/grafana/metrictank/util",
-			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
-			"revisionTime": "2017-08-31T15:46:53Z"
 		},
 		{
 			"checksumSHA1": "YP5MOKpfFQiS6F12th9I8hlI5EE=",
@@ -583,12 +565,6 @@
 			"path": "google.golang.org/grpc/transport",
 			"revision": "dfa18343df54bda471a4b53677aa7c0d0df882d1",
 			"revisionTime": "2018-02-15T23:27:11Z"
-		},
-		{
-			"checksumSHA1": "sToCp8GThnMnsBzsHv+L/tBYQrQ=",
-			"path": "gopkg.in/alecthomas/kingpin.v2",
-			"revision": "947dcec5ba9c011838740e680966fd7087a71d0d",
-			"revisionTime": "2017-12-17T18:08:21Z"
 		},
 		{
 			"checksumSHA1": "3omqeYpo6tkP7q8f3bfzX6uYem8=",
