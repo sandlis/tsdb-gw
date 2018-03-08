@@ -1,13 +1,10 @@
 package metric_publish
 
 import (
-	"errors"
 	"flag"
-	"hash"
-	"hash/fnv"
 	"time"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/Shopify/sarama"
 	p "github.com/grafana/metrictank/cluster/partitioner"
 	"github.com/grafana/metrictank/stats"
 	"github.com/raintank/tsdb-gw/usage"
@@ -17,8 +14,8 @@ import (
 )
 
 var (
-	config   *kafka.ConfigMap
-	producer *kafka.Producer
+	config   *sarama.Config
+	producer sarama.SyncProducer
 	brokers  []string
 
 	metricsPublished = stats.NewCounter32("metrics.published")
@@ -27,69 +24,38 @@ var (
 	sendErrProducer  = stats.NewCounter32("metrics.send_error.producer")
 	sendErrOther     = stats.NewCounter32("metrics.send_error.other")
 
-	topic            string
-	codec            string
-	enabled          bool
-	partitionScheme  string
-	partitioner      Partitioner
-	maxInFlight      int
-	bufferMaxMs      int
-	batchNumMessages int
+	partitioner     *p.Kafka
+	topic           string
+	codec           string
+	enabled         bool
+	partitionScheme string
+	flushFreq       time.Duration
+	maxMessages     int
 
 	bufferPool = util.NewBufferPool()
 )
-
-type Partitioner interface {
-	partition(schema.PartitionedMetric) (int32, []byte, error)
-}
-
-func NewPartitioner(pCount int32) Partitioner {
-	kafka, err := p.NewKafka(partitionScheme)
-	if err != nil {
-		log.Fatal(4, "failed to initialize partitioner. %s", err)
-	}
-
-	return &partitionerFnv1a{
-		hasher: fnv.New32a(),
-		pCount: pCount,
-		kafka:  kafka,
-	}
-}
-
-type partitionerFnv1a struct {
-	kafka  *p.Kafka
-	hasher hash.Hash32
-	pCount int32
-}
-
-func (p *partitionerFnv1a) partition(m schema.PartitionedMetric) (int32, []byte, error) {
-	key, err := p.kafka.GetPartitionKey(m, nil)
-	if err != nil {
-		return -1, nil, err
-	}
-
-	p.hasher.Reset()
-	_, err = p.hasher.Write(key)
-	if err != nil {
-		return -1, nil, err
-	}
-
-	partition := int32(p.hasher.Sum32()) % p.pCount
-	if partition < 0 {
-		partition = -partition
-	}
-
-	return partition, key, nil
-}
 
 func init() {
 	flag.StringVar(&topic, "metrics-topic", "mdm", "topic for metrics")
 	flag.StringVar(&codec, "metrics-kafka-comp", "snappy", "compression: none|gzip|snappy")
 	flag.BoolVar(&enabled, "metrics-publish", false, "enable metric publishing")
 	flag.StringVar(&partitionScheme, "metrics-partition-scheme", "bySeries", "method used for paritioning metrics. (byOrg|bySeries)")
-	flag.IntVar(&maxInFlight, "metrics-max-in-flight", 1000000, "The maximum number of messages in flight per broker connection")
-	flag.IntVar(&bufferMaxMs, "metrics-buffer-max-ms", 100, "Delay in milliseconds to wait for messages in the producer queue to accumulate before constructing message batches (MessageSets) to transmit to brokers")
-	flag.IntVar(&batchNumMessages, "batch-num-messages", 10000, "Maximum number of messages batched in one MessageSet")
+	flag.DurationVar(&flushFreq, "metrics-flush-freq", time.Millisecond*50, "The best-effort frequency of flushes to kafka")
+	flag.IntVar(&maxMessages, "metrics-max-messages", 5000, "The maximum number of messages the producer will send in a single request")
+}
+
+func getCompression(codec string) sarama.CompressionCodec {
+	switch codec {
+	case "none":
+		return sarama.CompressionNone
+	case "gzip":
+		return sarama.CompressionGZIP
+	case "snappy":
+		return sarama.CompressionSnappy
+	default:
+		log.Fatal(5, "unknown compression codec %q", codec)
+		return 0 // make go compiler happy, needs a return *roll eyes*
+	}
 }
 
 func Init(broker string) {
@@ -97,38 +63,37 @@ func Init(broker string) {
 		return
 	}
 	var err error
+	partitioner, err = p.NewKafka(partitionScheme)
+	if err != nil {
+		log.Fatal(4, "failed to initialize partitioner. %s", err)
+	}
 
-	config := kafka.ConfigMap{}
-	config.SetKey("request.required.acks", "all")
-	config.SetKey("message.send.max.retries", "10")
-	config.SetKey("bootstrap.servers", broker)
-	config.SetKey("compression.codec", codec)
-	config.SetKey("max.in.flight", maxInFlight)
-	config.SetKey("queue.buffering.max.ms", bufferMaxMs)
-	config.SetKey("batch.num.messages", batchNumMessages)
+	// We are looking for strong consistency semantics.
+	// Because we don't change the flush settings, sarama will try to produce messages
+	// as fast as possible to keep latency low.
+	config := sarama.NewConfig()
+	config.Producer.RequiredAcks = sarama.WaitForAll // Wait for all in-sync replicas to ack the message
+	config.Producer.Retry.Max = 10                   // Retry up to 10 times to produce the message
+	config.Producer.Compression = getCompression(codec)
+	config.Producer.Return.Successes = true
+	config.Producer.Flush.Frequency = flushFreq
+	config.Producer.Flush.MaxMessages = maxMessages
+	err = config.Validate()
+	if err != nil {
+		log.Fatal(4, "failed to validate kafka config. %s", err)
+	}
 
-	producer, err = kafka.NewProducer(&config)
+	brokers = []string{broker}
+
+	producer, err = sarama.NewSyncProducer(brokers, config)
 	if err != nil {
 		log.Fatal(4, "failed to initialize kafka producer. %s", err)
 	}
-
-	meta, err := producer.GetMetadata(&topic, false, 30000)
-	if err != nil {
-		log.Fatal(4, "failed to initialize kafka partitioner. %s", err)
-	}
-
-	var t kafka.TopicMetadata
-	var ok bool
-	if t, ok = meta.Topics[topic]; !ok {
-		log.Fatal(4, "failed to get metadata about topic %s", topic)
-	}
-
-	partitioner = NewPartitioner(int32(len(t.Partitions)))
 }
 
 func Publish(metrics []*schema.MetricData) error {
 	if producer == nil {
-		log.Debug("dropping %d metrics as publishing is disabled", len(metrics))
+		log.Debug("droping %d metrics as publishing is disabled", len(metrics))
 		return nil
 	}
 	if len(metrics) == 0 {
@@ -136,9 +101,8 @@ func Publish(metrics []*schema.MetricData) error {
 	}
 	var err error
 
-	payload := make([]*kafka.Message, len(metrics))
+	payload := make([]*sarama.ProducerMessage, len(metrics))
 	pre := time.Now()
-	deliveryChan := make(chan kafka.Event)
 
 	for i, metric := range metrics {
 		data := bufferPool.Get()
@@ -147,67 +111,38 @@ func Publish(metrics []*schema.MetricData) error {
 			return err
 		}
 
-		part, key, err := partitioner.partition(metric)
+		key, err := partitioner.GetPartitionKey(metric, nil)
 		if err != nil {
 			return err
 		}
-
-		payload[i] = &kafka.Message{
-			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: part},
-			Value:          data,
-			Key:            key,
+		payload[i] = &sarama.ProducerMessage{
+			Key:   sarama.ByteEncoder(key),
+			Topic: topic,
+			Value: sarama.ByteEncoder(data),
 		}
-
 		messagesSize.Value(len(data))
-
-		err = producer.Produce(payload[i], deliveryChan)
-		if err != nil {
-			return err
-		}
 	}
-
 	// return buffers to the bufferPool
 	defer func() {
 		var buf []byte
 		for _, msg := range payload {
-			buf = msg.Value
+			buf, _ = msg.Value.Encode()
 			bufferPool.Put(buf)
 		}
 	}()
-
-	msgCount := 0
-	var errCount int
-	var firstErr error
-	for e := range deliveryChan {
-		msgCount++
-
-		err = nil
-		m, ok := e.(*kafka.Message)
-		if !ok || e == nil {
-			log.Error(4, "unexpected delivery report of type %T: %v", e, e)
-			err = errors.New("Invalid acknowledgement")
-		} else if m.TopicPartition.Error != nil {
-			err = m.TopicPartition.Error
-		}
-
-		if err != nil {
-			errCount++
-			sendErrOther.Inc()
-			if firstErr == nil {
-				firstErr = err
+	err = producer.SendMessages(payload)
+	if err != nil {
+		if errors, ok := err.(sarama.ProducerErrors); ok {
+			sendErrProducer.Add(len(errors))
+			for i := 0; i < 10 && i < len(errors); i++ {
+				log.Error(4, "SendMessages ProducerError %d/%d: %s", i, len(errors), errors[i].Error())
 			}
+		} else {
+			sendErrOther.Inc()
+			log.Error(4, "SendMessages error: %s", err.Error())
 		}
-
-		if msgCount >= len(metrics) {
-			close(deliveryChan)
-		}
+		return err
 	}
-
-	if firstErr != nil {
-		log.Error(4, "Got %d errors when sending %d messages, the first was: %s", errCount, len(metrics), firstErr)
-		return firstErr
-	}
-
 	publishDuration.Value(time.Since(pre))
 	metricsPublished.Add(len(metrics))
 	log.Debug("published %d metrics", len(metrics))

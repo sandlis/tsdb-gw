@@ -29,24 +29,6 @@
 			"revisionTime": "2017-02-13T07:20:14Z"
 		},
 		{
-			"checksumSHA1": "KmjnydoAbofMieIWm+it5OWERaM=",
-			"path": "github.com/alecthomas/template",
-			"revision": "a0175ee3bccc567396460bf5acd36800cb10c49c",
-			"revisionTime": "2016-04-05T07:15:01Z"
-		},
-		{
-			"checksumSHA1": "3wt0pTXXeS+S93unwhGoLIyGX/Q=",
-			"path": "github.com/alecthomas/template/parse",
-			"revision": "a0175ee3bccc567396460bf5acd36800cb10c49c",
-			"revisionTime": "2016-04-05T07:15:01Z"
-		},
-		{
-			"checksumSHA1": "fCc3grA7vIxfBru7R3SqjcW+oLI=",
-			"path": "github.com/alecthomas/units",
-			"revision": "2efee857e7cfd4f3d0138cc3cbb1b4966962b93a",
-			"revisionTime": "2015-10-22T06:55:26Z"
-		},
-		{
 			"checksumSHA1": "acGG5NV9NBtjspVlWZ86Zzg8pW8=",
 			"path": "github.com/alyu/configparser",
 			"revision": "26b2fe18bee125de2a3090d6fadb7e280e63eba6",
@@ -583,12 +565,6 @@
 			"path": "google.golang.org/grpc/transport",
 			"revision": "dfa18343df54bda471a4b53677aa7c0d0df882d1",
 			"revisionTime": "2018-02-15T23:27:11Z"
-		},
-		{
-			"checksumSHA1": "sToCp8GThnMnsBzsHv+L/tBYQrQ=",
-			"path": "gopkg.in/alecthomas/kingpin.v2",
-			"revision": "947dcec5ba9c011838740e680966fd7087a71d0d",
-			"revisionTime": "2017-12-17T18:08:21Z"
 		},
 		{
 			"checksumSHA1": "3omqeYpo6tkP7q8f3bfzX6uYem8=",
