@@ -31,10 +31,11 @@ var (
 	codec            string
 	enabled          bool
 	partitionScheme  string
-	partitioner      Partitioner
 	maxInFlight      int
 	bufferMaxMs      int
 	batchNumMessages int
+	partitionCount   int32
+	kafkaPartitioner *p.Kafka
 
 	bufferPool = util.NewBufferPool()
 )
@@ -43,27 +44,18 @@ type Partitioner interface {
 	partition(schema.PartitionedMetric) (int32, []byte, error)
 }
 
-func NewPartitioner(pCount int32) Partitioner {
-	kafka, err := p.NewKafka(partitionScheme)
-	if err != nil {
-		log.Fatal(4, "failed to initialize partitioner. %s", err)
-	}
-
+func NewPartitioner() Partitioner {
 	return &partitionerFnv1a{
 		hasher: fnv.New32a(),
-		pCount: pCount,
-		kafka:  kafka,
 	}
 }
 
 type partitionerFnv1a struct {
-	kafka  *p.Kafka
 	hasher hash.Hash32
-	pCount int32
 }
 
 func (p *partitionerFnv1a) partition(m schema.PartitionedMetric) (int32, []byte, error) {
-	key, err := p.kafka.GetPartitionKey(m, nil)
+	key, err := kafkaPartitioner.GetPartitionKey(m, nil)
 	if err != nil {
 		return -1, nil, err
 	}
@@ -74,7 +66,7 @@ func (p *partitionerFnv1a) partition(m schema.PartitionedMetric) (int32, []byte,
 		return -1, nil, err
 	}
 
-	partition := int32(p.hasher.Sum32()) % p.pCount
+	partition := int32(p.hasher.Sum32()) % partitionCount
 	if partition < 0 {
 		partition = -partition
 	}
@@ -123,7 +115,11 @@ func Init(broker string) {
 		log.Fatal(4, "failed to get metadata about topic %s", topic)
 	}
 
-	partitioner = NewPartitioner(int32(len(t.Partitions)))
+	partitionCount = int32(len(t.Partitions))
+	kafkaPartitioner, err = p.NewKafka(partitionScheme)
+	if err != nil {
+		log.Fatal(4, "failed to initialize partitioner. %s", err)
+	}
 }
 
 func Publish(metrics []*schema.MetricData) error {
@@ -139,6 +135,7 @@ func Publish(metrics []*schema.MetricData) error {
 	payload := make([]*kafka.Message, len(metrics))
 	pre := time.Now()
 	deliveryChan := make(chan kafka.Event)
+	partitioner := NewPartitioner()
 
 	for i, metric := range metrics {
 		data := bufferPool.Get()
