@@ -5,6 +5,7 @@ import (
 	"flag"
 	"hash"
 	"hash/fnv"
+	"sync"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
@@ -37,7 +38,8 @@ var (
 	partitionCount   int32
 	kafkaPartitioner *p.Kafka
 
-	bufferPool = util.NewBufferPool()
+	bufferPool      = util.NewBufferPool()
+	partitionerPool sync.Pool
 )
 
 type Partitioner interface {
@@ -120,6 +122,10 @@ func Init(broker string) {
 	if err != nil {
 		log.Fatal(4, "failed to initialize partitioner. %s", err)
 	}
+
+	partitionerPool = sync.Pool{
+		New: func() interface{} { return NewPartitioner() },
+	}
 }
 
 func Publish(metrics []*schema.MetricData) error {
@@ -135,7 +141,7 @@ func Publish(metrics []*schema.MetricData) error {
 	payload := make([]*kafka.Message, len(metrics))
 	pre := time.Now()
 	deliveryChan := make(chan kafka.Event)
-	partitioner := NewPartitioner()
+	partitioner := partitionerPool.Get().(Partitioner)
 
 	for i, metric := range metrics {
 		data := bufferPool.Get()
@@ -162,6 +168,8 @@ func Publish(metrics []*schema.MetricData) error {
 			return err
 		}
 	}
+
+	partitionerPool.Put(partitioner)
 
 	// return buffers to the bufferPool
 	defer func() {
