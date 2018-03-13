@@ -21,17 +21,16 @@ func TestPartitioning(t *testing.T) {
 		{Name: "name10"},
 	}
 
-	part_old, _ := p.NewKafka("bySeries")
+	kafkaPartitioner, _ = p.NewKafka("bySeries")
 
 	var data []byte
-	kafkaPartitioner, _ = p.NewKafka(partitionScheme)
 	part_new := NewPartitioner()
 
 	for partitionCount = 1; partitionCount <= 64; partitionCount++ {
 		for _, m := range testData {
 			data, _ = m.MarshalMsg(data)
-			res_old, _ := part_old.Partition(&m, partitionCount)
-			key_old, _ := part_old.GetPartitionKey(&m, nil)
+			res_old, _ := kafkaPartitioner.Partition(&m, partitionCount)
+			key_old, _ := kafkaPartitioner.GetPartitionKey(&m, nil)
 			res_new, key_new, _ := part_new.partition(&m)
 			if res_old != res_new {
 				t.Fatalf("results did not match with %d partitionCount for %+v", partitionCount, m)

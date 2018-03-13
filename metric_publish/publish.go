@@ -36,6 +36,9 @@ var (
 	bufferMaxMs      int
 	batchNumMessages int
 	partitionCount   int32
+	// partitioner only needs to be initialized once since its configuration
+	// won't change during runtime and a single instance can be used by many
+	// threads
 	kafkaPartitioner *p.Kafka
 
 	bufferPool      = util.NewBufferPool()
