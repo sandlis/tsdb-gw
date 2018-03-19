@@ -9,8 +9,7 @@ type Metric struct {
 
 type PutRequest []Metric
 
-func (m Metric) FormatTags() []string {
-	tagArray := make([]string, 0)
+func (m Metric) FormatTags(tagArray []string) []string {
 	for t, v := range m.Tags {
 		tagArray = append(tagArray, t+"="+v)
 	}

@@ -42,7 +42,8 @@ func OpenTSDBWrite(ctx *Context) {
 			log.Error(3, "Read Error, %v", err)
 			return
 		}
-		buf := make([]*schema.MetricData, 0)
+
+		var buf []*schema.MetricData
 		for _, ts := range req {
 			_, s := schemas.Match(ts.Metric, 0)
 			md := metricPool.Get()
@@ -54,16 +55,16 @@ func OpenTSDBWrite(ctx *Context) {
 				Unit:     "unknown",
 				Time:     ts.Timestamp,
 				Mtype:    "gauge",
-				Tags:     ts.FormatTags(),
+				Tags:     ts.FormatTags(md.Tags),
 				OrgId:    ctx.OrgId,
 			}
 			md.SetId()
 			buf = append(buf, md)
-
 		}
 
 		err = metric_publish.Publish(buf)
 		for _, m := range buf {
+			m.Tags = m.Tags[:0]
 			metricPool.Put(m)
 		}
 		if err != nil {
