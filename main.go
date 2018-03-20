@@ -14,6 +14,7 @@ import (
 	"github.com/grafana/metrictank/stats"
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/carbon"
+	"github.com/raintank/tsdb-gw/cortex"
 	"github.com/raintank/tsdb-gw/graphite"
 	"github.com/raintank/tsdb-gw/metric_publish"
 	"github.com/raintank/tsdb-gw/metrictank"
@@ -38,6 +39,8 @@ var (
 
 	graphiteUrl   = flag.String("graphite-url", "http://localhost:8080", "graphite-api address")
 	metrictankUrl = flag.String("metrictank-url", "http://localhost:6060", "metrictank address")
+
+	cortexUrl = flag.String("cortex-url", "http://localhost:9000", "cortex address")
 
 	tsdbStatsEnabled = flag.Bool("tsdb-stats-enabled", false, "enable collecting usage stats")
 	tsdbStatsAddr    = flag.String("tsdb-stats-addr", "localhost:2004", "tsdb-usage server address")
@@ -116,6 +119,9 @@ func main() {
 		log.Fatal(4, err.Error())
 	}
 	if err := metrictank.Init(*metrictankUrl); err != nil {
+		log.Fatal(4, err.Error())
+	}
+	if err := cortex.Init(*cortexUrl); err != nil {
 		log.Fatal(4, err.Error())
 	}
 	inputs := make([]Stoppable, 0)
