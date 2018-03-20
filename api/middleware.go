@@ -92,6 +92,17 @@ func (a *Api) Auth() macaron.Handler {
 	}
 }
 
+func (a *Api) CortexHeader() macaron.Handler {
+	return func(ctx *Context) {
+		if ctx.OrgId > 0 {
+			ctx.Req.Request.Header.Add("X-Scope-OrgID", strconv.FormatInt(int64(ctx.OrgId), 10))
+		} else {
+			log.Error(3, "org %v does not exist", ctx.OrgId)
+			ctx.JSON(400, fmt.Sprintf("org %v does not exist", ctx.OrgId))
+		}
+	}
+}
+
 func getApiKey(c *Context) (string, error) {
 	header := c.Req.Header.Get("Authorization")
 	parts := strings.SplitN(header, " ", 2)

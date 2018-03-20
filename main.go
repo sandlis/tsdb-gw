@@ -40,8 +40,6 @@ var (
 	graphiteUrl   = flag.String("graphite-url", "http://localhost:8080", "graphite-api address")
 	metrictankUrl = flag.String("metrictank-url", "http://localhost:6060", "metrictank address")
 
-	cortexUrl = flag.String("cortex-url", "http://localhost:9000", "cortex address")
-
 	tsdbStatsEnabled = flag.Bool("tsdb-stats-enabled", false, "enable collecting usage stats")
 	tsdbStatsAddr    = flag.String("tsdb-stats-addr", "localhost:2004", "tsdb-usage server address")
 
@@ -121,7 +119,7 @@ func main() {
 	if err := metrictank.Init(*metrictankUrl); err != nil {
 		log.Fatal(4, err.Error())
 	}
-	if err := cortex.Init(*cortexUrl); err != nil {
+	if err := cortex.Init(); err != nil {
 		log.Fatal(4, err.Error())
 	}
 	inputs := make([]Stoppable, 0)
