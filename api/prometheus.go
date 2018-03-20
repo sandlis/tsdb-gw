@@ -17,14 +17,14 @@ import (
 )
 
 var (
-	metricPool             = metricpool.NewMetricDataPool()
-	schemas                *conf.Schemas
-	schemaFile             = flag.String("prometheus-schemas-file", "/etc/storage-schemas.conf", "path to carbon storage-schemas.conf file for prom metrics")
-	prometheusWriteEnabled = flag.Bool("prometheus-enabled", true, "enable prometheus input")
+	metricPool               = metricpool.NewMetricDataPool()
+	schemas                  *conf.Schemas
+	schemaFile               = flag.String("prometheus-schemas-file", "/etc/storage-schemas.conf", "path to carbon storage-schemas.conf file for prom metrics")
+	prometheusMTWriteEnabled = flag.Bool("prometheus-mt-enabled", false, "enable prometheus input for metrictank")
 )
 
-func PrometheusInit() {
-	if !*prometheusWriteEnabled {
+func PrometheusMTInit() {
+	if !*prometheusMTWriteEnabled {
 		return
 	}
 	log.Info("prometheus input enabled")
@@ -38,7 +38,7 @@ func PrometheusInit() {
 	schemas = &s
 }
 
-func PrometheusWrite(ctx *Context) {
+func PrometheusMTWrite(ctx *Context) {
 	if ctx.Req.Request.Body != nil {
 		defer ctx.Req.Request.Body.Close()
 		compressed, err := ioutil.ReadAll(ctx.Req.Request.Body)

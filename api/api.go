@@ -48,7 +48,7 @@ func InitApi() *Api {
 	}
 	a.l = l
 
-	PrometheusInit()
+	PrometheusMTInit()
 	a.InitRoutes(m)
 
 	// write Request logs in Apache Combined Log Format
@@ -96,8 +96,8 @@ func (a *Api) InitRoutes(m *macaron.Macaron) {
 	m.Get("/metrics/index.json", a.Auth(), MetrictankProxy("/metrics/index.json"))
 	m.Get("/graphite/metrics/index.json", a.Auth(), MetrictankProxy("/metrics/index.json"))
 	m.Any("/graphite/*", a.Auth(), GraphiteProxy)
-	if *prometheusWriteEnabled {
-		m.Any("/prometheus/write", a.Auth(), PrometheusWrite)
+	if *prometheusMTWriteEnabled {
+		m.Any("/prometheus/write", a.Auth(), PrometheusMTWrite)
 	}
 	m.Any("/prometheus/*", a.Auth(), PrometheusProxy)
 	m.Post("/opentsdb/api/put", a.Auth(), OpenTSDBWrite)
