@@ -1,7 +1,7 @@
 package auth
 
 import (
-	gAuth "github.com/raintank/raintank-apps/pkg/auth"
+	"github.com/raintank/tsdb-gw/auth/gAuth"
 )
 
 type GrafanaComAuth struct {
