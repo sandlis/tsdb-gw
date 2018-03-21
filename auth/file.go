@@ -3,6 +3,7 @@ package auth
 import (
 	"flag"
 	"path"
+	"strings"
 
 	ini "github.com/glacjay/goini"
 	"github.com/raintank/worldping-api/pkg/log"
@@ -17,6 +18,7 @@ example:
 [ahLaibi7Ee]
 orgId = 1
 isAdmin = true
+instances = 1,2,5,6
 
 [ubi5ZahD6l]
 orgId = 23
@@ -24,8 +26,9 @@ isAdmin = false
 -------------------
 */
 type FileAuth struct {
-	keys     map[string]*User //map auth key to orgId
-	filePath string
+	keys        map[string]*User //map auth key to orgId
+	instanceMap map[string]int
+	filePath    string
 }
 
 var filePath string
@@ -59,6 +62,13 @@ func NewFileAuth() *FileAuth {
 			OrgId:   orgId,
 			IsAdmin: isAdmin,
 		}
+		instances, _ := conf.GetString(key, "instances")
+		if !ok {
+			continue
+		}
+		for _, i := range strings.Split(instances, ",") {
+			a.instanceMap[i] = orgId
+		}
 	}
 	if len(a.keys) == 0 {
 		log.Fatal(4, "no auth credentials found in auth-file.")
@@ -74,6 +84,31 @@ func (a *FileAuth) Auth(userKey string) (*User, error) {
 	user, ok := a.keys[userKey]
 	if !ok {
 		return nil, ErrInvalidKey
+	}
+
+	return user, nil
+}
+
+func (a *FileAuth) InstanceAuth(userKey string, instanceID string) (*User, error) {
+	if userKey == AdminKey {
+		return AdminUser, nil
+	}
+	user, ok := a.keys[userKey]
+	if !ok {
+		return nil, ErrInvalidKey
+	}
+
+	instanceOrg, ok := a.instanceMap[instanceID]
+	if !ok {
+		return nil, ErrInvalidInstanceID
+	}
+
+	if user.IsAdmin {
+		return user, nil
+	}
+
+	if user.OrgId != instanceOrg {
+		return nil, ErrPermissions
 	}
 
 	return user, nil

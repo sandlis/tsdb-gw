@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	ErrInvalidKey   = errors.New("invalid key")
-	ErrInvalidOrgId = errors.New("invalid orgId")
+	ErrInvalidKey        = errors.New("invalid key")
+	ErrInvalidOrgId      = errors.New("invalid orgId")
+	ErrInvalidInstanceID = errors.New("invalid instanceID")
+	ErrPermissions       = errors.New("user does not have access to that instance")
 
 	AdminKey  string
 	AdminUser = &User{
@@ -29,6 +31,7 @@ type User struct {
 
 type AuthPlugin interface {
 	Auth(userKey string) (*User, error)
+	InstanceAuth(userKey string, instanceID string) (*User, error)
 }
 
 func GetAuthPlugin(name string) AuthPlugin {

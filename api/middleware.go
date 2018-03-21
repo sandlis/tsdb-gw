@@ -92,14 +92,30 @@ func (a *Api) Auth() macaron.Handler {
 	}
 }
 
-func (a *Api) CortexHeader() macaron.Handler {
+func (a *Api) CortexAuth() macaron.Handler {
 	return func(ctx *Context) {
-		if ctx.OrgId > 0 {
-			ctx.Req.Request.Header.Add("X-Scope-OrgID", strconv.FormatInt(int64(ctx.OrgId), 10))
-		} else {
-			log.Error(3, "org %v does not exist", ctx.OrgId)
-			ctx.JSON(400, fmt.Sprintf("org %v does not exist", ctx.OrgId))
+		instanceID, key, err := getInstanceIdAndApiKey(ctx)
+		if err != nil {
+			ctx.JSON(401, "Invalid Authentication header.")
+			return
 		}
+		if key == "" {
+			ctx.JSON(401, "Unauthorized")
+			return
+		}
+		user, err := a.authPlugin.InstanceAuth(key, instanceID)
+		if err != nil {
+			if err == auth.ErrInvalidKey || err == auth.ErrInvalidOrgId {
+				ctx.JSON(401, err.Error())
+				return
+			}
+			log.Error(3, "failed to perform authentication: %q", err.Error())
+			ctx.JSON(500, err.Error())
+			return
+		}
+
+		ctx.User = user
+		ctx.Req.Request.Header.Add("X-Scope-OrgID", instanceID)
 	}
 }
 
@@ -124,6 +140,28 @@ func getApiKey(c *Context) (string, error) {
 	}
 
 	return "", nil
+}
+
+func getInstanceIdAndApiKey(c *Context) (string, string, error) {
+	header := c.Req.Header.Get("Authorization")
+	parts := strings.SplitN(header, " ", 2)
+
+	if len(parts) == 2 && parts[0] == "Basic" {
+		decoded, err := base64.StdEncoding.DecodeString(parts[1])
+		if err != nil {
+			log.Warn("Unable to decode basic auth header.", err)
+			return "", "", err
+		}
+		userAndPass := strings.SplitN(string(decoded), ":", 2)
+
+		if len(userAndPass) != 2 {
+			return "", "", errors.New("unable to decode instance ID from auth header")
+		}
+
+		return userAndPass[0], userAndPass[1], nil
+	}
+
+	return "", "", errors.New("unable to authenticate")
 }
 
 type requestStats struct {
