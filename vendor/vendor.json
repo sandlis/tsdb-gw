@@ -249,16 +249,16 @@
 			"revisionTime": "2018-02-16T14:53:10Z"
 		},
 		{
-			"checksumSHA1": "p9Pr2HqLt59P0R1ps1x1bpHRlg4=",
-			"path": "github.com/grafana/metrictank/mdata/chunk",
-			"revision": "442188119462913f5a43c93a90453b17397d9202",
-			"revisionTime": "2018-02-16T14:53:10Z"
-		},
-		{
 			"checksumSHA1": "hK4POSb6q8utNbjmIIiSQiwgobA=",
 			"path": "github.com/grafana/metrictank/mdata/chunk",
 			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
 			"revisionTime": "2017-08-31T15:46:53Z"
+		},
+		{
+			"checksumSHA1": "p9Pr2HqLt59P0R1ps1x1bpHRlg4=",
+			"path": "github.com/grafana/metrictank/mdata/chunk",
+			"revision": "442188119462913f5a43c93a90453b17397d9202",
+			"revisionTime": "2018-02-16T14:53:10Z"
 		},
 		{
 			"checksumSHA1": "z8tyaX1kWYzQELcDNg/sPZtMnbs=",
@@ -301,6 +301,18 @@
 			"path": "github.com/grpc-ecosystem/grpc-gateway/utilities",
 			"revision": "424b8e1b005f9af4d801572c93d500f056b9754e",
 			"revisionTime": "2018-02-16T16:09:04Z"
+		},
+		{
+			"checksumSHA1": "yHSEfaBkSMHzZUwnKr7m8L3x4gA=",
+			"path": "github.com/jarcoal/httpmock",
+			"revision": "4442edb3db31196622da56482fd8d0fa375fba4d",
+			"revisionTime": "2016-12-10T15:13:36Z"
+		},
+		{
+			"checksumSHA1": "Js/yx9fZ3+wH1wZpHNIxSTMIaCg=",
+			"path": "github.com/jtolds/gls",
+			"revision": "77f18212c9c7edc9bd6a33d383a7b545ce62f064",
+			"revisionTime": "2017-05-03T22:40:06Z"
 		},
 		{
 			"checksumSHA1": "j4CCNdvlzHLOMA7gyS7wzIfwBTw=",
@@ -355,6 +367,12 @@
 			"path": "github.com/rcrowley/go-metrics",
 			"revision": "1f30fe9094a513ce4c700b9a54458bbb0c96996c",
 			"revisionTime": "2016-11-28T21:05:44Z"
+		},
+		{
+			"checksumSHA1": "wVmkBavCZSwHYTDGxa1xOD3RKe0=",
+			"path": "github.com/smartystreets/assertions",
+			"revision": "7678a5452ebea5b7090a6b163f844c133f523da2",
+			"revisionTime": "2018-03-01T16:12:46Z"
 		},
 		{
 			"checksumSHA1": "c71WVAQlpp3r4I+BtTxRz1Cq1Lw=",
