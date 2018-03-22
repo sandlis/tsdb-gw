@@ -15,7 +15,7 @@ var (
 
 	AdminKey  string
 	AdminUser = &User{
-		OrgId:   1,
+		ID:      1,
 		IsAdmin: true,
 	}
 )
@@ -25,19 +25,20 @@ func init() {
 }
 
 type User struct {
-	OrgId   int
+	ID      int
 	IsAdmin bool
 }
 
 type AuthPlugin interface {
-	Auth(userKey string) (*User, error)
-	InstanceAuth(userKey string, instanceID string) (*User, error)
+	Auth(username, password string) (*User, error)
 }
 
 func GetAuthPlugin(name string) AuthPlugin {
 	switch name {
 	case "grafana":
 		return NewGrafanaComAuth()
+	case "cortex":
+		return NewGrafanaInstanceAuth()
 	case "file":
 		return NewFileAuth()
 	default:

@@ -59,7 +59,7 @@ func NewFileAuth() *FileAuth {
 		}
 		isAdmin, _ := conf.GetBool(key, "isadmin")
 		a.keys[key] = &User{
-			OrgId:   orgId,
+			ID:      orgId,
 			IsAdmin: isAdmin,
 		}
 		instances, _ := conf.GetString(key, "instances")
@@ -77,38 +77,13 @@ func NewFileAuth() *FileAuth {
 	return a
 }
 
-func (a *FileAuth) Auth(userKey string) (*User, error) {
-	if userKey == AdminKey {
+func (a *FileAuth) Auth(username, password string) (*User, error) {
+	if password == AdminKey {
 		return AdminUser, nil
 	}
-	user, ok := a.keys[userKey]
+	user, ok := a.keys[password]
 	if !ok {
 		return nil, ErrInvalidKey
-	}
-
-	return user, nil
-}
-
-func (a *FileAuth) InstanceAuth(userKey string, instanceID string) (*User, error) {
-	if userKey == AdminKey {
-		return AdminUser, nil
-	}
-	user, ok := a.keys[userKey]
-	if !ok {
-		return nil, ErrInvalidKey
-	}
-
-	instanceOrg, ok := a.instanceMap[instanceID]
-	if !ok {
-		return nil, ErrInvalidInstanceID
-	}
-
-	if user.IsAdmin {
-		return user, nil
-	}
-
-	if user.OrgId != instanceOrg {
-		return nil, ErrPermissions
 	}
 
 	return user, nil

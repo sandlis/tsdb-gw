@@ -88,7 +88,7 @@ func PrometheusMTWrite(ctx *Context) {
 						Time:     (sample.Timestamp / 1000),
 						Mtype:    "gauge",
 						Tags:     tagSet,
-						OrgId:    ctx.OrgId,
+						OrgId:    ctx.ID,
 					}
 					md.SetId()
 					buf = append(buf, md)
@@ -117,6 +117,6 @@ func PrometheusMTWrite(ctx *Context) {
 
 func PrometheusProxy(c *Context) {
 	proxyPath := c.Params("*")
-	proxy := metrictank.Proxy(c.OrgId, "/prometheus/"+proxyPath)
+	proxy := metrictank.Proxy(c.ID, "/prometheus/"+proxyPath)
 	proxy.ServeHTTP(c.Resp, c.Req.Request)
 }

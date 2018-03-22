@@ -68,7 +68,7 @@ func (a *Api) Auth() macaron.Handler {
 			ctx.JSON(401, "Unauthorized")
 			return
 		}
-		user, err := a.authPlugin.Auth(key)
+		user, err := a.authPlugin.Auth("", key)
 		if err != nil {
 			if err == auth.ErrInvalidKey || err == auth.ErrInvalidOrgId {
 				ctx.JSON(401, err.Error())
@@ -84,7 +84,7 @@ func (a *Api) Auth() macaron.Handler {
 			if header != "" {
 				orgId, err := strconv.ParseInt(header, 10, 64)
 				if err == nil && orgId != 0 {
-					user.OrgId = int(orgId)
+					user.ID = int(orgId)
 				}
 			}
 		}
@@ -103,7 +103,7 @@ func (a *Api) CortexAuth() macaron.Handler {
 			ctx.JSON(401, "Unauthorized")
 			return
 		}
-		user, err := a.authPlugin.InstanceAuth(key, instanceID)
+		user, err := a.authPlugin.Auth(instanceID, key)
 		if err != nil {
 			if err == auth.ErrInvalidKey || err == auth.ErrInvalidOrgId {
 				ctx.JSON(401, err.Error())
@@ -186,7 +186,7 @@ func (r *requestStats) PathStatusCount(ctx *Context, path string, status int) {
 	}
 	r.Unlock()
 	c.Inc()
-	usage.LogRequest(ctx.OrgId, metricKey)
+	usage.LogRequest(ctx.ID, metricKey)
 }
 
 func (r *requestStats) PathLatency(ctx *Context, path string, dur time.Duration) {

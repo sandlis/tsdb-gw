@@ -1,4 +1,4 @@
-package gAuth
+package gcom
 
 import (
 	"encoding/json"

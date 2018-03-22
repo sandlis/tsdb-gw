@@ -5,5 +5,5 @@ import (
 )
 
 func GraphiteProxy(c *Context) {
-	graphite.Proxy(c.OrgId, c.Context)
+	graphite.Proxy(c.ID, c.Context)
 }

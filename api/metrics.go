@@ -63,7 +63,7 @@ func metricsJson(ctx *Context) {
 			}
 		} else {
 			for _, m := range metrics {
-				m.OrgId = ctx.OrgId
+				m.OrgId = ctx.ID
 				if m.Metric == "" {
 					m.Metric = m.Name
 				}
@@ -139,7 +139,7 @@ func metricsBinary(ctx *Context, compressed bool) {
 			}
 		} else {
 			for _, m := range metricData.Metrics {
-				m.OrgId = ctx.OrgId
+				m.OrgId = ctx.ID
 				if m.Metric == "" {
 					m.Metric = m.Name
 				}
