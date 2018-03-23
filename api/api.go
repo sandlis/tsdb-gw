@@ -19,7 +19,6 @@ var (
 	certFile   = flag.String("cert-file", "", "SSL certificate file")
 	keyFile    = flag.String("key-file", "", "SSL key file")
 	authPlugin = flag.String("api-auth-plugin", "grafana", "auth plugin to use. (grafana|file)")
-	backend    = flag.String("api-backend", "metrictank", "backend enabled. (cortex|metrictank)")
 )
 
 type Api struct {
@@ -32,15 +31,10 @@ func InitApi() *Api {
 	if *ssl && (*certFile == "" || *keyFile == "") {
 		log.Fatal(4, "cert-file and key-file must be set when using SSL")
 	}
-	var aPlugin auth.AuthPlugin
-	if *backend == "cortex" {
-		aPlugin = auth.GetAuthPlugin(*backend)
-	} else {
-		aPlugin = auth.GetAuthPlugin(*authPlugin)
-	}
+
 	a := &Api{
 		done:       make(chan struct{}),
-		authPlugin: aPlugin,
+		authPlugin: auth.GetAuthPlugin(*authPlugin),
 	}
 
 	m := macaron.New()
@@ -98,25 +92,18 @@ func (a *Api) InitRoutes(m *macaron.Macaron) {
 	m.Use(RequestStats())
 	m.Get("/", index)
 
-	if *backend == "metrictank" {
-		log.Info("metrictank api enabled")
-		m.Post("/metrics/delete", a.Auth(), MetrictankProxy("/metrics/delete"))
-		m.Post("/metrics", a.Auth(), Metrics)
-		m.Get("/metrics/index.json", a.Auth(), MetrictankProxy("/metrics/index.json"))
-		m.Get("/graphite/metrics/index.json", a.Auth(), MetrictankProxy("/metrics/index.json"))
-		m.Any("/graphite/*", a.Auth(), GraphiteProxy)
-		if *prometheusMTWriteEnabled {
-			m.Any("/prometheus/write", a.Auth(), PrometheusMTWrite)
-		}
-		m.Any("/prometheus/*", a.Auth(), PrometheusProxy)
-		m.Post("/opentsdb/api/put", a.Auth(), OpenTSDBWrite)
+	m.Post("/metrics/delete", a.Auth(), MetrictankProxy("/metrics/delete"))
+	m.Post("/metrics", a.Auth(), Metrics)
+	m.Get("/metrics/index.json", a.Auth(), MetrictankProxy("/metrics/index.json"))
+	m.Get("/graphite/metrics/index.json", a.Auth(), MetrictankProxy("/metrics/index.json"))
+	m.Any("/graphite/*", a.Auth(), GraphiteProxy)
+	if *prometheusMTWriteEnabled {
+		m.Any("/prometheus/write", a.Auth(), PrometheusMTWrite)
 	}
-
-	if *backend == "cortex" {
-		log.Info("cortex api enabled")
-		m.Any("/api/prom/push", a.CortexAuth(), CortexWrite)
-		m.Any("/api/prom/*", a.CortexAuth(), CortexProxy)
-	}
+	m.Any("/prometheus/*", a.Auth(), PrometheusProxy)
+	m.Post("/opentsdb/api/put", a.Auth(), OpenTSDBWrite)
+	m.Any("/api/prom/push", a.CortexAuth(), CortexWrite)
+	m.Any("/api/prom/*", a.CortexAuth(), CortexProxy)
 }
 
 func index(ctx *macaron.Context) {

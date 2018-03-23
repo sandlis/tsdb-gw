@@ -68,7 +68,7 @@ func (a *Api) Auth() macaron.Handler {
 			ctx.JSON(401, "Unauthorized")
 			return
 		}
-		user, err := a.authPlugin.Auth("", key)
+		user, err := a.authPlugin.Auth("api_key", key)
 		if err != nil {
 			if err == auth.ErrInvalidKey || err == auth.ErrInvalidOrgId {
 				ctx.JSON(401, err.Error())

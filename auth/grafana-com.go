@@ -11,7 +11,7 @@ func NewGrafanaComAuth() *GrafanaComAuth {
 	return &GrafanaComAuth{}
 }
 
-func (a *GrafanaComAuth) Auth(username, password string) (*User, error) {
+func (a *GrafanaComAuth) Auth(instanceID, password string) (*User, error) {
 	u, err := gcom.Auth(AdminKey, password)
 	if err != nil {
 		if err == gcom.ErrInvalidApiKey {
@@ -21,6 +21,12 @@ func (a *GrafanaComAuth) Auth(username, password string) (*User, error) {
 			return nil, ErrInvalidOrgId
 		}
 		return nil, err
+	}
+	if instanceID != "api_key" {
+		err = u.CheckInstance(instanceID)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return &User{
 		ID:      int(u.OrgId),
