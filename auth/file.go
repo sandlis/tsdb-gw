@@ -3,11 +3,9 @@ package auth
 import (
 	"flag"
 	"path"
-	"strconv"
-	"strings"
 
-	ini "github.com/glacjay/goini"
 	"github.com/raintank/worldping-api/pkg/log"
+	"gopkg.in/ini.v1"
 )
 
 /*
@@ -16,15 +14,14 @@ the user details associated with that key.
 
 example:
 ------------------
-[org1]
+[aaeipgnq]
 orgId = 1
 isAdmin = true
 
-[org2]
+[wpirgn123]
 orgId = 23
 isAdmin = false
 instances = 1,2,4
-password = wpirgn123
 -------------------
 */
 type FileAuth struct {
@@ -47,42 +44,53 @@ func NewFileAuth() *FileAuth {
 		filePath:    path.Clean(filePath),
 	}
 
-	conf := ini.MustLoad(filePath)
+	conf, err := ini.Load(filePath)
+	if err != nil {
+		log.Fatal(4, "could not load auth file: %v", filePath)
+	}
 
-	orgs := conf.GetSections()
-
-	for _, org := range orgs {
-		if org == "" {
-			continue
-		}
-		password, ok := conf.GetString(org, "password")
-		if !ok {
-			log.Error(3, "auth.file: no password defined for org %s", org)
+	for _, section := range conf.Sections() {
+		if section.Name() == "" || section.Name() == "DEFAULT" {
 			continue
 		}
 
-		orgID, ok := conf.GetInt(org, "orgid")
-		if !ok {
-			var err error
-			orgID, err = strconv.Atoi(org)
+		orgKey, err := section.GetKey("orgId")
+		if err != nil {
+			log.Error(3, "auth.file: no orgID defined for org %s", section.Name())
+			continue
+		}
+
+		orgID, err := orgKey.Int()
+		if err != nil {
+			log.Error(3, "auth.file: orgID '%v' is not a int", orgKey.String())
+			continue
+		}
+
+		var isAdmin bool
+		if section.Haskey("isadmin") {
+			isAdminKey, err := section.GetKey("isadmin")
 			if err != nil {
-				log.Error(3, "auth.file: no orgID defined for org %s", org)
+				log.Error(3, "auth.file: error decoding isadmin: '%v'", err)
 			}
-			log.Debug("orgID not explicitly defined, using section header %v", org)
-			continue
+			isAdmin = isAdminKey.MustBool(false)
 		}
 
-		isAdmin, _ := conf.GetBool(org, "isadmin")
-		a.keys[password] = &User{
+		a.keys[section.Name()] = &User{
 			ID:      orgID,
 			IsAdmin: isAdmin,
 		}
 
-		instances, _ := conf.GetString(org, "instances")
-		if !ok {
+		if !section.Haskey("instances") {
 			continue
 		}
-		for _, i := range strings.Split(instances, ",") {
+
+		instanceKey, err := section.GetKey("instances")
+		if err != nil {
+			log.Error(3, "auth.file: error decoding instances: '%v'", err)
+			continue
+		}
+		instances := instanceKey.Strings(",")
+		for _, i := range instances {
 			a.instanceMap[i] = orgID
 		}
 	}

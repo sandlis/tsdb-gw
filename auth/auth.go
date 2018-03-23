@@ -31,7 +31,7 @@ type User struct {
 
 // AuthPlugins returns whether a api_key is a valid and if the user has access to a certain instance
 type AuthPlugin interface {
-	Auth(instanceID, password string) (*User, error)
+	Auth(username, password string) (*User, error)
 }
 
 func GetAuthPlugin(name string) AuthPlugin {

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
@@ -59,15 +58,22 @@ func RequireAdmin() macaron.Handler {
 
 func (a *Api) Auth() macaron.Handler {
 	return func(ctx *Context) {
-		key, err := getApiKey(ctx)
-		if err != nil {
+		username, key, ok := ctx.Req.BasicAuth()
+		if !ok {
 			ctx.JSON(401, "Invalid Authentication header.")
 			return
 		}
+
 		if key == "" {
 			ctx.JSON(401, "Unauthorized")
 			return
 		}
+
+		if username != "api_key" {
+			ctx.JSON(401, "Unauthorized, Bad Username")
+			return
+		}
+
 		user, err := a.authPlugin.Auth("api_key", key)
 		if err != nil {
 			if err == auth.ErrInvalidKey || err == auth.ErrInvalidOrgId {
@@ -78,6 +84,7 @@ func (a *Api) Auth() macaron.Handler {
 			ctx.JSON(500, err.Error())
 			return
 		}
+
 		// allow admin users to impersonate other orgs.
 		if user.IsAdmin {
 			header := ctx.Req.Header.Get("X-Tsdb-Org")
@@ -94,8 +101,8 @@ func (a *Api) Auth() macaron.Handler {
 
 func (a *Api) CortexAuth() macaron.Handler {
 	return func(ctx *Context) {
-		instanceID, key, err := getInstanceIdAndApiKey(ctx)
-		if err != nil {
+		instanceID, key, ok := ctx.Req.BasicAuth()
+		if !ok {
 			ctx.JSON(401, "Invalid Authentication header.")
 			return
 		}
@@ -115,53 +122,8 @@ func (a *Api) CortexAuth() macaron.Handler {
 		}
 
 		ctx.User = user
-		ctx.Req.Request.Header.Add("X-Scope-OrgID", instanceID)
+		ctx.Req.Request.Header.Set("X-Scope-OrgID", instanceID)
 	}
-}
-
-func getApiKey(c *Context) (string, error) {
-	header := c.Req.Header.Get("Authorization")
-	parts := strings.SplitN(header, " ", 2)
-	if len(parts) == 2 && parts[0] == "Bearer" {
-		key := parts[1]
-		return key, nil
-	}
-
-	if len(parts) == 2 && parts[0] == "Basic" {
-		decoded, err := base64.StdEncoding.DecodeString(parts[1])
-		if err != nil {
-			log.Warn("Unable to decode basic auth header.", err)
-			return "", err
-		}
-		userAndPass := strings.SplitN(string(decoded), ":", 2)
-		if userAndPass[0] == "api_key" {
-			return userAndPass[1], nil
-		}
-	}
-
-	return "", nil
-}
-
-func getInstanceIdAndApiKey(c *Context) (string, string, error) {
-	header := c.Req.Header.Get("Authorization")
-	parts := strings.SplitN(header, " ", 2)
-
-	if len(parts) == 2 && parts[0] == "Basic" {
-		decoded, err := base64.StdEncoding.DecodeString(parts[1])
-		if err != nil {
-			log.Warn("Unable to decode basic auth header.", err)
-			return "", "", err
-		}
-		userAndPass := strings.SplitN(string(decoded), ":", 2)
-
-		if len(userAndPass) != 2 {
-			return "", "", errors.New("unable to decode instance ID from auth header")
-		}
-
-		return userAndPass[0], userAndPass[1], nil
-	}
-
-	return "", "", errors.New("unable to authenticate")
 }
 
 type requestStats struct {

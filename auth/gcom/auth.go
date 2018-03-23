@@ -39,7 +39,7 @@ func (i *int64SliceFlag) String() string {
 var (
 	validTTL      = time.Minute * 5
 	invalidTTL    = time.Second * 30
-	authEndpoint  = "https://grafana.net"
+	authEndpoint  = "https://grafana.com"
 	validOrgIds   = int64SliceFlag{}
 	cache         *AuthCache
 	instanceCache *InstanceAuthCache
