@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/raintank/worldping-api/pkg/log"
 )
 
 type int64SliceFlag []int64
@@ -42,8 +43,6 @@ var (
 	validOrgIds   = int64SliceFlag{}
 	cache         *AuthCache
 	instanceCache *InstanceAuthCache
-
-	Debug = false
 
 	// global HTTP client.  By sharing the client we can take
 	// advantage of keepalives and re-use connections instead
@@ -153,21 +152,13 @@ func Auth(adminKey, keyString string) (*SignedInUser, error) {
 		}, nil
 	}
 
-	// check the cache
-	if Debug {
-		log.Println("Auth: Checking cache for apiKey")
-	}
 	user, cached := cache.Get(keyString)
 	if cached {
 		if user != nil {
-			if Debug {
-				log.Println("Auth: valid key cached")
-			}
+			log.Debug("Auth: valid key cached")
 			return user, nil
 		}
-		if Debug {
-			log.Println("Auth: invalid key cached")
-		}
+		log.Debug("Auth: invalid key cached")
 		return nil, ErrInvalidApiKey
 	}
 
@@ -179,9 +170,7 @@ func Auth(adminKey, keyString string) (*SignedInUser, error) {
 		// if we have an expired cached entry for the user, reset the cache expiration and return that
 		// this allows the service to remain available if grafana.net is unreachable
 		if user != nil {
-			if Debug {
-				log.Printf("Auth: re-caching validKey response for %d seconds", validTTL/time.Second)
-			}
+			log.Debug("Auth: re-caching validKey response for %d seconds", validTTL/time.Second)
 			cache.Set(keyString, user, validTTL)
 			return user, nil
 		}
@@ -191,17 +180,12 @@ func Auth(adminKey, keyString string) (*SignedInUser, error) {
 
 	body, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
-	if Debug {
-		log.Printf("Auth: apiKey check response was: %s", body)
-	}
 
 	if res.StatusCode >= 500 {
 		// if we have an expired cached entry for the user, reset the cache expiration and return that
 		// this allows the service to remain available if grafana.net is unreachable
 		if user != nil {
-			if Debug {
-				log.Printf("Auth: re-caching validKey response for %d seconds", validTTL/time.Second)
-			}
+			log.Debug("Auth: re-caching validKey response for %d seconds", validTTL/time.Second)
 			cache.Set(keyString, user, validTTL)
 			return user, nil
 		}
@@ -211,9 +195,7 @@ func Auth(adminKey, keyString string) (*SignedInUser, error) {
 
 	if res.StatusCode != 200 {
 		// add the invalid key to the cache
-		if Debug {
-			log.Printf("Auth: Caching invalidKey response for %d seconds", invalidTTL/time.Second)
-		}
+		log.Debug("Auth: Caching invalidKey response for %d seconds", invalidTTL/time.Second)
 		cache.Set(keyString, nil, invalidTTL)
 
 		return nil, ErrInvalidApiKey
@@ -243,9 +225,9 @@ func Auth(adminKey, keyString string) (*SignedInUser, error) {
 	}
 
 	// add the user to the cache.
-	if Debug {
-		log.Printf("Auth: Caching validKey response for %d seconds", validTTL/time.Second)
-	}
+
+	log.Debug("Auth: Caching validKey response for %d seconds", validTTL/time.Second)
+
 	cache.Set(keyString, user, validTTL)
 	return user, nil
 }
@@ -253,20 +235,20 @@ func Auth(adminKey, keyString string) (*SignedInUser, error) {
 func (u *SignedInUser) CheckInstance(instanceID string) error {
 	instanceSlug := u.Name + "-" + instanceID
 	// check the cache
-	if Debug {
-		log.Println("Auth: Checking cache for instance")
-	}
+
+	log.Debug("Auth: Checking cache for instance")
+
 	valid, cached := instanceCache.Get(instanceSlug)
 	if cached {
 		if valid {
-			if Debug {
-				log.Println("Auth: valid instance key cached")
-			}
+
+			log.Debug("Auth: valid instance key cached")
+
 			return nil
 		}
-		if Debug {
-			log.Println("Auth: invalid instance key cached")
-		}
+
+		log.Debug("Auth: invalid instance key cached")
+
 		return ErrInvalidInstanceID
 	}
 	payload := url.Values{}
@@ -277,9 +259,9 @@ func (u *SignedInUser) CheckInstance(instanceID string) error {
 		// if we have an expired cached entry for the user, reset the cache expiration and return that
 		// this allows the service to remain available if grafana.net is unreachable
 		if valid {
-			if Debug {
-				log.Printf("Auth: re-caching validKey response for %d seconds", validTTL/time.Second)
-			}
+
+			log.Debug("Auth: re-caching valid instance response for %d seconds", validTTL/time.Second)
+
 			instanceCache.Set(instanceSlug, true, validTTL)
 			return nil
 		}
@@ -294,9 +276,9 @@ func (u *SignedInUser) CheckInstance(instanceID string) error {
 		// if we have an expired cached entry for the user, reset the cache expiration and return that
 		// this allows the service to remain available if grafana.net is unreachable
 		if valid {
-			if Debug {
-				log.Printf("Auth: re-caching validKey response for %d seconds", validTTL/time.Second)
-			}
+
+			log.Debug("Auth: re-caching valid instance response for %d seconds", validTTL/time.Second)
+
 			instanceCache.Set(instanceSlug, true, validTTL)
 			return nil
 		}
@@ -306,17 +288,14 @@ func (u *SignedInUser) CheckInstance(instanceID string) error {
 
 	body, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
-	if Debug {
-		log.Printf("Auth: hosted-metrics response was: %s", body)
-	}
+
+	log.Debug("Auth: hosted-metrics response was: %s", body)
 
 	if res.StatusCode >= 500 {
 		// if we have an expired cached entry for the instanceID, reset the cache expiration and return that
 		// this allows the service to remain available if grafana.net is unreachable
 		if valid {
-			if Debug {
-				log.Printf("Auth: re-caching validKey response for %d seconds", validTTL/time.Second)
-			}
+			log.Debug("Auth: re-caching valid instance response for %d seconds", validTTL/time.Second)
 			instanceCache.Set(instanceSlug, true, validTTL)
 			return nil
 		}
@@ -324,13 +303,10 @@ func (u *SignedInUser) CheckInstance(instanceID string) error {
 		return err
 	}
 
+	// add the invalid instance ID to the cache
 	if res.StatusCode != 200 {
-		// add the invalid key to the cache
-		if Debug {
-			log.Printf("Auth: Caching invalidKey response for %d seconds", invalidTTL/time.Second)
-		}
+		log.Debug("Auth: Caching invalid instance ID response for %d seconds", invalidTTL/time.Second)
 		instanceCache.Set(instanceSlug, false, invalidTTL)
-
 		return ErrInvalidInstanceID
 	}
 
@@ -340,17 +316,13 @@ func (u *SignedInUser) CheckInstance(instanceID string) error {
 		return err
 	}
 
+	// Add instance to the cache
 	if len(instance.Items) < 1 {
-		// add the user to the cache.
-		if Debug {
-			log.Printf("Auth: Caching invalid instance response for %d seconds", validTTL/time.Second)
-		}
+		log.Debug("Auth: Caching invalid instance response for %d seconds", validTTL/time.Second)
 		instanceCache.Set(instanceSlug, false, validTTL)
 	}
 
-	if Debug {
-		log.Printf("Auth: Caching validKey response for %d seconds", validTTL/time.Second)
-	}
+	log.Debug("Auth: Caching valid instance response for %d seconds", validTTL/time.Second)
 
 	instanceCache.Set(instanceSlug, true, validTTL)
 
