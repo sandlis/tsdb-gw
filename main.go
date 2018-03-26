@@ -14,6 +14,7 @@ import (
 	"github.com/grafana/metrictank/stats"
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/carbon"
+	"github.com/raintank/tsdb-gw/cortex"
 	"github.com/raintank/tsdb-gw/graphite"
 	"github.com/raintank/tsdb-gw/metric_publish"
 	"github.com/raintank/tsdb-gw/metrictank"
@@ -116,6 +117,9 @@ func main() {
 		log.Fatal(4, err.Error())
 	}
 	if err := metrictank.Init(*metrictankUrl); err != nil {
+		log.Fatal(4, err.Error())
+	}
+	if err := cortex.Init(); err != nil {
 		log.Fatal(4, err.Error())
 	}
 	inputs := make([]Stoppable, 0)

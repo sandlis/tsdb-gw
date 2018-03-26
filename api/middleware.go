@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
@@ -59,18 +58,25 @@ func RequireAdmin() macaron.Handler {
 
 func (a *Api) Auth() macaron.Handler {
 	return func(ctx *Context) {
-		key, err := getApiKey(ctx)
-		if err != nil {
-			ctx.JSON(401, "Invalid Authentication header.")
-			return
+		username, key, ok := ctx.Req.BasicAuth()
+		if !ok {
+			// no basicAuth, but we also need to check for a Bearer Token
+			header := ctx.Req.Header.Get("Authorization")
+			parts := strings.SplitN(header, " ", 2)
+			if len(parts) == 2 && parts[0] == "Bearer" {
+				key = parts[1]
+				username = "api_key"
+			}
 		}
+
 		if key == "" {
 			ctx.JSON(401, "Unauthorized")
 			return
 		}
-		user, err := a.authPlugin.Auth(key)
+
+		user, err := a.authPlugin.Auth(username, key)
 		if err != nil {
-			if err == auth.ErrInvalidKey || err == auth.ErrInvalidOrgId {
+			if err == auth.ErrInvalidCredentials || err == auth.ErrInvalidOrgId || err == auth.ErrInvalidInstanceID {
 				ctx.JSON(401, err.Error())
 				return
 			}
@@ -78,41 +84,19 @@ func (a *Api) Auth() macaron.Handler {
 			ctx.JSON(500, err.Error())
 			return
 		}
+
 		// allow admin users to impersonate other orgs.
 		if user.IsAdmin {
 			header := ctx.Req.Header.Get("X-Tsdb-Org")
 			if header != "" {
 				orgId, err := strconv.ParseInt(header, 10, 64)
 				if err == nil && orgId != 0 {
-					user.OrgId = int(orgId)
+					user.ID = int(orgId)
 				}
 			}
 		}
 		ctx.User = user
 	}
-}
-
-func getApiKey(c *Context) (string, error) {
-	header := c.Req.Header.Get("Authorization")
-	parts := strings.SplitN(header, " ", 2)
-	if len(parts) == 2 && parts[0] == "Bearer" {
-		key := parts[1]
-		return key, nil
-	}
-
-	if len(parts) == 2 && parts[0] == "Basic" {
-		decoded, err := base64.StdEncoding.DecodeString(parts[1])
-		if err != nil {
-			log.Warn("Unable to decode basic auth header.", err)
-			return "", err
-		}
-		userAndPass := strings.SplitN(string(decoded), ":", 2)
-		if userAndPass[0] == "api_key" {
-			return userAndPass[1], nil
-		}
-	}
-
-	return "", nil
 }
 
 type requestStats struct {
@@ -137,7 +121,7 @@ func (r *requestStats) PathStatusCount(ctx *Context, path string, status int) {
 	}
 	r.Unlock()
 	c.Inc()
-	usage.LogRequest(ctx.OrgId, metricKey)
+	usage.LogRequest(ctx.ID, metricKey)
 }
 
 func (r *requestStats) PathLatency(ctx *Context, path string, dur time.Duration) {

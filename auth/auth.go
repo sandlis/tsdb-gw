@@ -8,12 +8,13 @@ import (
 )
 
 var (
-	ErrInvalidKey   = errors.New("invalid key")
-	ErrInvalidOrgId = errors.New("invalid orgId")
+	ErrInvalidCredentials = errors.New("invalid authentication credentials")
+	ErrInvalidOrgId       = errors.New("invalid orgId")
+	ErrInvalidInstanceID  = errors.New("invalid instanceID")
 
 	AdminKey  string
 	AdminUser = &User{
-		OrgId:   1,
+		ID:      1,
 		IsAdmin: true,
 	}
 )
@@ -23,18 +24,22 @@ func init() {
 }
 
 type User struct {
-	OrgId   int
+	ID      int
 	IsAdmin bool
 }
 
+// AuthPlugin is used to validate access
 type AuthPlugin interface {
-	Auth(userKey string) (*User, error)
+	// Auth returns whether a api_key is a valid and if the user has access to a certain instance
+	Auth(username, password string) (*User, error)
 }
 
 func GetAuthPlugin(name string) AuthPlugin {
 	switch name {
 	case "grafana":
 		return NewGrafanaComAuth()
+	case "grafana-instance":
+		return NewGrafanaComInstanceAuth()
 	case "file":
 		return NewFileAuth()
 	default:

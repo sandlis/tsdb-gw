@@ -213,6 +213,12 @@
 			"revisionTime": "2017-02-15T23:32:05Z"
 		},
 		{
+			"checksumSHA1": "yIkYzW7bzAD81zHyuCNmEj4+oxQ=",
+			"path": "github.com/gopherjs/gopherjs/js",
+			"revision": "82b322028c96512b15077093b16a5f1c7ea897ac",
+			"revisionTime": "2018-03-17T19:13:37Z"
+		},
+		{
 			"checksumSHA1": "/lWfaq/Ok+El1amGaf3wPY5JpUc=",
 			"path": "github.com/gorilla/handlers",
 			"revision": "a4043c62cc2329bacda331d33fc908ab11ef0ec3",
@@ -231,10 +237,28 @@
 			"revisionTime": "2018-02-16T14:53:10Z"
 		},
 		{
+			"checksumSHA1": "JjEvruL5CkxDFwQFCp6nk7ik864=",
+			"path": "github.com/grafana/metrictank/cluster/partitioner",
+			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
+			"revisionTime": "2017-06-01T08:43:28Z"
+		},
+		{
+			"checksumSHA1": "SPHLt6V8DpIwSnSUu8GEd1DxxJ4=",
+			"path": "github.com/grafana/metrictank/conf",
+			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
+			"revisionTime": "2017-08-31T15:46:53Z"
+		},
+		{
 			"checksumSHA1": "NtQWChpiBA3CIGvTfp4jBnooBzs=",
 			"path": "github.com/grafana/metrictank/conf",
 			"revision": "442188119462913f5a43c93a90453b17397d9202",
 			"revisionTime": "2018-02-16T14:53:10Z"
+		},
+		{
+			"checksumSHA1": "hK4POSb6q8utNbjmIIiSQiwgobA=",
+			"path": "github.com/grafana/metrictank/mdata/chunk",
+			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
+			"revisionTime": "2017-08-31T15:46:53Z"
 		},
 		{
 			"checksumSHA1": "p9Pr2HqLt59P0R1ps1x1bpHRlg4=",
@@ -249,10 +273,22 @@
 			"revisionTime": "2018-02-16T14:53:10Z"
 		},
 		{
+			"checksumSHA1": "z8tyaX1kWYzQELcDNg/sPZtMnbs=",
+			"path": "github.com/grafana/metrictank/stats",
+			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
+			"revisionTime": "2017-06-01T08:43:28Z"
+		},
+		{
 			"checksumSHA1": "KWKsNYbKmCJ3v6Bi+AijBpPHMhQ=",
 			"path": "github.com/grafana/metrictank/util",
 			"revision": "442188119462913f5a43c93a90453b17397d9202",
 			"revisionTime": "2018-02-16T14:53:10Z"
+		},
+		{
+			"checksumSHA1": "s9JuMhR0PcshihIiHbwcVzPI/EU=",
+			"path": "github.com/grafana/metrictank/util",
+			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
+			"revisionTime": "2017-08-31T15:46:53Z"
 		},
 		{
 			"checksumSHA1": "SKfhN3KUiSGwVUoveEhICDrzDGo=",
@@ -273,10 +309,28 @@
 			"revisionTime": "2018-02-16T16:09:04Z"
 		},
 		{
+			"checksumSHA1": "yHSEfaBkSMHzZUwnKr7m8L3x4gA=",
+			"path": "github.com/jarcoal/httpmock",
+			"revision": "4442edb3db31196622da56482fd8d0fa375fba4d",
+			"revisionTime": "2016-12-10T15:13:36Z"
+		},
+		{
+			"checksumSHA1": "Js/yx9fZ3+wH1wZpHNIxSTMIaCg=",
+			"path": "github.com/jtolds/gls",
+			"revision": "77f18212c9c7edc9bd6a33d383a7b545ce62f064",
+			"revisionTime": "2017-05-03T22:40:06Z"
+		},
+		{
 			"checksumSHA1": "j4CCNdvlzHLOMA7gyS7wzIfwBTw=",
 			"path": "github.com/metrics20/go-metrics20/carbon20",
 			"revision": "55e770486f161cc83baf4e7178f7bb928dbc5716",
 			"revisionTime": "2017-08-11T09:14:05Z"
+		},
+		{
+			"checksumSHA1": "uG/irJIgifYdc+HC1kF6Gwgn7kU=",
+			"path": "github.com/oxtoacart/bpool",
+			"revision": "4e1c5567d7c2dd59fa4c7c83d34c2f3528b025d6",
+			"revisionTime": "2015-07-12T13:31:11Z"
 		},
 		{
 			"checksumSHA1": "mbhJnsNwGAwkTQH5c2hVRO9YmxA=",
@@ -315,42 +369,6 @@
 			"revisionTime": "2017-07-09T09:05:02Z"
 		},
 		{
-			"checksumSHA1": "JjEvruL5CkxDFwQFCp6nk7ik864=",
-			"path": "github.com/grafana/metrictank/cluster/partitioner",
-			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
-			"revisionTime": "2017-06-01T08:43:28Z"
-		},
-		{
-			"checksumSHA1": "SPHLt6V8DpIwSnSUu8GEd1DxxJ4=",
-			"path": "github.com/grafana/metrictank/conf",
-			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
-			"revisionTime": "2017-08-31T15:46:53Z"
-		},
-		{
-			"checksumSHA1": "hK4POSb6q8utNbjmIIiSQiwgobA=",
-			"path": "github.com/grafana/metrictank/mdata/chunk",
-			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
-			"revisionTime": "2017-08-31T15:46:53Z"
-		},
-		{
-			"checksumSHA1": "z8tyaX1kWYzQELcDNg/sPZtMnbs=",
-			"path": "github.com/grafana/metrictank/stats",
-			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
-			"revisionTime": "2017-06-01T08:43:28Z"
-		},
-		{
-			"checksumSHA1": "s9JuMhR0PcshihIiHbwcVzPI/EU=",
-			"path": "github.com/grafana/metrictank/util",
-			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
-			"revisionTime": "2017-08-31T15:46:53Z"
-		},
-		{
-			"checksumSHA1": "YP5MOKpfFQiS6F12th9I8hlI5EE=",
-			"path": "github.com/raintank/raintank-apps/pkg/auth",
-			"revision": "6bf25870e4795026c75afb6714849f74a0db7007",
-			"revisionTime": "2017-05-23T17:28:40Z"
-		},
-		{
 			"checksumSHA1": "oCMADD0xqElYRIXBgNkBGHXGQyk=",
 			"path": "github.com/raintank/worldping-api/pkg/log",
 			"revision": "7902b21a7c4f303430c83b2c155c57d6d7dca62d",
@@ -361,6 +379,42 @@
 			"path": "github.com/rcrowley/go-metrics",
 			"revision": "1f30fe9094a513ce4c700b9a54458bbb0c96996c",
 			"revisionTime": "2016-11-28T21:05:44Z"
+		},
+		{
+			"checksumSHA1": "wVmkBavCZSwHYTDGxa1xOD3RKe0=",
+			"path": "github.com/smartystreets/assertions",
+			"revision": "7678a5452ebea5b7090a6b163f844c133f523da2",
+			"revisionTime": "2018-03-01T16:12:46Z"
+		},
+		{
+			"checksumSHA1": "v6W3GIQMzr3QSXB2NtBa9X7SwiI=",
+			"path": "github.com/smartystreets/assertions/internal/go-render/render",
+			"revision": "7678a5452ebea5b7090a6b163f844c133f523da2",
+			"revisionTime": "2018-03-01T16:12:46Z"
+		},
+		{
+			"checksumSHA1": "r6FauVdOTFnwYQgrKGFuWUbIAJE=",
+			"path": "github.com/smartystreets/assertions/internal/oglematchers",
+			"revision": "7678a5452ebea5b7090a6b163f844c133f523da2",
+			"revisionTime": "2018-03-01T16:12:46Z"
+		},
+		{
+			"checksumSHA1": "c71WVAQlpp3r4I+BtTxRz1Cq1Lw=",
+			"path": "github.com/smartystreets/goconvey/convey",
+			"revision": "ef6db91d284a0e7badaa1f0c404c30aa7dee3aed",
+			"revisionTime": "2018-02-22T19:45:00Z"
+		},
+		{
+			"checksumSHA1": "6Mgn4H/4vpqYGlaIKZ0UwOmJN0E=",
+			"path": "github.com/smartystreets/goconvey/convey/gotest",
+			"revision": "ef6db91d284a0e7badaa1f0c404c30aa7dee3aed",
+			"revisionTime": "2018-02-22T19:45:00Z"
+		},
+		{
+			"checksumSHA1": "FWDhk37bhAwZ2363D/L2xePwR64=",
+			"path": "github.com/smartystreets/goconvey/convey/reporting",
+			"revision": "ef6db91d284a0e7badaa1f0c404c30aa7dee3aed",
+			"revisionTime": "2018-02-22T19:45:00Z"
 		},
 		{
 			"checksumSHA1": "HN3pLd5cC+QXkX8j8FsCCB3FzSI=",

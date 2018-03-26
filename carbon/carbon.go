@@ -230,13 +230,13 @@ func (c *Carbon) flush() {
 			}
 
 			parts := bytes.SplitN(b, []byte("."), 2)
-			user, err := c.authPlugin.Auth(string(parts[0]))
+			user, err := c.authPlugin.Auth("", string(parts[0]))
 			if err != nil {
 				log.Debug("invalid auth key. %s", b)
 				metricsDroppedAuthFail.Inc()
 				continue
 			}
-			md, err := parseMetric(parts[1], c.schemas, user.OrgId)
+			md, err := parseMetric(parts[1], c.schemas, user.ID)
 			if err != nil {
 				log.Error(3, "could not parse metric %q: %s", string(parts[1]), err)
 				metricsRejected.Inc()

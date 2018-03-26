@@ -18,7 +18,7 @@ var (
 	ssl        = flag.Bool("ssl", false, "use https")
 	certFile   = flag.String("cert-file", "", "SSL certificate file")
 	keyFile    = flag.String("key-file", "", "SSL key file")
-	authPlugin = flag.String("api-auth-plugin", "grafana", "auth plugin to use. (grafana|file)")
+	authPlugin = flag.String("api-auth-plugin", "grafana", "auth plugin to use. (grafana|grafana-instance|file)")
 )
 
 type Api struct {
@@ -31,6 +31,7 @@ func InitApi() *Api {
 	if *ssl && (*certFile == "" || *keyFile == "") {
 		log.Fatal(4, "cert-file and key-file must be set when using SSL")
 	}
+
 	a := &Api{
 		done:       make(chan struct{}),
 		authPlugin: auth.GetAuthPlugin(*authPlugin),
@@ -48,7 +49,7 @@ func InitApi() *Api {
 	}
 	a.l = l
 
-	PrometheusInit()
+	PrometheusMTInit()
 	a.InitRoutes(m)
 
 	// write Request logs in Apache Combined Log Format
@@ -89,18 +90,20 @@ func (a *Api) Stop() {
 func (a *Api) InitRoutes(m *macaron.Macaron) {
 	m.Use(GetContextHandler())
 	m.Use(RequestStats())
-
 	m.Get("/", index)
+
 	m.Post("/metrics/delete", a.Auth(), MetrictankProxy("/metrics/delete"))
 	m.Post("/metrics", a.Auth(), Metrics)
 	m.Get("/metrics/index.json", a.Auth(), MetrictankProxy("/metrics/index.json"))
 	m.Get("/graphite/metrics/index.json", a.Auth(), MetrictankProxy("/metrics/index.json"))
 	m.Any("/graphite/*", a.Auth(), GraphiteProxy)
-	if *prometheusWriteEnabled {
-		m.Any("/prometheus/write", a.Auth(), PrometheusWrite)
+	if *prometheusMTWriteEnabled {
+		m.Any("/prometheus/write", a.Auth(), PrometheusMTWrite)
 	}
 	m.Any("/prometheus/*", a.Auth(), PrometheusProxy)
 	m.Post("/opentsdb/api/put", a.Auth(), OpenTSDBWrite)
+	m.Any("/api/prom/push", a.Auth(), CortexWrite)
+	m.Any("/api/prom/*", a.Auth(), CortexProxy)
 }
 
 func index(ctx *macaron.Context) {

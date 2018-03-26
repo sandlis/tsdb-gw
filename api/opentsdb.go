@@ -56,7 +56,7 @@ func OpenTSDBWrite(ctx *Context) {
 				Time:     ts.Timestamp,
 				Mtype:    "gauge",
 				Tags:     ts.FormatTags(md.Tags),
-				OrgId:    ctx.OrgId,
+				OrgId:    ctx.ID,
 			}
 			md.SetId()
 			buf = append(buf, md)

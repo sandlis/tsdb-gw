@@ -6,7 +6,7 @@ import (
 
 func MetrictankProxy(path string) func(c *Context) {
 	return func(c *Context) {
-		proxy := metrictank.Proxy(c.OrgId, path)
+		proxy := metrictank.Proxy(c.ID, path)
 		proxy.ServeHTTP(c.Resp, c.Req.Request)
 	}
 }
