@@ -37,7 +37,7 @@ func TestAuth(t *testing.T) {
 	Convey("when authenticating with valid Key", t, func() {
 		responder, err := httpmock.NewJsonResponder(200, &testUser)
 		So(err, ShouldBeNil)
-		mockTransport.RegisterResponder("POST", "https://grafana.net/api/api-keys/check", responder)
+		mockTransport.RegisterResponder("POST", "https://grafana.com/api/api-keys/check", responder)
 
 		user, err := Auth("key", "foo")
 		So(err, ShouldBeNil)
@@ -71,7 +71,7 @@ func TestAuth(t *testing.T) {
 		cache.Clear()
 		responder, err := httpmock.NewJsonResponder(200, &testUser)
 		So(err, ShouldBeNil)
-		mockTransport.RegisterResponder("POST", "https://grafana.net/api/api-keys/check", responder)
+		mockTransport.RegisterResponder("POST", "https://grafana.com/api/api-keys/check", responder)
 
 		originalValidOrgIds := validOrgIds
 		defer func() { validOrgIds = originalValidOrgIds }()
@@ -87,7 +87,7 @@ func TestAuth(t *testing.T) {
 		cache.Clear()
 		responder, err := httpmock.NewJsonResponder(200, &testUser)
 		So(err, ShouldBeNil)
-		mockTransport.RegisterResponder("POST", "https://grafana.net/api/api-keys/check", responder)
+		mockTransport.RegisterResponder("POST", "https://grafana.com/api/api-keys/check", responder)
 
 		originalValidOrgIds := validOrgIds
 		defer func() { validOrgIds = originalValidOrgIds }()
@@ -103,7 +103,7 @@ func TestAuth(t *testing.T) {
 		cache.Clear()
 		responder, err := httpmock.NewJsonResponder(200, &testUser)
 		So(err, ShouldBeNil)
-		mockTransport.RegisterResponder("POST", "https://grafana.net/api/api-keys/check", responder)
+		mockTransport.RegisterResponder("POST", "https://grafana.com/api/api-keys/check", responder)
 
 		originalValidOrgIds := validOrgIds
 		defer func() { validOrgIds = originalValidOrgIds }()
@@ -124,7 +124,7 @@ func TestAuth(t *testing.T) {
 		cache.Set("bar", &testUser, 0)
 		responder, err := httpmock.NewJsonResponder(200, &testUser)
 		So(err, ShouldBeNil)
-		mockTransport.RegisterResponder("POST", "https://grafana.net/api/api-keys/check", responder)
+		mockTransport.RegisterResponder("POST", "https://grafana.com/api/api-keys/check", responder)
 
 		// make sure cached item is expired.
 		cuser, valid := cache.Get("bar")
@@ -152,7 +152,7 @@ func TestAuth(t *testing.T) {
 		cache.Set("baz", &testUser, 0)
 		responder, err := httpmock.NewJsonResponder(503, nil)
 		So(err, ShouldBeNil)
-		mockTransport.RegisterResponder("POST", "https://grafana.net/api/api-keys/check", responder)
+		mockTransport.RegisterResponder("POST", "https://grafana.com/api/api-keys/check", responder)
 
 		// make sure cached item is expired.
 		cuser, valid := cache.Get("baz")
@@ -177,7 +177,7 @@ func TestAuth(t *testing.T) {
 	})
 	Convey("When authenticating using expired cache and no g.net response", t, func() {
 		cache.Set("baz", &testUser, 0)
-		mockTransport.RegisterResponder("POST", "https://grafana.net/api/api-keys/check", func(req *http.Request) (*http.Response, error) {
+		mockTransport.RegisterResponder("POST", "https://grafana.com/api/api-keys/check", func(req *http.Request) (*http.Response, error) {
 			return nil, fmt.Errorf("failed")
 		})
 
