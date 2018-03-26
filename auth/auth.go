@@ -29,9 +29,9 @@ type User struct {
 	IsAdmin bool
 }
 
-// AuthPlugins returns whether a api_key is a valid and if the user has access to a certain instance
+// AuthPlugin is used to validate access
 type AuthPlugin interface {
-	Auth(username, password string) (*User, error)
+	Auth(username, password string) (*User, error) // Auth returns whether a api_key is a valid and if the user has access to a certain instance
 }
 
 func GetAuthPlugin(name string) AuthPlugin {
