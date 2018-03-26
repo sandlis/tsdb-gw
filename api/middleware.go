@@ -61,10 +61,10 @@ func (a *Api) Auth() macaron.Handler {
 		username, key, ok := ctx.Req.BasicAuth()
 		if !ok {
 			// no basicAuth, but we also need to check for a Bearer Token
-			header := c.Req.Header.Get("Authorization")
+			header := ctx.Req.Header.Get("Authorization")
 			parts := strings.SplitN(header, " ", 2)
 			if len(parts) == 2 && parts[0] == "Bearer" {
-				key := parts[1]
+				key = parts[1]
 				username = "api_key"
 			}
 		}

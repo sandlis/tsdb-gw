@@ -18,7 +18,7 @@ var (
 	ssl        = flag.Bool("ssl", false, "use https")
 	certFile   = flag.String("cert-file", "", "SSL certificate file")
 	keyFile    = flag.String("key-file", "", "SSL key file")
-	authPlugin = flag.String("api-auth-plugin", "grafana", "auth plugin to use. (grafana|file)")
+	authPlugin = flag.String("api-auth-plugin", "grafana", "auth plugin to use. (grafana|grafana-instance|file)")
 )
 
 type Api struct {

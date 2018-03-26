@@ -37,6 +37,8 @@ func GetAuthPlugin(name string) AuthPlugin {
 	switch name {
 	case "grafana":
 		return NewGrafanaComAuth()
+	case "grafana-instance":
+		return NewGrafanaComInstanceAuth()
 	case "file":
 		return NewFileAuth()
 	default:
