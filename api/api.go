@@ -102,8 +102,8 @@ func (a *Api) InitRoutes(m *macaron.Macaron) {
 	}
 	m.Any("/prometheus/*", a.Auth(), PrometheusProxy)
 	m.Post("/opentsdb/api/put", a.Auth(), OpenTSDBWrite)
-	m.Any("/api/prom/push", a.CortexAuth(), CortexWrite)
-	m.Any("/api/prom/*", a.CortexAuth(), CortexProxy)
+	m.Any("/api/prom/push", a.Auth(), CortexWrite)
+	m.Any("/api/prom/*", a.Auth(), CortexProxy)
 }
 
 func index(ctx *macaron.Context) {

@@ -60,8 +60,13 @@ func (a *Api) Auth() macaron.Handler {
 	return func(ctx *Context) {
 		username, key, ok := ctx.Req.BasicAuth()
 		if !ok {
-			ctx.JSON(401, "Invalid Authentication header.")
-			return
+			// no basicAuth, but we also need to check for a Bearer Token
+			header := c.Req.Header.Get("Authorization")
+			parts := strings.SplitN(header, " ", 2)
+			if len(parts) == 2 && parts[0] == "Bearer" {
+				key := parts[1]
+				username = "api_key"
+			}
 		}
 
 		if key == "" {
@@ -69,14 +74,9 @@ func (a *Api) Auth() macaron.Handler {
 			return
 		}
 
-		if username != "api_key" {
-			ctx.JSON(401, "Unauthorized, Bad Username")
-			return
-		}
-
-		user, err := a.authPlugin.Auth("api_key", key)
+		user, err := a.authPlugin.Auth(username, key)
 		if err != nil {
-			if err == auth.ErrInvalidKey || err == auth.ErrInvalidOrgId {
+			if err == auth.ErrInvalidCredentials || err == auth.ErrInvalidOrgId || err == auth.ErrInvalidInstanceID {
 				ctx.JSON(401, err.Error())
 				return
 			}
@@ -96,33 +96,6 @@ func (a *Api) Auth() macaron.Handler {
 			}
 		}
 		ctx.User = user
-	}
-}
-
-func (a *Api) CortexAuth() macaron.Handler {
-	return func(ctx *Context) {
-		instanceID, key, ok := ctx.Req.BasicAuth()
-		if !ok {
-			ctx.JSON(401, "Invalid Authentication header.")
-			return
-		}
-		if key == "" {
-			ctx.JSON(401, "Unauthorized")
-			return
-		}
-		user, err := a.authPlugin.Auth(instanceID, key)
-		if err != nil {
-			if err == auth.ErrInvalidKey || err == auth.ErrInvalidOrgId {
-				ctx.JSON(401, err.Error())
-				return
-			}
-			log.Error(3, "failed to perform authentication: %q", err.Error())
-			ctx.JSON(500, err.Error())
-			return
-		}
-
-		ctx.User = user
-		ctx.Req.Request.Header.Set("X-Scope-OrgID", instanceID)
 	}
 }
 

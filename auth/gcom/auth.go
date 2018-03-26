@@ -221,6 +221,7 @@ func Auth(adminKey, keyString string) (*SignedInUser, error) {
 	}
 
 	if !valid {
+		log.Debug("Auth: orgID is not listed in auth-valid-org-id setting.")
 		return nil, ErrInvalidOrgId
 	}
 

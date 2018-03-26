@@ -108,7 +108,7 @@ func (a *FileAuth) Auth(instanceID, password string) (*User, error) {
 	user, ok := a.keys[password]
 	if !ok {
 		log.Debug("key not found: %v", password)
-		return nil, ErrInvalidKey
+		return nil, ErrInvalidCredentials
 	}
 
 	if user.IsAdmin {
@@ -121,7 +121,7 @@ func (a *FileAuth) Auth(instanceID, password string) (*User, error) {
 			return nil, ErrInvalidInstanceID
 		}
 		if ID != user.ID {
-			return nil, ErrPermissions
+			return nil, ErrInvalidInstanceID
 		}
 	}
 

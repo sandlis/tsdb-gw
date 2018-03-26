@@ -8,10 +8,9 @@ import (
 )
 
 var (
-	ErrInvalidKey        = errors.New("invalid key")
-	ErrInvalidOrgId      = errors.New("invalid orgId")
-	ErrInvalidInstanceID = errors.New("invalid instanceID")
-	ErrPermissions       = errors.New("user does not have access to that instance")
+	ErrInvalidCredentials = errors.New("invalid authentication credentials")
+	ErrInvalidOrgId       = errors.New("invalid orgId")
+	ErrInvalidInstanceID  = errors.New("invalid instanceID")
 
 	AdminKey  string
 	AdminUser = &User{
