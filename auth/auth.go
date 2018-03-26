@@ -30,7 +30,8 @@ type User struct {
 
 // AuthPlugin is used to validate access
 type AuthPlugin interface {
-	Auth(username, password string) (*User, error) // Auth returns whether a api_key is a valid and if the user has access to a certain instance
+	// Auth returns whether a api_key is a valid and if the user has access to a certain instance
+	Auth(username, password string) (*User, error)
 }
 
 func GetAuthPlugin(name string) AuthPlugin {
