@@ -49,7 +49,7 @@ func InitApi() *Api {
 	}
 	a.l = l
 
-	PrometheusMTInit()
+	apiIngestInit()
 	a.InitRoutes(m)
 
 	// write Request logs in Apache Combined Log Format
@@ -97,13 +97,18 @@ func (a *Api) InitRoutes(m *macaron.Macaron) {
 	m.Get("/metrics/index.json", a.Auth(), MetrictankProxy("/metrics/index.json"))
 	m.Get("/graphite/metrics/index.json", a.Auth(), MetrictankProxy("/metrics/index.json"))
 	m.Any("/graphite/*", a.Auth(), GraphiteProxy)
-	if *prometheusMTWriteEnabled {
-		m.Any("/prometheus/write", a.Auth(), PrometheusMTWrite)
-	}
-	m.Any("/prometheus/*", a.Auth(), PrometheusProxy)
+
+	// MetricTank Api Ingest (TODO upgrade HMAPI to have multiple outputs for each ingest)
+	// DataDog Endpoints
+	m.Post("/datadog/api/v1/series", a.Auth(), DataDogMTWrite)
+
 	m.Post("/opentsdb/api/put", a.Auth(), OpenTSDBWrite)
-	m.Any("/api/prom/push", a.PromStats("cortex-write"), a.Auth(), CortexWrite)
-	m.Any("/api/prom/*", a.PromStats("cortex-read"), a.Auth(), CortexProxy)
+	m.Any("/prometheus/write", a.Auth(), PrometheusMTWrite)
+	m.Any("/prometheus/*", a.Auth(), PrometheusProxy)
+
+	// Cortex specific endpoints
+	m.Any("/api/prom/push", a.Auth(), CortexWrite)
+	m.Any("/api/prom/*", a.Auth(), CortexProxy)
 }
 
 func index(ctx *macaron.Context) {
