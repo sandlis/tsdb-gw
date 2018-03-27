@@ -1,42 +1,17 @@
 package api
 
 import (
-	"flag"
 	"io/ioutil"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
-	"github.com/grafana/metrictank/conf"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/prompb"
 	"github.com/raintank/tsdb-gw/metric_publish"
-	"github.com/raintank/tsdb-gw/metricpool"
 	"github.com/raintank/tsdb-gw/metrictank"
 	"github.com/raintank/worldping-api/pkg/log"
 	schema "gopkg.in/raintank/schema.v1"
 )
-
-var (
-	metricPool               = metricpool.NewMetricDataPool()
-	schemas                  *conf.Schemas
-	schemaFile               = flag.String("prometheus-schemas-file", "/etc/storage-schemas.conf", "path to carbon storage-schemas.conf file for prom metrics")
-	prometheusMTWriteEnabled = flag.Bool("prometheus-mt-enabled", false, "enable prometheus input for metrictank")
-)
-
-func PrometheusMTInit() {
-	if !*prometheusMTWriteEnabled {
-		return
-	}
-	log.Info("prometheus input enabled")
-	if *schemaFile == "" {
-		log.Fatal(4, "no schema file configured for prometheus importer")
-	}
-	s, err := conf.ReadSchemas(*schemaFile)
-	if err != nil {
-		log.Fatal(4, "failed to load prometheus schemas config. %s", err)
-	}
-	schemas = &s
-}
 
 func PrometheusMTWrite(ctx *Context) {
 	if ctx.Req.Request.Body != nil {
