@@ -1,4 +1,4 @@
-package api
+package ingest
 
 import (
 	"io/ioutil"
@@ -7,13 +7,14 @@ import (
 	"github.com/golang/snappy"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/prompb"
-	"github.com/raintank/tsdb-gw/metric_publish"
+	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/metrictank"
-	"github.com/raintank/worldping-api/pkg/log"
+	"github.com/raintank/tsdb-gw/publish"
+	log "github.com/sirupsen/logrus"
 	schema "gopkg.in/raintank/schema.v1"
 )
 
-func PrometheusMTWrite(ctx *Context) {
+func PrometheusMTWrite(ctx *api.Context) {
 	if ctx.Req.Request.Body != nil {
 		defer ctx.Req.Request.Body.Close()
 		compressed, err := ioutil.ReadAll(ctx.Req.Request.Body)
@@ -75,7 +76,7 @@ func PrometheusMTWrite(ctx *Context) {
 			}
 		}
 
-		err = metric_publish.Publish(buf)
+		err = publish.Publish(buf)
 		for _, m := range buf {
 			metricPool.Put(m)
 		}
@@ -90,7 +91,7 @@ func PrometheusMTWrite(ctx *Context) {
 	ctx.JSON(400, "no data included in request.")
 }
 
-func PrometheusProxy(c *Context) {
+func PrometheusProxy(c *api.Context) {
 	proxyPath := c.Params("*")
 	proxy := metrictank.Proxy(c.ID, "/prometheus/"+proxyPath)
 	proxy.ServeHTTP(c.Resp, c.Req.Request)

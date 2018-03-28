@@ -1,4 +1,4 @@
-package api
+package ingest
 
 import (
 	"compress/zlib"
@@ -8,12 +8,13 @@ import (
 	"strings"
 
 	"github.com/DataDog/datadog-agent/pkg/metrics"
-	"github.com/raintank/tsdb-gw/metric_publish"
-	"github.com/raintank/worldping-api/pkg/log"
+	"github.com/raintank/tsdb-gw/api"
+	"github.com/raintank/tsdb-gw/publish"
+	log "github.com/sirupsen/logrus"
 	schema "gopkg.in/raintank/schema.v1"
 )
 
-func DataDogMTWrite(ctx *Context) {
+func DataDogMTWrite(ctx *api.Context) {
 	if ctx.Req.Request.Body != nil {
 		defer ctx.Req.Request.Body.Close()
 
@@ -57,7 +58,7 @@ func DataDogMTWrite(ctx *Context) {
 			}
 		}
 
-		err = metric_publish.Publish(buf)
+		err = publish.Publish(buf)
 		for _, m := range buf {
 			metricPool.Put(m)
 		}

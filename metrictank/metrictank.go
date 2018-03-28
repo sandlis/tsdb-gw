@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/util"
 )
 
@@ -31,4 +32,11 @@ func Proxy(orgId int, path string) *httputil.ReverseProxy {
 		req.Header.Add("X-Org-Id", strconv.FormatInt(int64(orgId), 10))
 	}
 	return &httputil.ReverseProxy{Director: director}
+}
+
+func MetrictankProxy(path string) func(c *api.Context) {
+	return func(c *api.Context) {
+		proxy := Proxy(c.ID, path)
+		proxy.ServeHTTP(c.Resp, c.Req.Request)
+	}
 }

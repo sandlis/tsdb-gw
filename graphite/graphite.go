@@ -10,8 +10,9 @@ import (
 	"strconv"
 
 	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/util"
-	"github.com/raintank/worldping-api/pkg/log"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/macaron.v1"
 )
 
@@ -105,4 +106,8 @@ func Proxy(orgId int, c *macaron.Context) {
 	c.Req.Request.Header.Add("X-Org-Id", strconv.FormatInt(int64(orgId), 10))
 	c.Req.Request.URL.Path = util.JoinUrlFragments(GraphiteUrl.Path, proxyPath)
 	gProxy.ServeHTTP(c.Resp, c.Req.Request)
+}
+
+func GraphiteProxy(c *api.Context) {
+	Proxy(c.ID, c.Context)
 }

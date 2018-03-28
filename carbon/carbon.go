@@ -13,9 +13,9 @@ import (
 	"github.com/grafana/metrictank/stats"
 	m20 "github.com/metrics20/go-metrics20/carbon20"
 	"github.com/raintank/tsdb-gw/auth"
-	"github.com/raintank/tsdb-gw/metric_publish"
 	"github.com/raintank/tsdb-gw/metricpool"
-	"github.com/raintank/worldping-api/pkg/log"
+	"github.com/raintank/tsdb-gw/publish"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/raintank/schema.v1"
 )
 
@@ -207,7 +207,7 @@ func (c *Carbon) flush() {
 	for {
 		select {
 		case <-ticker.C:
-			err := metric_publish.Publish(buf)
+			err := publish.Publish(buf)
 			if err != nil {
 				log.Error(3, "failed to publish metrics. %s", err)
 				metricsFailed.Add(len(buf))

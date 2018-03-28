@@ -17,7 +17,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/raintank/tsdb-gw/auth"
 	"github.com/raintank/tsdb-gw/usage"
-	"github.com/raintank/worldping-api/pkg/log"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/macaron.v1"
 )
 
@@ -213,7 +213,7 @@ func pathSlug(p string) string {
 	return strings.Replace(strings.Replace(slug, "/", "_", -1), ".", "_", -1)
 }
 
-func Tracer() macaron.Handler {
+func Tracer(spanName string) macaron.Handler {
 	return func(macCtx *macaron.Context) {
 		tracer := opentracing.GlobalTracer()
 		path := pathSlug(macCtx.Req.URL.Path)
@@ -222,7 +222,7 @@ func Tracer() macaron.Handler {
 
 		ext.HTTPMethod.Set(span, macCtx.Req.Method)
 		ext.HTTPUrl.Set(span, macCtx.Req.URL.String())
-		ext.Component.Set(span, "tsdb-gw/api")
+		ext.Component.Set(span, spanName)
 
 		macCtx.Req = macaron.Request{
 			Request: macCtx.Req.WithContext(opentracing.ContextWithSpan(macCtx.Req.Context(), span)),

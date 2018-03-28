@@ -4,7 +4,7 @@ import (
 	"flag"
 	"path"
 
-	"github.com/raintank/worldping-api/pkg/log"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/ini.v1"
 )
 

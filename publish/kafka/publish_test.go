@@ -1,4 +1,4 @@
-package metric_publish
+package kafka
 
 import (
 	"testing"

@@ -1,4 +1,4 @@
-package metric_publish
+package kafka
 
 import (
 	"errors"
@@ -13,7 +13,7 @@ import (
 	"github.com/grafana/metrictank/stats"
 	"github.com/raintank/tsdb-gw/usage"
 	"github.com/raintank/tsdb-gw/util"
-	"github.com/raintank/worldping-api/pkg/log"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/raintank/schema.v1"
 )
 
@@ -45,6 +45,8 @@ var (
 	bufferPool      = util.NewBufferPool()
 	partitionerPool sync.Pool
 )
+
+type mtPublisher struct{}
 
 type Partitioner interface {
 	partition(schema.PartitionedMetric) (int32, []byte, error)
@@ -91,9 +93,9 @@ func init() {
 	flag.IntVar(&batchNumMessages, "batch-num-messages", 10000, "Maximum number of messages batched in one MessageSet")
 }
 
-func Init(broker string) {
+func New(broker string) *mtPublisher {
 	if !enabled {
-		return
+		return nil
 	}
 	var err error
 
@@ -132,9 +134,10 @@ func Init(broker string) {
 	partitionerPool = sync.Pool{
 		New: func() interface{} { return NewPartitioner() },
 	}
+	return &mtPublisher{}
 }
 
-func Publish(metrics []*schema.MetricData) error {
+func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 	if producer == nil {
 		log.Debug("dropping %d metrics as publishing is disabled", len(metrics))
 		return nil
@@ -221,9 +224,13 @@ func Publish(metrics []*schema.MetricData) error {
 
 	publishDuration.Value(time.Since(pre))
 	metricsPublished.Add(len(metrics))
-	log.Debug("published %d metrics", len(metrics))
+	log.Debugf("published %d metrics", len(metrics))
 	for _, metric := range metrics {
 		usage.LogDataPoint(metric.Id)
 	}
 	return nil
+}
+
+func (*mtPublisher) Type() string {
+	return "MetricTank"
 }
