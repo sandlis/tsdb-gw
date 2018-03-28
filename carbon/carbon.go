@@ -70,32 +70,32 @@ func InitCarbon() *Carbon {
 
 	c.authPlugin = auth.GetAuthPlugin(authPlugin)
 
-	log.Info("Carbon input listening on %s", addr)
+	log.Infof("Carbon input listening on %s", addr)
 	c.buf = make(chan []byte, bufferSize)
 
 	schemas, err := getSchemas(schemasConf)
 	if err != nil {
-		log.Fatal(4, "failed to load schemas config. %s", err)
+		log.Fatalf("failed to load schemas config. %s", err)
 	}
 	c.schemas = schemas
 
 	laddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
-		log.Fatal(4, "failed to resolve TCP address. %s", err)
+		log.Fatalf("failed to resolve TCP address. %s", err)
 	}
 	l, err := net.ListenTCP("tcp", laddr)
 	if err != nil {
-		log.Fatal(4, "failed to listen on TCP address. %s", err)
+		log.Fatalf("failed to listen on TCP address. %s", err)
 	}
 	c.tcp = l
 
 	udp_addr, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
-		log.Fatal(4, "failed to resolve UDP address. %s", err)
+		log.Fatalf("failed to resolve UDP address. %s", err)
 	}
 	udp_conn, err := net.ListenUDP("udp", udp_addr)
 	if err != nil {
-		log.Fatal(4, "failed to listen on UDP address. %s", err)
+		log.Fatalf("failed to listen on UDP address. %s", err)
 	}
 	c.udp = udp_conn
 
@@ -129,14 +129,14 @@ func (c *Carbon) Stop() {
 }
 
 func (c *Carbon) listen() {
-	log.Info("listening on %v", c.tcp.Addr())
+	log.Infof("listening on %v", c.tcp.Addr())
 	shutdown := make(chan struct{})
 	var wg sync.WaitGroup
 	for {
 		// Listen for an incoming connection.
 		conn, err := c.tcp.Accept()
 		if err != nil {
-			log.Info("listener error. %v", err)
+			log.Infof("listener error. %v", err)
 			break
 		}
 		// Handle connections in a new goroutine.
@@ -145,7 +145,7 @@ func (c *Carbon) listen() {
 	}
 	close(shutdown)
 	wg.Wait()
-	log.Info("TCP listener has shutdown.")
+	log.Infoln("TCP listener has shutdown.")
 	c.listenWg.Done()
 	return
 }
@@ -153,12 +153,12 @@ func (c *Carbon) listen() {
 func (c *Carbon) handleConn(conn net.Conn, shutdown chan struct{}, wg *sync.WaitGroup) {
 	carbonConnections.Inc()
 	if conn.RemoteAddr() != nil {
-		log.Info("handling connection from %s", conn.RemoteAddr().String())
+		log.Infof("handling connection from %s", conn.RemoteAddr().String())
 	}
 	defer func() {
 		carbonConnections.Dec()
 		if conn.RemoteAddr() != nil {
-			log.Info("connection from %s ended", conn.RemoteAddr().String())
+			log.Infof("connection from %s ended", conn.RemoteAddr().String())
 		}
 		wg.Done()
 	}()
@@ -178,7 +178,7 @@ func (c *Carbon) handleConn(conn net.Conn, shutdown chan struct{}, wg *sync.Wait
 
 		if err != nil {
 			if io.EOF != err {
-				log.Error(3, err.Error())
+				log.Errorln(err.Error())
 			}
 			break
 		}
@@ -189,7 +189,7 @@ func (c *Carbon) handleConn(conn net.Conn, shutdown chan struct{}, wg *sync.Wait
 				case c.buf <- line:
 				default:
 					metricsDroppedBufferFull.Inc()
-					log.Debug("metric dropped due to full buffer")
+					log.Debugln("metric dropped due to full buffer")
 					// maybe we should just close the connection here
 				}
 			} else {
@@ -209,7 +209,7 @@ func (c *Carbon) flush() {
 		case <-ticker.C:
 			err := publish.Publish(buf)
 			if err != nil {
-				log.Error(3, "failed to publish metrics. %s", err)
+				log.Errorf("failed to publish metrics. %s", err)
 				metricsFailed.Add(len(buf))
 				continue
 			}
@@ -224,7 +224,7 @@ func (c *Carbon) flush() {
 			}
 			_, _, _, err := m20.ValidatePacket(b, m20.StrictLegacy, m20.NoneM20)
 			if err != nil {
-				log.Debug("packet rejected with error. %s - %s", err, b)
+				log.Debugf("packet rejected with error. %s - %s", err, b)
 				metricsRejected.Inc()
 				continue
 			}
@@ -232,13 +232,13 @@ func (c *Carbon) flush() {
 			parts := bytes.SplitN(b, []byte("."), 2)
 			user, err := c.authPlugin.Auth("", string(parts[0]))
 			if err != nil {
-				log.Debug("invalid auth key. %s", b)
+				log.Debugf("invalid auth key. %s", b)
 				metricsDroppedAuthFail.Inc()
 				continue
 			}
 			md, err := parseMetric(parts[1], c.schemas, user.ID)
 			if err != nil {
-				log.Error(3, "could not parse metric %q: %s", string(parts[1]), err)
+				log.Errorf("could not parse metric %q: %s", string(parts[1]), err)
 				metricsRejected.Inc()
 				continue
 			}

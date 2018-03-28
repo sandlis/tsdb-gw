@@ -41,7 +41,7 @@ func main() {
 		EnvPrefix: "GW_",
 	})
 	if err != nil {
-		log.Fatal(4, "error with configuration file: %s", err)
+		log.Fatalf("error with configuration file: %s", err)
 		os.Exit(1)
 	}
 	conf.ParseAll()

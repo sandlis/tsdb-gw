@@ -63,7 +63,7 @@ func DataDogMTWrite(ctx *api.Context) {
 			metricPool.Put(m)
 		}
 		if err != nil {
-			log.Error(3, "failed to publish prom write metrics. %s", err)
+			log.Errorf("failed to publish prom write metrics. %s", err)
 			ctx.JSON(500, err)
 			return
 		}

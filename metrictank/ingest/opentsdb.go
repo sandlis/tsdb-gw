@@ -21,7 +21,7 @@ func OpenTSDBWrite(ctx *api.Context) {
 			reader, err = gzip.NewReader(ctx.Req.Request.Body)
 			if err != nil {
 				ctx.JSON(400, err.Error())
-				log.Error(3, "Read Error, %v", err)
+				log.Errorf("Read Error, %v", err)
 				return
 			}
 		} else {
@@ -31,7 +31,7 @@ func OpenTSDBWrite(ctx *api.Context) {
 		body, err := ioutil.ReadAll(reader)
 		if err != nil {
 			ctx.JSON(400, err.Error())
-			log.Error(3, "Read Error, %v", err)
+			log.Errorf("Read Error, %v", err)
 			return
 		}
 
@@ -39,7 +39,7 @@ func OpenTSDBWrite(ctx *api.Context) {
 		err = json.Unmarshal(body, &req)
 		if err != nil {
 			ctx.JSON(400, err.Error())
-			log.Error(3, "Read Error, %v", err)
+			log.Errorf("Read Error, %v", err)
 			return
 		}
 
@@ -68,7 +68,7 @@ func OpenTSDBWrite(ctx *api.Context) {
 			metricPool.Put(m)
 		}
 		if err != nil {
-			log.Error(3, "failed to publish opentsdb write metrics. %s", err)
+			log.Errorf("failed to publish opentsdb write metrics. %s", err)
 			ctx.JSON(500, err)
 			return
 		}

@@ -43,7 +43,7 @@ func GetAuthPlugin(name string) AuthPlugin {
 	case "file":
 		return NewFileAuth()
 	default:
-		log.Fatal(4, "invalid auth plugin specified, %s", name)
+		log.Fatalf("invalid auth plugin specified, %s", name)
 	}
 	return nil
 }

@@ -21,11 +21,11 @@ func IngestInit() {
 	}
 	log.Info("api ingest enabled")
 	if *schemaFile == "" {
-		log.Fatal(4, "no schema file configured for api ingest")
+		log.Fatalln("no schema file configured for api ingest")
 	}
 	s, err := conf.ReadSchemas(*schemaFile)
 	if err != nil {
-		log.Fatal(4, "failed to load carbon schemas config. %s", err)
+		log.Fatalf("failed to load carbon schemas config. %s", err)
 	}
 	schemas = &s
 }

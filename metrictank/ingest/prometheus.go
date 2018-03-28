@@ -21,20 +21,20 @@ func PrometheusMTWrite(ctx *api.Context) {
 
 		if err != nil {
 			ctx.JSON(400, err.Error())
-			log.Error(3, "Read Error, %v", err)
+			log.Errorf("Read Error, %v", err)
 			return
 		}
 		reqBuf, err := snappy.Decode(nil, compressed)
 		if err != nil {
 			ctx.JSON(400, err.Error())
-			log.Error(3, "Decode Error, %v", err)
+			log.Errorf("Decode Error, %v", err)
 			return
 		}
 
 		var req prompb.WriteRequest
 		if err := proto.Unmarshal(reqBuf, &req); err != nil {
 			ctx.JSON(400, err.Error())
-			log.Error(3, "Unmarshal Error, %v", err)
+			log.Errorf("Unmarshal Error, %v", err)
 			return
 		}
 
@@ -70,7 +70,7 @@ func PrometheusMTWrite(ctx *api.Context) {
 					buf = append(buf, md)
 				}
 			} else {
-				log.Error(3, "prometheus metric received with empty name: %v", ts.String())
+				log.Errorf("prometheus metric received with empty name: %v", ts.String())
 				ctx.JSON(400, "invalid metric received: __name__ label can not equal \"\"")
 				return
 			}
@@ -81,7 +81,7 @@ func PrometheusMTWrite(ctx *api.Context) {
 			metricPool.Put(m)
 		}
 		if err != nil {
-			log.Error(3, "failed to publish prom write metrics. %s", err)
+			log.Errorf("failed to publish prom write metrics. %s", err)
 			ctx.JSON(500, err)
 			return
 		}

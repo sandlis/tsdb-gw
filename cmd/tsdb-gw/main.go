@@ -63,7 +63,7 @@ func main() {
 		EnvPrefix: "GW_",
 	})
 	if err != nil {
-		log.Fatal(4, "error with configuration file: %s", err)
+		log.Fatalf("error with configuration file: %s", err)
 		os.Exit(1)
 	}
 	conf.ParseAll()
@@ -87,13 +87,13 @@ func main() {
 	if *tsdbStatsEnabled {
 		err := usage.Init(*tsdbStatsAddr)
 		if err != nil {
-			log.Fatal(4, "failed to initialize usage stats. %s", err.Error())
+			log.Fatalf("failed to initialize usage stats. %s", err.Error())
 		}
 	}
 
 	_, traceCloser, err := util.GetTracer(app, *tracingEnabled, *tracingAddr)
 	if err != nil {
-		log.Fatal(4, "Could not initialize jaeger tracer: %s", err.Error())
+		log.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
 	}
 	defer traceCloser.Close()
 
@@ -105,10 +105,10 @@ func main() {
 	}
 
 	if err := graphite.Init(*graphiteURL); err != nil {
-		log.Fatal(4, err.Error())
+		log.Fatalf(err.Error())
 	}
 	if err := metrictank.Init(*metrictankURL); err != nil {
-		log.Fatal(4, err.Error())
+		log.Fatalf(err.Error())
 	}
 
 	inputs := make([]Stoppable, 0)
