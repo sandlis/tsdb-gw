@@ -34,6 +34,7 @@ var (
 	partitionScheme  string
 	maxInFlight      int
 	bufferMaxMs      int
+	bufferMaxMsgs    int
 	batchNumMessages int
 	partitionCount   int32
 	// partitioner only needs to be initialized once since its configuration
@@ -84,7 +85,8 @@ func init() {
 	flag.StringVar(&codec, "metrics-kafka-comp", "snappy", "compression: none|gzip|snappy")
 	flag.BoolVar(&enabled, "metrics-publish", false, "enable metric publishing")
 	flag.StringVar(&partitionScheme, "metrics-partition-scheme", "bySeries", "method used for paritioning metrics. (byOrg|bySeries)")
-	flag.IntVar(&maxInFlight, "metrics-max-in-flight", 1000000, "The maximum number of messages in flight per broker connection")
+	flag.IntVar(&maxInFlight, "metrics-max-in-flight", 1000000, "The maximum number of requests in flight per broker connection")
+	flag.IntVar(&bufferMaxMsgs, "metrics-buffer-max-msgs", 100000, "Maximum number of messages allowed on the producer queue. Publishing attempts will be rejected once this limit is reached.")
 	flag.IntVar(&bufferMaxMs, "metrics-buffer-max-ms", 100, "Delay in milliseconds to wait for messages in the producer queue to accumulate before constructing message batches (MessageSets) to transmit to brokers")
 	flag.IntVar(&batchNumMessages, "batch-num-messages", 10000, "Maximum number of messages batched in one MessageSet")
 }
@@ -103,6 +105,7 @@ func Init(broker string) {
 	config.SetKey("max.in.flight", maxInFlight)
 	config.SetKey("queue.buffering.max.ms", bufferMaxMs)
 	config.SetKey("batch.num.messages", batchNumMessages)
+	config.SetKey("queue.buffering.max.messages", bufferMaxMsgs)
 
 	producer, err = kafka.NewProducer(&config)
 	if err != nil {
