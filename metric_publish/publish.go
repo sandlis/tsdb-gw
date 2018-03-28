@@ -143,7 +143,7 @@ func Publish(metrics []*schema.MetricData) error {
 
 	payload := make([]*kafka.Message, len(metrics))
 	pre := time.Now()
-	deliveryChan := make(chan kafka.Event)
+	deliveryChan := make(chan kafka.Event, len(metrics))
 	partitioner := partitionerPool.Get().(Partitioner)
 
 	for i, metric := range metrics {
