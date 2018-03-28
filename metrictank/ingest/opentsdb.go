@@ -1,4 +1,4 @@
-package api
+package ingest
 
 import (
 	"compress/gzip"
@@ -6,13 +6,13 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/raintank/tsdb-gw/metric_publish"
-	"github.com/raintank/tsdb-gw/opentsdb"
-	"github.com/raintank/worldping-api/pkg/log"
+	"github.com/raintank/tsdb-gw/api"
+	"github.com/raintank/tsdb-gw/publish"
+	log "github.com/sirupsen/logrus"
 	schema "gopkg.in/raintank/schema.v1"
 )
 
-func OpenTSDBWrite(ctx *Context) {
+func OpenTSDBWrite(ctx *api.Context) {
 	if ctx.Req.Request.Body != nil {
 		defer ctx.Req.Request.Body.Close()
 		var reader io.Reader
@@ -35,7 +35,7 @@ func OpenTSDBWrite(ctx *Context) {
 			return
 		}
 
-		var req opentsdb.PutRequest
+		var req OpenTSDBPutRequest
 		err = json.Unmarshal(body, &req)
 		if err != nil {
 			ctx.JSON(400, err.Error())
@@ -62,7 +62,7 @@ func OpenTSDBWrite(ctx *Context) {
 			buf = append(buf, md)
 		}
 
-		err = metric_publish.Publish(buf)
+		err = publish.Publish(buf)
 		for _, m := range buf {
 			m.Tags = m.Tags[:0]
 			metricPool.Put(m)
@@ -77,4 +77,20 @@ func OpenTSDBWrite(ctx *Context) {
 	}
 
 	ctx.JSON(400, "no data included in request.")
+}
+
+type OpenTSDBMetric struct {
+	Metric    string            `json:"metric"`
+	Timestamp int64             `json:"timestamp"`
+	Value     float64           `json:"value"`
+	Tags      map[string]string `json:"tags"`
+}
+
+type OpenTSDBPutRequest []OpenTSDBMetric
+
+func (m OpenTSDBMetric) FormatTags(tagArray []string) []string {
+	for t, v := range m.Tags {
+		tagArray = append(tagArray, t+"="+v)
+	}
+	return tagArray
 }

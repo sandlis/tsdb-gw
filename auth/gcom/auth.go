@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/raintank/worldping-api/pkg/log"
+	log "github.com/sirupsen/logrus"
 )
 
 type int64SliceFlag []int64

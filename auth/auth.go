@@ -4,7 +4,7 @@ import (
 	"errors"
 	"flag"
 
-	"github.com/raintank/worldping-api/pkg/log"
+	log "github.com/sirupsen/logrus"
 )
 
 var (

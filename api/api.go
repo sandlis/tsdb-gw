@@ -9,57 +9,61 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/raintank/tsdb-gw/auth"
-	"github.com/raintank/worldping-api/pkg/log"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/macaron.v1"
 )
 
 var (
-	addr       = flag.String("addr", "localhost:80", "http service address")
-	ssl        = flag.Bool("ssl", false, "use https")
-	certFile   = flag.String("cert-file", "", "SSL certificate file")
-	keyFile    = flag.String("key-file", "", "SSL key file")
-	authPlugin = flag.String("api-auth-plugin", "grafana", "auth plugin to use. (grafana|grafana-instance|file)")
+	addr     = flag.String("addr", "localhost:80", "http service address")
+	ssl      = flag.Bool("ssl", false, "use https")
+	certFile = flag.String("cert-file", "", "SSL certificate file")
+	keyFile  = flag.String("key-file", "", "SSL key file")
 )
 
 type Api struct {
 	l          net.Listener
 	done       chan struct{}
 	authPlugin auth.AuthPlugin
+	Router     *macaron.Macaron
 }
 
-func InitApi() *Api {
+func New(authPlugin string, appName string) *Api {
 	if *ssl && (*certFile == "" || *keyFile == "") {
-		log.Fatal(4, "cert-file and key-file must be set when using SSL")
+		log.Fatal("cert-file and key-file must be set when using SSL")
 	}
 
 	a := &Api{
 		done:       make(chan struct{}),
-		authPlugin: auth.GetAuthPlugin(*authPlugin),
+		authPlugin: auth.GetAuthPlugin(authPlugin),
 	}
-
-	m := macaron.New()
-	m.Use(macaron.Recovery())
-	m.Use(macaron.Renderer())
-	m.Use(Tracer())
 
 	// define our own listner so we can call Close on it
 	l, err := net.Listen("tcp", *addr)
 	if err != nil {
-		log.Fatal(4, err.Error())
+		log.Fatal(err.Error())
 	}
 	a.l = l
-
-	apiIngestInit()
+	m := macaron.New()
+	m.Use(macaron.Recovery())
+	m.Use(macaron.Renderer())
+	m.Use(Tracer(appName))
 	a.InitRoutes(m)
 
+	a.Router = m
+	return a
+}
+
+func (a *Api) Start() *Api {
 	// write Request logs in Apache Combined Log Format
-	loggedRouter := handlers.CombinedLoggingHandler(os.Stdout, m)
+	loggedRouter := handlers.CombinedLoggingHandler(os.Stdout, a.Router)
 	srv := http.Server{
 		Addr:    *addr,
 		Handler: loggedRouter,
 	}
+
 	go func() {
 		defer close(a.done)
+		var err error
 		if *ssl {
 			cert, err := tls.LoadX509KeyPair(*certFile, *keyFile)
 			if err != nil {
@@ -69,10 +73,10 @@ func InitApi() *Api {
 				Certificates: []tls.Certificate{cert},
 				NextProtos:   []string{"http/1.1"},
 			}
-			tlsListener := tls.NewListener(l, srv.TLSConfig)
+			tlsListener := tls.NewListener(a.l, srv.TLSConfig)
 			err = srv.Serve(tlsListener)
 		} else {
-			err = srv.Serve(l)
+			err = srv.Serve(a.l)
 		}
 
 		if err != nil {
@@ -87,30 +91,12 @@ func (a *Api) Stop() {
 	<-a.done
 }
 
+func index(ctx *macaron.Context) {
+	ctx.JSON(200, "ok")
+}
+
 func (a *Api) InitRoutes(m *macaron.Macaron) {
 	m.Use(GetContextHandler())
 	m.Use(RequestStats())
 	m.Get("/", index)
-
-	m.Post("/metrics/delete", a.Auth(), MetrictankProxy("/metrics/delete"))
-	m.Post("/metrics", a.Auth(), Metrics)
-	m.Get("/metrics/index.json", a.Auth(), MetrictankProxy("/metrics/index.json"))
-	m.Get("/graphite/metrics/index.json", a.Auth(), MetrictankProxy("/metrics/index.json"))
-	m.Any("/graphite/*", a.Auth(), GraphiteProxy)
-
-	// MetricTank Api Ingest (TODO upgrade HMAPI to have multiple outputs for each ingest)
-	// DataDog Endpoints
-	m.Post("/datadog/api/v1/series", a.Auth(), DataDogMTWrite)
-
-	m.Post("/opentsdb/api/put", a.Auth(), OpenTSDBWrite)
-	m.Any("/prometheus/write", a.Auth(), PrometheusMTWrite)
-	m.Any("/prometheus/*", a.Auth(), PrometheusProxy)
-
-	// Cortex specific endpoints
-	m.Any("/api/prom/push", a.Auth(), CortexWrite)
-	m.Any("/api/prom/*", a.Auth(), CortexProxy)
-}
-
-func index(ctx *macaron.Context) {
-	ctx.JSON(200, "ok")
 }

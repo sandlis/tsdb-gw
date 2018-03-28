@@ -14,20 +14,23 @@ import (
 	"github.com/grafana/metrictank/stats"
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/carbon"
-	"github.com/raintank/tsdb-gw/cortex"
 	"github.com/raintank/tsdb-gw/graphite"
-	"github.com/raintank/tsdb-gw/metric_publish"
 	"github.com/raintank/tsdb-gw/metrictank"
+	"github.com/raintank/tsdb-gw/metrictank/ingest"
+	"github.com/raintank/tsdb-gw/publish"
+	"github.com/raintank/tsdb-gw/publish/kafka"
 	"github.com/raintank/tsdb-gw/usage"
 	"github.com/raintank/tsdb-gw/util"
-	"github.com/raintank/worldping-api/pkg/log"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
+	app         = "tsdb-gw"
 	GitHash     = "(none)"
 	showVersion = flag.Bool("version", false, "print version string")
-	logLevel    = flag.Int("log-level", 2, "log level. 0=TRACE|1=DEBUG|2=INFO|3=WARN|4=ERROR|5=CRITICAL|6=FATAL")
-	confFile    = flag.String("config", "/etc/raintank/tsdb.ini", "configuration file path")
+
+	authPlugin = flag.String("api-auth-plugin", "grafana", "auth plugin to use. (grafana|file)")
+	confFile   = flag.String("config", "/etc/raintank/tsdb.ini", "configuration file path")
 
 	broker = flag.String("kafka-tcp-addr", "localhost:9092", "kafka tcp address for metrics")
 
@@ -37,8 +40,8 @@ var (
 	statsInterval   = flag.Int("stats-interval", 10, "interval in seconds to send statistics")
 	statsBufferSize = flag.Int("stats-buffer-size", 20000, "how many messages (holding all measurements from one interval) to buffer up in case graphite endpoint is unavailable.")
 
-	graphiteUrl   = flag.String("graphite-url", "http://localhost:8080", "graphite-api address")
-	metrictankUrl = flag.String("metrictank-url", "http://localhost:6060", "metrictank address")
+	graphiteURL   = flag.String("graphite-url", "http://localhost:8080", "graphite-api address")
+	metrictankURL = flag.String("metrictank-url", "http://localhost:6060", "metrictank address")
 
 	tsdbStatsEnabled = flag.Bool("tsdb-stats-enabled", false, "enable collecting usage stats")
 	tsdbStatsAddr    = flag.String("tsdb-stats-addr", "localhost:2004", "tsdb-usage server address")
@@ -65,24 +68,7 @@ func main() {
 	}
 	conf.ParseAll()
 
-	log.NewLogger(0, "console", fmt.Sprintf(`{"level": %d, "formatting":true}`, *logLevel))
-	// workaround for https://github.com/grafana/grafana/issues/4055
-	switch *logLevel {
-	case 0:
-		log.Level(log.TRACE)
-	case 1:
-		log.Level(log.DEBUG)
-	case 2:
-		log.Level(log.INFO)
-	case 3:
-		log.Level(log.WARN)
-	case 4:
-		log.Level(log.ERROR)
-	case 5:
-		log.Level(log.CRITICAL)
-	case 6:
-		log.Level(log.FATAL)
-	}
+	util.InitLogger()
 
 	if *showVersion {
 		fmt.Printf("tsdb (built with %s, git hash %s)\n", runtime.Version(), GitHash)
@@ -105,30 +91,36 @@ func main() {
 		}
 	}
 
-	_, traceCloser, err := util.GetTracer(*tracingEnabled, *tracingAddr)
+	_, traceCloser, err := util.GetTracer(app, *tracingEnabled, *tracingAddr)
 	if err != nil {
 		log.Fatal(4, "Could not initialize jaeger tracer: %s", err.Error())
 	}
 	defer traceCloser.Close()
 
-	metric_publish.Init(*broker)
+	publisher := kafka.New(*broker)
+	if publisher == nil {
+		publish.Init(nil)
+	} else {
+		publish.Init(publisher)
+	}
 
-	if err := graphite.Init(*graphiteUrl); err != nil {
+	if err := graphite.Init(*graphiteURL); err != nil {
 		log.Fatal(4, err.Error())
 	}
-	if err := metrictank.Init(*metrictankUrl); err != nil {
+	if err := metrictank.Init(*metrictankURL); err != nil {
 		log.Fatal(4, err.Error())
 	}
-	if err := cortex.Init(); err != nil {
-		log.Fatal(4, err.Error())
-	}
+
 	inputs := make([]Stoppable, 0)
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
+	api := api.New(*authPlugin, app)
+	InitRoutes(api)
+
 	log.Info("starting up")
 	done := make(chan struct{})
-	inputs = append(inputs, api.InitApi(), carbon.InitCarbon())
+	inputs = append(inputs, api.Start(), carbon.InitCarbon())
 	go handleShutdown(done, interrupt, inputs)
 
 	<-done
@@ -151,4 +143,16 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 	}
 	wg.Wait()
 	close(done)
+}
+
+func InitRoutes(a *api.Api) {
+	a.Router.Post("/metrics/delete", a.Auth(), metrictank.MetrictankProxy("/metrics/delete"))
+	a.Router.Post("/metrics", a.Auth(), metrictank.Metrics)
+	a.Router.Get("/metrics/index.json", a.Auth(), metrictank.MetrictankProxy("/metrics/index.json"))
+	a.Router.Get("/graphite/metrics/index.json", a.Auth(), metrictank.MetrictankProxy("/metrics/index.json"))
+	a.Router.Any("/graphite/*", a.Auth(), graphite.GraphiteProxy)
+	a.Router.Post("/datadog/api/v1/series", a.Auth(), ingest.DataDogMTWrite)
+	a.Router.Post("/opentsdb/api/put", a.Auth(), ingest.OpenTSDBWrite)
+	a.Router.Any("/prometheus/write", a.Auth(), ingest.PrometheusMTWrite)
+	a.Router.Any("/prometheus/*", a.Auth(), ingest.PrometheusProxy)
 }

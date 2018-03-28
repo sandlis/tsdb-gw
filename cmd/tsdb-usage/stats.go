@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	"github.com/raintank/tsdb-gw/metric_publish"
+	"github.com/raintank/tsdb-gw/publish"
 	"github.com/raintank/tsdb-gw/usage"
 	"gopkg.in/raintank/schema.v1"
 )
@@ -131,7 +131,7 @@ func emitStats(flushChan chan TsdbStats) {
 		for _, m := range metrics {
 			m.SetId()
 		}
-		if err := metric_publish.Publish(metrics); err != nil {
+		if err := publish.Publish(metrics); err != nil {
 			glog.Errorf("failed to publish metrics. %v", err)
 		}
 

@@ -1,11 +1,11 @@
-package api
+package ingest
 
 import (
 	"flag"
 
 	"github.com/grafana/metrictank/conf"
 	"github.com/raintank/tsdb-gw/metricpool"
-	"github.com/raintank/worldping-api/pkg/log"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -15,11 +15,11 @@ var (
 	ingestEnabled = flag.Bool("api-ingest", true, "enable api ingest for datadog/opentsdb/prometheus for metrictank")
 )
 
-func apiIngestInit() {
+func IngestInit() {
 	if !*ingestEnabled {
 		return
 	}
-	log.Info("api input enabled")
+	log.Info("api ingest enabled")
 	if *schemaFile == "" {
 		log.Fatal(4, "no schema file configured for api ingest")
 	}

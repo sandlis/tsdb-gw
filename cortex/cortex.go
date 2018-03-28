@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strconv"
 
 	"github.com/oxtoacart/bpool"
+	"github.com/raintank/tsdb-gw/api"
 )
 
 var (
@@ -17,10 +19,10 @@ var (
 	cortexWriteBPoolWidth = flag.Int("cortex-bpool-width", 1024, "capacity of byte array provided by cortex write buffer pool")
 
 	// Proxy handles all non write requests to cortex
-	Proxy *httputil.ReverseProxy
+	proxy *httputil.ReverseProxy
 
 	// WriteProxy handles all write requests to cortex
-	WriteProxy *httputil.ReverseProxy
+	writeProxy *httputil.ReverseProxy
 )
 
 // Init initializes the cortex reverse proxies
@@ -30,14 +32,14 @@ func Init() error {
 	if err != nil {
 		return err
 	}
-	Proxy = httputil.NewSingleHostReverseProxy(CortexReadURL)
+	proxy = httputil.NewSingleHostReverseProxy(CortexReadURL)
 
 	CortexWriteURL, err := url.Parse(*cortexWriteURL)
 	if err != nil {
 		return err
 	}
 	// Seperate Proxy for Writes, add BufferPool for perf reasons if needed
-	WriteProxy = &httputil.ReverseProxy{
+	writeProxy = &httputil.ReverseProxy{
 		Director: func(req *http.Request) {
 			req.URL.Scheme = CortexWriteURL.Scheme
 			req.URL.Host = CortexWriteURL.Host
@@ -45,4 +47,14 @@ func Init() error {
 		BufferPool: bpool.NewBytePool(*cortexWriteBPoolSize, *cortexWriteBPoolWidth),
 	}
 	return nil
+}
+
+func Proxy(c *api.Context) {
+	c.Req.Request.Header.Set("X-Scope-OrgID", strconv.Itoa(c.User.ID))
+	proxy.ServeHTTP(c.Resp, c.Req.Request)
+}
+
+func Write(c *api.Context) {
+	c.Req.Request.Header.Set("X-Scope-OrgID", strconv.Itoa(c.User.ID))
+	writeProxy.ServeHTTP(c.Resp, c.Req.Request)
 }

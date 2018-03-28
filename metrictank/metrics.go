@@ -1,4 +1,4 @@
-package api
+package metrictank
 
 import (
 	"encoding/json"
@@ -8,8 +8,9 @@ import (
 
 	"github.com/golang/snappy"
 	"github.com/grafana/metrictank/stats"
-	"github.com/raintank/tsdb-gw/metric_publish"
-	"github.com/raintank/worldping-api/pkg/log"
+	"github.com/raintank/tsdb-gw/api"
+	"github.com/raintank/tsdb-gw/publish"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/raintank/schema.v1"
 	"gopkg.in/raintank/schema.v1/msg"
 )
@@ -19,7 +20,7 @@ var (
 	metricsRejected = stats.NewCounter32("metrics.http.rejected")
 )
 
-func Metrics(ctx *Context) {
+func Metrics(ctx *api.Context) {
 	contentType := ctx.Req.Header.Get("Content-Type")
 	switch contentType {
 	case "rt-metric-binary":
@@ -33,7 +34,7 @@ func Metrics(ctx *Context) {
 	}
 }
 
-func metricsJson(ctx *Context) {
+func metricsJson(ctx *api.Context) {
 	defer ctx.Req.Request.Body.Close()
 	if ctx.Req.Request.Body != nil {
 		body, err := ioutil.ReadAll(ctx.Req.Request.Body)
@@ -79,7 +80,7 @@ func metricsJson(ctx *Context) {
 			}
 		}
 		metricsValid.Add(len(metrics))
-		err = metric_publish.Publish(metrics)
+		err = publish.Publish(metrics)
 		if err != nil {
 			log.Error(3, "failed to publish metrics. %s", err)
 			ctx.JSON(500, err)
@@ -91,7 +92,7 @@ func metricsJson(ctx *Context) {
 	ctx.JSON(400, "no data included in request.")
 }
 
-func metricsBinary(ctx *Context, compressed bool) {
+func metricsBinary(ctx *api.Context, compressed bool) {
 	var body io.ReadCloser
 	if compressed {
 		body = ioutil.NopCloser(snappy.NewReader(ctx.Req.Request.Body))
@@ -155,7 +156,7 @@ func metricsBinary(ctx *Context, compressed bool) {
 			}
 		}
 		metricsValid.Add(len(metricData.Metrics))
-		err = metric_publish.Publish(metricData.Metrics)
+		err = publish.Publish(metricData.Metrics)
 		if err != nil {
 			log.Error(3, "failed to publish metrics. %s", err)
 			ctx.JSON(500, err)
