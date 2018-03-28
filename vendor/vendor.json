@@ -3,6 +3,12 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "/zipndouoyYAi740NaKzAEts9lQ=",
+			"path": "github.com/DataDog/datadog-agent/pkg/metrics",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
 			"checksumSHA1": "vPAHn6NQfXwZmzal7YBN93Fnd6I=",
 			"origin": "github.com/grafana/metrictank/vendor/github.com/Dieterbe/artisanalhistogram/hist12h",
 			"path": "github.com/Dieterbe/artisanalhistogram/hist12h",
@@ -231,16 +237,16 @@
 			"revisionTime": "2017-05-23T21:16:22Z"
 		},
 		{
-			"checksumSHA1": "KKmDpHQD1VK6ryXdZFBud8asZ/E=",
-			"path": "github.com/grafana/metrictank/cluster/partitioner",
-			"revision": "442188119462913f5a43c93a90453b17397d9202",
-			"revisionTime": "2018-02-16T14:53:10Z"
-		},
-		{
 			"checksumSHA1": "JjEvruL5CkxDFwQFCp6nk7ik864=",
 			"path": "github.com/grafana/metrictank/cluster/partitioner",
 			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
 			"revisionTime": "2017-06-01T08:43:28Z"
+		},
+		{
+			"checksumSHA1": "KKmDpHQD1VK6ryXdZFBud8asZ/E=",
+			"path": "github.com/grafana/metrictank/cluster/partitioner",
+			"revision": "442188119462913f5a43c93a90453b17397d9202",
+			"revisionTime": "2018-02-16T14:53:10Z"
 		},
 		{
 			"checksumSHA1": "SPHLt6V8DpIwSnSUu8GEd1DxxJ4=",
@@ -255,28 +261,28 @@
 			"revisionTime": "2018-02-16T14:53:10Z"
 		},
 		{
-			"checksumSHA1": "hK4POSb6q8utNbjmIIiSQiwgobA=",
-			"path": "github.com/grafana/metrictank/mdata/chunk",
-			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
-			"revisionTime": "2017-08-31T15:46:53Z"
-		},
-		{
 			"checksumSHA1": "p9Pr2HqLt59P0R1ps1x1bpHRlg4=",
 			"path": "github.com/grafana/metrictank/mdata/chunk",
 			"revision": "442188119462913f5a43c93a90453b17397d9202",
 			"revisionTime": "2018-02-16T14:53:10Z"
 		},
 		{
-			"checksumSHA1": "CN8+3osIDyJeSOGhRPgeubTw0Bs=",
-			"path": "github.com/grafana/metrictank/stats",
-			"revision": "442188119462913f5a43c93a90453b17397d9202",
-			"revisionTime": "2018-02-16T14:53:10Z"
+			"checksumSHA1": "hK4POSb6q8utNbjmIIiSQiwgobA=",
+			"path": "github.com/grafana/metrictank/mdata/chunk",
+			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
+			"revisionTime": "2017-08-31T15:46:53Z"
 		},
 		{
 			"checksumSHA1": "z8tyaX1kWYzQELcDNg/sPZtMnbs=",
 			"path": "github.com/grafana/metrictank/stats",
 			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
 			"revisionTime": "2017-06-01T08:43:28Z"
+		},
+		{
+			"checksumSHA1": "CN8+3osIDyJeSOGhRPgeubTw0Bs=",
+			"path": "github.com/grafana/metrictank/stats",
+			"revision": "442188119462913f5a43c93a90453b17397d9202",
+			"revisionTime": "2018-02-16T14:53:10Z"
 		},
 		{
 			"checksumSHA1": "KWKsNYbKmCJ3v6Bi+AijBpPHMhQ=",
