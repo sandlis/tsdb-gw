@@ -39,7 +39,7 @@ func metricsJson(ctx *api.Context) {
 	if ctx.Req.Request.Body != nil {
 		body, err := ioutil.ReadAll(ctx.Req.Request.Body)
 		if err != nil {
-			log.Error(3, "unable to read request body. %s", err)
+			log.Errorf("unable to read request body. %s", err)
 		}
 		metrics := make([]*schema.MetricData, 0)
 		err = json.Unmarshal(body, &metrics)
@@ -82,7 +82,7 @@ func metricsJson(ctx *api.Context) {
 		metricsValid.Add(len(metrics))
 		err = publish.Publish(metrics)
 		if err != nil {
-			log.Error(3, "failed to publish metrics. %s", err)
+			log.Errorf("failed to publish metrics. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
@@ -104,21 +104,21 @@ func metricsBinary(ctx *api.Context, compressed bool) {
 	if ctx.Req.Request.Body != nil {
 		body, err := ioutil.ReadAll(body)
 		if err != nil {
-			log.Error(3, "unable to read request body. %s", err)
+			log.Errorf("unable to read request body. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
 		metricData := new(msg.MetricData)
 		err = metricData.InitFromMsg(body)
 		if err != nil {
-			log.Error(3, "payload not metricData. %s", err)
+			log.Errorf("payload not metricData. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
 
 		err = metricData.DecodeMetricData()
 		if err != nil {
-			log.Error(3, "failed to unmarshal metricData. %s", err)
+			log.Errorf("failed to unmarshal metricData. %s", err)
 			ctx.JSON(500, err)
 			return
 		}
@@ -158,7 +158,7 @@ func metricsBinary(ctx *api.Context, compressed bool) {
 		metricsValid.Add(len(metricData.Metrics))
 		err = publish.Publish(metricData.Metrics)
 		if err != nil {
-			log.Error(3, "failed to publish metrics. %s", err)
+			log.Errorf("failed to publish metrics. %s", err)
 			ctx.JSON(500, err)
 			return
 		}

@@ -111,24 +111,24 @@ func New(broker string) *mtPublisher {
 
 	producer, err = kafka.NewProducer(&config)
 	if err != nil {
-		log.Fatal(4, "failed to initialize kafka producer. %s", err)
+		log.Fatalf("failed to initialize kafka producer. %s", err)
 	}
 
 	meta, err := producer.GetMetadata(&topic, false, 30000)
 	if err != nil {
-		log.Fatal(4, "failed to initialize kafka partitioner. %s", err)
+		log.Fatalf("failed to initialize kafka partitioner. %s", err)
 	}
 
 	var t kafka.TopicMetadata
 	var ok bool
 	if t, ok = meta.Topics[topic]; !ok {
-		log.Fatal(4, "failed to get metadata about topic %s", topic)
+		log.Fatalf("failed to get metadata about topic %s", topic)
 	}
 
 	partitionCount = int32(len(t.Partitions))
 	kafkaPartitioner, err = p.NewKafka(partitionScheme)
 	if err != nil {
-		log.Fatal(4, "failed to initialize partitioner. %s", err)
+		log.Fatalf("failed to initialize partitioner. %s", err)
 	}
 
 	partitionerPool = sync.Pool{
@@ -139,7 +139,7 @@ func New(broker string) *mtPublisher {
 
 func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 	if producer == nil {
-		log.Debug("dropping %d metrics as publishing is disabled", len(metrics))
+		log.Debugf("dropping %d metrics as publishing is disabled", len(metrics))
 		return nil
 	}
 	if len(metrics) == 0 {
@@ -198,7 +198,7 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 		err = nil
 		m, ok := e.(*kafka.Message)
 		if !ok || e == nil {
-			log.Error(4, "unexpected delivery report of type %T: %v", e, e)
+			log.Errorf("unexpected delivery report of type %T: %v", e, e)
 			err = errors.New("Invalid acknowledgement")
 		} else if m.TopicPartition.Error != nil {
 			err = m.TopicPartition.Error
@@ -218,7 +218,7 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 	}
 
 	if firstErr != nil {
-		log.Error(4, "Got %d errors when sending %d messages, the first was: %s", errCount, len(metrics), firstErr)
+		log.Errorf("Got %d errors when sending %d messages, the first was: %s", errCount, len(metrics), firstErr)
 		return firstErr
 	}
 

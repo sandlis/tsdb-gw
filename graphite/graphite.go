@@ -62,7 +62,7 @@ func (t *proxyRetryTransport) RoundTrip(outreq *http.Request) (*http.Response, e
 		carrier := opentracing.HTTPHeadersCarrier(outreq.Header)
 		err = opentracing.GlobalTracer().Inject(attempt_span.Context(), opentracing.HTTPHeaders, carrier)
 		if err != nil {
-			log.Error(3, "CLU failed to inject span into headers: %s", err)
+			log.Errorf("CLU failed to inject span into headers: %s", err)
 		}
 
 		res, err = t.transport.RoundTrip(outreq)
@@ -74,7 +74,7 @@ func (t *proxyRetryTransport) RoundTrip(outreq *http.Request) (*http.Response, e
 		if attempts <= 3 {
 			log.Info("graphiteProxy: request to %v failed, will retry: %s", outreq.URL.Host, err)
 		} else {
-			log.Error(3, "graphiteProxy: request to %v failed 3 times. Giving up: %s", outreq.URL.Host, err)
+			log.Errorf("graphiteProxy: request to %v failed 3 times. Giving up: %s", outreq.URL.Host, err)
 			break
 		}
 	}

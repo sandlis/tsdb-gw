@@ -46,7 +46,7 @@ func NewFileAuth() *FileAuth {
 
 	conf, err := ini.Load(filePath)
 	if err != nil {
-		log.Fatal(4, "could not load auth file: %v", filePath)
+		log.Fatalf("could not load auth file: %v", filePath)
 	}
 
 	for _, section := range conf.Sections() {
@@ -56,13 +56,13 @@ func NewFileAuth() *FileAuth {
 
 		orgKey, err := section.GetKey("orgId")
 		if err != nil {
-			log.Error(3, "auth.file: no orgID defined for org %s", section.Name())
+			log.Errorf("auth.file: no orgID defined for org %s", section.Name())
 			continue
 		}
 
 		orgID, err := orgKey.Int()
 		if err != nil {
-			log.Error(3, "auth.file: orgID '%v' is not a int", orgKey.String())
+			log.Errorf("auth.file: orgID '%v' is not a int", orgKey.String())
 			continue
 		}
 
@@ -70,7 +70,7 @@ func NewFileAuth() *FileAuth {
 		if section.Haskey("isadmin") {
 			isAdminKey, err := section.GetKey("isadmin")
 			if err != nil {
-				log.Error(3, "auth.file: error decoding isadmin: '%v'", err)
+				log.Errorf("auth.file: error decoding isadmin: '%v'", err)
 			}
 			isAdmin = isAdminKey.MustBool(false)
 		}
@@ -86,7 +86,7 @@ func NewFileAuth() *FileAuth {
 
 		instanceKey, err := section.GetKey("instances")
 		if err != nil {
-			log.Error(3, "auth.file: error decoding instances: '%v'", err)
+			log.Errorf("auth.file: error decoding instances: '%v'", err)
 			continue
 		}
 		instances := instanceKey.Strings(",")
@@ -95,7 +95,7 @@ func NewFileAuth() *FileAuth {
 		}
 	}
 	if len(a.keys) == 0 {
-		log.Fatal(4, "no auth credentials found in auth-file.")
+		log.Fatalf("no auth credentials found in auth-file.")
 	}
 
 	return a
@@ -107,7 +107,7 @@ func (a *FileAuth) Auth(instanceID, password string) (*User, error) {
 	}
 	user, ok := a.keys[password]
 	if !ok {
-		log.Debug("key not found: %v", password)
+		log.Debugf("key not found: %v", password)
 		return nil, ErrInvalidCredentials
 	}
 
