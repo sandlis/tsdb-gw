@@ -204,3 +204,63 @@ func TestAuth(t *testing.T) {
 	})
 
 }
+
+func TestCheckInstance(t *testing.T) {
+	mockTransport := httpmock.NewMockTransport()
+	client.Transport = mockTransport
+
+	testUser := SignedInUser{
+		Id:        3,
+		OrgName:   "awoods Test",
+		OrgSlug:   "awoodsTest",
+		OrgId:     2,
+		Name:      "testKey",
+		Role:      ROLE_EDITOR,
+		CreatedAt: time.Now(),
+		key:       "foo",
+	}
+
+	testInstance := Instance{
+		ID:    10,
+		OrgID: 3,
+	}
+
+	Convey("when checking valid instanceID", t, func() {
+		responder, err := httpmock.NewJsonResponder(200, &testInstance)
+		So(err, ShouldBeNil)
+		mockTransport.RegisterResponder("GET", "https://grafana.com/api/hosted-metrics/10", responder)
+
+		err = testUser.CheckInstance("10")
+		So(err, ShouldBeNil)
+		mockTransport.Reset()
+	})
+
+	Convey("when checking cached valid instanceID", t, func() {
+		responder, err := httpmock.NewJsonResponder(404, "not found")
+		So(err, ShouldBeNil)
+		mockTransport.RegisterResponder("GET", "https://grafana.com/api/hosted-metrics/10", responder)
+
+		instanceCache.Set("awoodsTest-10", true, time.Second)
+		err = testUser.CheckInstance("10")
+		So(err, ShouldEqual, nil)
+		mockTransport.Reset()
+	})
+	Convey("when checking valid instanceID with expired cache and g.com is down", t, func() {
+		mockTransport.RegisterResponder("GET", "https://grafana.com/api/hosted-metrics/10", func(req *http.Request) (*http.Response, error) {
+			return nil, fmt.Errorf("failed")
+		})
+		instanceCache.Set("awoodsTest-10", true, 0)
+		err := testUser.CheckInstance("10")
+		So(err, ShouldEqual, nil)
+		mockTransport.Reset()
+	})
+	Convey("when checking invalid instanceID", t, func() {
+		responder, err := httpmock.NewJsonResponder(404, "not found")
+		So(err, ShouldBeNil)
+		mockTransport.RegisterResponder("GET", "https://grafana.com/api/hosted-metrics/20", responder)
+
+		err = testUser.CheckInstance("20")
+		So(err, ShouldEqual, ErrInvalidInstanceID)
+		mockTransport.Reset()
+	})
+}

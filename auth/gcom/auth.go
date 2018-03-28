@@ -226,43 +226,36 @@ func Auth(adminKey, keyString string) (*SignedInUser, error) {
 	}
 
 	// add the user to the cache.
-
 	log.Debug("Auth: Caching validKey response for %d seconds", validTTL/time.Second)
-
 	cache.Set(keyString, user, validTTL)
 	return user, nil
 }
 
+// validate that the signedInUser has a hosted-metrics instance with the
+// passed instanceID.  It is assumed that the instanceID has already been
+// confirmed to be an integer.
 func (u *SignedInUser) CheckInstance(instanceID string) error {
-	instanceSlug := u.Name + "-" + instanceID
+	instanceSlug := u.OrgSlug + "-" + instanceID
+
 	// check the cache
-
 	log.Debug("Auth: Checking cache for instance")
-
 	valid, cached := instanceCache.Get(instanceSlug)
 	if cached {
 		if valid {
-
 			log.Debug("Auth: valid instance key cached")
-
 			return nil
 		}
 
 		log.Debug("Auth: invalid instance key cached")
-
 		return ErrInvalidInstanceID
 	}
-	payload := url.Values{}
-	payload.Add("id", instanceID)
 
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/hosted-metrics", authEndpoint), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/hosted-metrics/%s", authEndpoint, instanceID), nil)
 	if err != nil {
 		// if we have an expired cached entry for the user, reset the cache expiration and return that
 		// this allows the service to remain available if grafana.net is unreachable
 		if valid {
-
 			log.Debug("Auth: re-caching valid instance response for %d seconds", validTTL/time.Second)
-
 			instanceCache.Set(instanceSlug, true, validTTL)
 			return nil
 		}
@@ -277,9 +270,7 @@ func (u *SignedInUser) CheckInstance(instanceID string) error {
 		// if we have an expired cached entry for the user, reset the cache expiration and return that
 		// this allows the service to remain available if grafana.net is unreachable
 		if valid {
-
 			log.Debug("Auth: re-caching valid instance response for %d seconds", validTTL/time.Second)
-
 			instanceCache.Set(instanceSlug, true, validTTL)
 			return nil
 		}
@@ -317,15 +308,12 @@ func (u *SignedInUser) CheckInstance(instanceID string) error {
 		return err
 	}
 
-	// Add instance to the cache
-	if len(instance.Items) < 1 {
-		log.Debug("Auth: Caching invalid instance response for %d seconds", validTTL/time.Second)
-		instanceCache.Set(instanceSlug, false, validTTL)
+	if strconv.Itoa(int(instance.ID)) != instanceID {
+		log.Error(3, "Auth: instanceID returned from grafana.com doesnt match requested instanceID. %d != %s", instance.ID, instanceID)
+		return fmt.Errorf("instance.ID returned from grafana.com doesnt match requested instanceID")
 	}
 
 	log.Debug("Auth: Caching valid instance response for %d seconds", validTTL/time.Second)
-
 	instanceCache.Set(instanceSlug, true, validTTL)
-
 	return nil
 }

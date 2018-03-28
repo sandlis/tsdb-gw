@@ -39,8 +39,8 @@ type SignedInUser struct {
 }
 
 type Instance struct {
-	Items []struct {
-		ID    int64 `json:"id"`
-		OrgID int   `json:"orgId"`
-	} `json:"items"`
+	ID          int64  `json:"id"`
+	OrgID       int    `json:"orgId"`
+	ClusterName string `json:"clusterName"`
+	ClusterID   int    `json:"clusterId"`
 }
