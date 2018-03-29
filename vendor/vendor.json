@@ -3,8 +3,129 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "MKGJvCOaVj3Xl4gBqFkCU+hcMc4=",
+			"path": "github.com/DataDog/agent-payload/gogen",
+			"revision": "3b793015ecfa5b829e8a466bd7cce836891502cc",
+			"revisionTime": "2018-02-09T17:50:02Z"
+		},
+		{
+			"checksumSHA1": "sC//SgbgFQtj0lR3nc7AXXXkjeI=",
+			"path": "github.com/DataDog/datadog-agent/pkg/aggregator/ckey",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "bJQ8SWEQGctQDtieCTEgWrGIajo=",
+			"path": "github.com/DataDog/datadog-agent/pkg/collector/check",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "Jwc9PPSbYuwnyBLIjHF0w1kKGZk=",
+			"path": "github.com/DataDog/datadog-agent/pkg/config",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "i2TUoKAPeEPzHT6T//iaEzjAFsg=",
+			"path": "github.com/DataDog/datadog-agent/pkg/diagnose/diagnosis",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "rkZmqDdb+qWRc71YXImx4jw0gdM=",
+			"path": "github.com/DataDog/datadog-agent/pkg/errors",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
 			"checksumSHA1": "/zipndouoyYAi740NaKzAEts9lQ=",
 			"path": "github.com/DataDog/datadog-agent/pkg/metrics",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "AzMGWCB8ntZacGLXHhgBQu9Lzqg=",
+			"path": "github.com/DataDog/datadog-agent/pkg/metrics/percentile",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "zoHi5RN4QdZj+eFLKr/QuB/gOmc=",
+			"path": "github.com/DataDog/datadog-agent/pkg/serializer/marshaler",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "vMNXmVrOb1HsxcNTaGRY2yfCjes=",
+			"path": "github.com/DataDog/datadog-agent/pkg/util",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "gMwG9R4doecOvbP6epRXCkY9+Es=",
+			"path": "github.com/DataDog/datadog-agent/pkg/util/cache",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "B/3enfxCQENxsnrp0OhTPMDSJeA=",
+			"path": "github.com/DataDog/datadog-agent/pkg/util/docker",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "1V+WueRk7ePxmEi5k+VUmAZ/lYM=",
+			"path": "github.com/DataDog/datadog-agent/pkg/util/ec2",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "z7fUpoS+NHA5j1LPIdUXzYQ1vTQ=",
+			"path": "github.com/DataDog/datadog-agent/pkg/util/ecs",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "zdy5rCfutX4FbzrLSiIk/Qw9Rh4=",
+			"path": "github.com/DataDog/datadog-agent/pkg/util/gce",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "3tgBj7ejrJwe88GOC769xBhVeDI=",
+			"path": "github.com/DataDog/datadog-agent/pkg/util/hostname",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "DeZFD3ZUygDRWmK4Skqudq1ZTsQ=",
+			"path": "github.com/DataDog/datadog-agent/pkg/util/kubernetes",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "dJMbRvg8rdKT7V21OakVhJw6gNY=",
+			"path": "github.com/DataDog/datadog-agent/pkg/util/kubernetes/kubelet",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "VGkMF48awuE2udGYhzJ3pnqaKvQ=",
+			"path": "github.com/DataDog/datadog-agent/pkg/util/retry",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "x0GnQBNajYXI1/i90yVqteSoAOI=",
+			"path": "github.com/DataDog/datadog-agent/pkg/version",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "zHwE4YMMi2pF6NYN/34TDeiL9Dc=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/DataDog/mmh3",
+			"path": "github.com/DataDog/mmh3",
 			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
 			"revisionTime": "2018-03-23T16:10:12Z"
 		},
@@ -21,6 +142,13 @@
 			"path": "github.com/Dieterbe/artisanalhistogram/hist15s",
 			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
 			"revisionTime": "2017-06-01T08:43:28Z"
+		},
+		{
+			"checksumSHA1": "oEpUpU8ASfBWIRGesd9fBG1ar40=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/Microsoft/go-winio",
+			"path": "github.com/Microsoft/go-winio",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
 		},
 		{
 			"checksumSHA1": "50/2Bv2EHsoyhrd7ddZKIFMIkoo=",
@@ -57,6 +185,211 @@
 			"path": "github.com/alyu/configparser",
 			"revision": "26b2fe18bee125de2a3090d6fadb7e280e63eba6",
 			"revisionTime": "2015-11-25T02:12:32Z"
+		},
+		{
+			"checksumSHA1": "DQNOlncuykm7PoycI6AeHkuD97s=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/aws",
+			"path": "github.com/aws/aws-sdk-go/aws",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "Y9W+4GimK4Fuxq+vyIskVYFRnX4=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/aws/awserr",
+			"path": "github.com/aws/aws-sdk-go/aws/awserr",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "yyYr41HZ1Aq0hWc3J5ijXwYEcac=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/aws/awsutil",
+			"path": "github.com/aws/aws-sdk-go/aws/awsutil",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "9nE/FjZ4pYrT883KtV2/aI+Gayo=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/aws/client",
+			"path": "github.com/aws/aws-sdk-go/aws/client",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "ieAJ+Cvp/PKv1LpUEnUXpc3OI6E=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/aws/client/metadata",
+			"path": "github.com/aws/aws-sdk-go/aws/client/metadata",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "7/8j/q0TWtOgXyvEcv4B2Dhl00o=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/aws/corehandlers",
+			"path": "github.com/aws/aws-sdk-go/aws/corehandlers",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "Y+cPwQL0dZMyqp3wI+KJWmA9KQ8=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/aws/credentials",
+			"path": "github.com/aws/aws-sdk-go/aws/credentials",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "u3GOAJLmdvbuNUeUEcZSEAOeL/0=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds",
+			"path": "github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "NUJUTWlc1sV8b7WjfiYc4JZbXl0=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/aws/credentials/endpointcreds",
+			"path": "github.com/aws/aws-sdk-go/aws/credentials/endpointcreds",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "JEYqmF83O5n5bHkupAzA6STm0no=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/aws/credentials/stscreds",
+			"path": "github.com/aws/aws-sdk-go/aws/credentials/stscreds",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "OnU/n7R33oYXiB4SAGd5pK7I0Bs=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/aws/defaults",
+			"path": "github.com/aws/aws-sdk-go/aws/defaults",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "/EXbk/z2TWjWc1Hvb4QYs3Wmhb8=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/aws/ec2metadata",
+			"path": "github.com/aws/aws-sdk-go/aws/ec2metadata",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "CJNEM69cgdO9tZi6c5Lj07jI+dk=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/aws/endpoints",
+			"path": "github.com/aws/aws-sdk-go/aws/endpoints",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "657ICMok3uC5dm5e9bKcVF2HaxE=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/aws/request",
+			"path": "github.com/aws/aws-sdk-go/aws/request",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "DIn7B+oP++/nw603OB95fmupzu8=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/aws/session",
+			"path": "github.com/aws/aws-sdk-go/aws/session",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "iU00ZjhAml/13g+1YXT21IqoXqg=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/aws/signer/v4",
+			"path": "github.com/aws/aws-sdk-go/aws/signer/v4",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "04ypv4x12l4q0TksA1zEVsmgpvw=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/internal/shareddefaults",
+			"path": "github.com/aws/aws-sdk-go/internal/shareddefaults",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "NStHCXEvYqG72GknZyv1jaKaeH0=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/private/protocol",
+			"path": "github.com/aws/aws-sdk-go/private/protocol",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "1QmQ3FqV37w0Zi44qv8pA1GeR0A=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/private/protocol/ec2query",
+			"path": "github.com/aws/aws-sdk-go/private/protocol/ec2query",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "ZqY5RWavBLWTo6j9xqdyBEaNFRk=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/private/protocol/query",
+			"path": "github.com/aws/aws-sdk-go/private/protocol/query",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "9V1PvtFQ9MObZTc3sa86WcuOtOU=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/private/protocol/query/queryutil",
+			"path": "github.com/aws/aws-sdk-go/private/protocol/query/queryutil",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "pkeoOfZpHRvFG/AOZeTf0lwtsFg=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/private/protocol/rest",
+			"path": "github.com/aws/aws-sdk-go/private/protocol/rest",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "0qYPUga28aQVkxZgBR3Z86AbGUQ=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil",
+			"path": "github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "6m97gyHt25GPBhd48PdPaAXCT9Y=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/service/ec2",
+			"path": "github.com/aws/aws-sdk-go/service/ec2",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "x7HCNPJnQi+4P6FKpBTY1hm3m6o=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/aws/aws-sdk-go/service/sts",
+			"path": "github.com/aws/aws-sdk-go/service/sts",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "1bK29RcAjCAMCYS2HS3O18w4m8k=",
+			"path": "github.com/cihub/seelog",
+			"revision": "f561c5e57575bb1e0a2167028b7339b3a8d16fb4",
+			"revisionTime": "2017-01-30T13:45:32Z"
+		},
+		{
+			"checksumSHA1": "iMU6SM/jawaCOJnyvR5/w8C/C1w=",
+			"path": "github.com/cihub/seelog/archive",
+			"revision": "f561c5e57575bb1e0a2167028b7339b3a8d16fb4",
+			"revisionTime": "2017-01-30T13:45:32Z"
+		},
+		{
+			"checksumSHA1": "oSd7EVei192qS3uYyCAMx9zV3Y8=",
+			"path": "github.com/cihub/seelog/archive/gzip",
+			"revision": "f561c5e57575bb1e0a2167028b7339b3a8d16fb4",
+			"revisionTime": "2017-01-30T13:45:32Z"
+		},
+		{
+			"checksumSHA1": "emesF9mCsIQC59VUE2lvjZYpAHU=",
+			"path": "github.com/cihub/seelog/archive/tar",
+			"revision": "f561c5e57575bb1e0a2167028b7339b3a8d16fb4",
+			"revisionTime": "2017-01-30T13:45:32Z"
+		},
+		{
+			"checksumSHA1": "TXLSkZsRlMifg3mg9+6QgEZJ6m4=",
+			"path": "github.com/cihub/seelog/archive/zip",
+			"revision": "f561c5e57575bb1e0a2167028b7339b3a8d16fb4",
+			"revisionTime": "2017-01-30T13:45:32Z"
 		},
 		{
 			"checksumSHA1": "n6WHmaVaxufQthaT1tYnqTmtSsY=",
@@ -99,6 +432,160 @@
 			"revisionTime": "2017-08-31T15:46:53Z"
 		},
 		{
+			"checksumSHA1": "f1wARLDzsF/JoyN01yoxXEwFIp8=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/distribution/digest",
+			"path": "github.com/docker/distribution/digest",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "Afja02fDYNayq+FvrfyAgPBtW6Y=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/distribution/reference",
+			"path": "github.com/docker/distribution/reference",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "YBWdvq03F8tkXRmh9qfcU8otV1Q=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/docker/api/types",
+			"path": "github.com/docker/docker/api/types",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "jVJDbe0IcyjoKc2xbohwzQr+FF0=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/docker/api/types/blkiodev",
+			"path": "github.com/docker/docker/api/types/blkiodev",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "kRUxG8BqWGMPA0TGu7I8LuFNISE=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/docker/api/types/container",
+			"path": "github.com/docker/docker/api/types/container",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "fzeGodcTcWuV18AT0BcvB4EFByo=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/docker/api/types/events",
+			"path": "github.com/docker/docker/api/types/events",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "U7BQrWTTXX/5UtI8SN6u4Hhbrw4=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/docker/api/types/filters",
+			"path": "github.com/docker/docker/api/types/filters",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "PiklEpjvh8fCcD3T/yspWiq+cV0=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/docker/api/types/mount",
+			"path": "github.com/docker/docker/api/types/mount",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "vGvZtL6F5XsNlr1p/tmLO1b3dN0=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/docker/api/types/network",
+			"path": "github.com/docker/docker/api/types/network",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "BHWRYLuNJly1Asgi2s/OQiS+LJU=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/docker/api/types/reference",
+			"path": "github.com/docker/docker/api/types/reference",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "XNedxDfkAxGCe5d8nLNPJRbWwDE=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/docker/api/types/registry",
+			"path": "github.com/docker/docker/api/types/registry",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "VTxWyFud/RedrpllGdQonVtGM/A=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/docker/api/types/strslice",
+			"path": "github.com/docker/docker/api/types/strslice",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "+VZ2iq/v0b1G9CkjUOnuhreBB/k=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/docker/api/types/swarm",
+			"path": "github.com/docker/docker/api/types/swarm",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "XwEQCyDAwJhWtDk0njEv/qHlWvA=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/docker/api/types/time",
+			"path": "github.com/docker/docker/api/types/time",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "iRarXGLKK2hKs5sdktWlAcP6adM=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/docker/api/types/versions",
+			"path": "github.com/docker/docker/api/types/versions",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "Aw4GIxyeak7ey5CjVhtlx0UVSug=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/docker/api/types/volume",
+			"path": "github.com/docker/docker/api/types/volume",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "bV5UaDOCPu5Ipa842uSh5Nso3tU=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/docker/client",
+			"path": "github.com/docker/docker/client",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "8I0Ez+aUYGpsDEVZ8wN/Ztf6Zqs=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/docker/pkg/tlsconfig",
+			"path": "github.com/docker/docker/pkg/tlsconfig",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "JbiWTzH699Sqz25XmDlsARpMN9w=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/go-connections/nat",
+			"path": "github.com/docker/go-connections/nat",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "jUfDG3VQsA2UZHvvIXncgiddpYA=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/go-connections/sockets",
+			"path": "github.com/docker/go-connections/sockets",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "c6lDGNwTm5mYq18IHP+lqYpk8xU=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/go-connections/tlsconfig",
+			"path": "github.com/docker/go-connections/tlsconfig",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "UmXGieuTJQOzJPspPJTVKKKMiUA=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/docker/go-units",
+			"path": "github.com/docker/go-units",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
 			"checksumSHA1": "y2Kh4iPlgCPXSGTCcFpzePYdzzg=",
 			"path": "github.com/eapache/go-resiliency/breaker",
 			"revision": "b86b1ec0dd4209a588dc1285cdd471e73525c0b3",
@@ -117,10 +604,24 @@
 			"revisionTime": "2016-08-05T00:47:13Z"
 		},
 		{
+			"checksumSHA1": "7NP1qUMF8Kx1y0zANxx0e+oq9Oo=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/fsnotify/fsnotify",
+			"path": "github.com/fsnotify/fsnotify",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
 			"checksumSHA1": "xsLJUaqRupQXOzcjjMFrGdi2CTM=",
 			"path": "github.com/glacjay/goini",
 			"revision": "fd3024d87ee21a36d3ccc4367f509fec89cd90ee",
 			"revisionTime": "2016-11-20T06:25:52Z"
+		},
+		{
+			"checksumSHA1": "jK0knSGdB7hA/Pvc0mQBYkYxN/8=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/go-ini/ini",
+			"path": "github.com/go-ini/ini",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
 		},
 		{
 			"checksumSHA1": "y0olVbiMQ6/UOa/eh52XYnies90=",
@@ -273,16 +774,16 @@
 			"revisionTime": "2017-08-31T15:46:53Z"
 		},
 		{
-			"checksumSHA1": "z8tyaX1kWYzQELcDNg/sPZtMnbs=",
-			"path": "github.com/grafana/metrictank/stats",
-			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
-			"revisionTime": "2017-06-01T08:43:28Z"
-		},
-		{
 			"checksumSHA1": "CN8+3osIDyJeSOGhRPgeubTw0Bs=",
 			"path": "github.com/grafana/metrictank/stats",
 			"revision": "442188119462913f5a43c93a90453b17397d9202",
 			"revisionTime": "2018-02-16T14:53:10Z"
+		},
+		{
+			"checksumSHA1": "z8tyaX1kWYzQELcDNg/sPZtMnbs=",
+			"path": "github.com/grafana/metrictank/stats",
+			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
+			"revisionTime": "2017-06-01T08:43:28Z"
 		},
 		{
 			"checksumSHA1": "KWKsNYbKmCJ3v6Bi+AijBpPHMhQ=",
@@ -315,10 +816,80 @@
 			"revisionTime": "2018-02-16T16:09:04Z"
 		},
 		{
+			"checksumSHA1": "HtpYAWHvd9mq+mHkpo7z8PGzMik=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/hashicorp/hcl",
+			"path": "github.com/hashicorp/hcl",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "XQmjDva9JCGGkIecOgwtBEMCJhU=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/hashicorp/hcl/hcl/ast",
+			"path": "github.com/hashicorp/hcl/hcl/ast",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "/15SVLnCDzxICSatuYbfctrcpSM=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/hashicorp/hcl/hcl/parser",
+			"path": "github.com/hashicorp/hcl/hcl/parser",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "PYDzRc61T0pbwWuLNHgBRp/gJII=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/hashicorp/hcl/hcl/scanner",
+			"path": "github.com/hashicorp/hcl/hcl/scanner",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "oS3SCN9Wd6D8/LG0Yx1fu84a7gI=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/hashicorp/hcl/hcl/strconv",
+			"path": "github.com/hashicorp/hcl/hcl/strconv",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "c6yprzj06ASwCo18TtbbNNBHljA=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/hashicorp/hcl/hcl/token",
+			"path": "github.com/hashicorp/hcl/hcl/token",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "PwlfXt7mFS8UYzWxOK5DOq0yxS0=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/hashicorp/hcl/json/parser",
+			"path": "github.com/hashicorp/hcl/json/parser",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "afrZ8VmAwfTdDAYVgNSXbxa4GsA=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/hashicorp/hcl/json/scanner",
+			"path": "github.com/hashicorp/hcl/json/scanner",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "fNlXQCQEnb+B3k5UDL/r15xtSJY=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/hashicorp/hcl/json/token",
+			"path": "github.com/hashicorp/hcl/json/token",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
 			"checksumSHA1": "yHSEfaBkSMHzZUwnKr7m8L3x4gA=",
 			"path": "github.com/jarcoal/httpmock",
 			"revision": "4442edb3db31196622da56482fd8d0fa375fba4d",
 			"revisionTime": "2016-12-10T15:13:36Z"
+		},
+		{
+			"checksumSHA1": "0ZrwvB6KoGPj2PoDNSEJwxQ6Mog=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/jmespath/go-jmespath",
+			"path": "github.com/jmespath/go-jmespath",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
 		},
 		{
 			"checksumSHA1": "Js/yx9fZ3+wH1wZpHNIxSTMIaCg=",
@@ -327,16 +898,44 @@
 			"revisionTime": "2017-05-03T22:40:06Z"
 		},
 		{
+			"checksumSHA1": "Miru3KXpJ+bMOmT7Q3auY7ODZE0=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/magiconair/properties",
+			"path": "github.com/magiconair/properties",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
 			"checksumSHA1": "j4CCNdvlzHLOMA7gyS7wzIfwBTw=",
 			"path": "github.com/metrics20/go-metrics20/carbon20",
 			"revision": "55e770486f161cc83baf4e7178f7bb928dbc5716",
 			"revisionTime": "2017-08-11T09:14:05Z"
 		},
 		{
+			"checksumSHA1": "FpgODaspeA2JtrcagXl9JRY/i88=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/mitchellh/mapstructure",
+			"path": "github.com/mitchellh/mapstructure",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
 			"checksumSHA1": "uG/irJIgifYdc+HC1kF6Gwgn7kU=",
 			"path": "github.com/oxtoacart/bpool",
 			"revision": "4e1c5567d7c2dd59fa4c7c83d34c2f3528b025d6",
 			"revisionTime": "2015-07-12T13:31:11Z"
+		},
+		{
+			"checksumSHA1": "JVGDxPn66bpe6xEiexs1r+y6jF0=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/patrickmn/go-cache",
+			"path": "github.com/patrickmn/go-cache",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "+qobk0BQiCfqdrhKeoZnwz6hFnE=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/pelletier/go-toml",
+			"path": "github.com/pelletier/go-toml",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
 		},
 		{
 			"checksumSHA1": "mbhJnsNwGAwkTQH5c2hVRO9YmxA=",
@@ -355,6 +954,20 @@
 			"path": "github.com/pierrec/xxHash/xxHash32",
 			"revision": "5a004441f897722c627870a981d02b29924215fa",
 			"revisionTime": "2016-01-12T16:53:51Z"
+		},
+		{
+			"checksumSHA1": "ynJSWoF6v+3zMnh9R0QmmG6iGV8=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/pkg/errors",
+			"path": "github.com/pkg/errors",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "LuFv4/jlrmFNnDb/5SCSEPAM9vU=",
+			"origin": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
+			"path": "github.com/pmezard/go-difflib/difflib",
+			"revision": "c679ae2cc0cb27ec3293fea7e254e47386f05d69",
+			"revisionTime": "2018-03-14T08:05:35Z"
 		},
 		{
 			"checksumSHA1": "YU+/K48IMawQnToO4ETE6a+hhj4=",
@@ -385,6 +998,12 @@
 			"path": "github.com/rcrowley/go-metrics",
 			"revision": "1f30fe9094a513ce4c700b9a54458bbb0c96996c",
 			"revisionTime": "2016-11-28T21:05:44Z"
+		},
+		{
+			"checksumSHA1": "ySaT8G3I3y4MmnoXOYAAX0rC+p8=",
+			"path": "github.com/sirupsen/logrus",
+			"revision": "d682213848ed68c0a260ca37d6dd5ace8423f5ba",
+			"revisionTime": "2017-12-05T20:32:29Z"
 		},
 		{
 			"checksumSHA1": "wVmkBavCZSwHYTDGxa1xOD3RKe0=",
@@ -423,6 +1042,54 @@
 			"revisionTime": "2018-02-22T19:45:00Z"
 		},
 		{
+			"checksumSHA1": "F3JU4T4XXvZTRAcv6rhTao4QGos=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/spf13/afero",
+			"path": "github.com/spf13/afero",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "X6RueW0rO55PbOQ0sMWSQOxVl4I=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/spf13/afero/mem",
+			"path": "github.com/spf13/afero/mem",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "Hc2i9OOK34PAImuNftTaHdbdLgs=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/spf13/cast",
+			"path": "github.com/spf13/cast",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "+JFKK0z5Eutk29rUz1lEhLxHMfk=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/spf13/jwalterweatherman",
+			"path": "github.com/spf13/jwalterweatherman",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "STxYqRb4gnlSr3mRpT+Igfdz/kM=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/spf13/pflag",
+			"path": "github.com/spf13/pflag",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "XeB0yeQkOMI+CWrllrbTrg4iOEs=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/github.com/spf13/viper",
+			"path": "github.com/spf13/viper",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
+			"checksumSHA1": "6LwXZI7kXm1C0h4Ui0Y52p9uQhk=",
+			"path": "github.com/stretchr/testify/assert",
+			"revision": "c679ae2cc0cb27ec3293fea7e254e47386f05d69",
+			"revisionTime": "2018-03-14T08:05:35Z"
+		},
+		{
 			"checksumSHA1": "HN3pLd5cC+QXkX8j8FsCCB3FzSI=",
 			"path": "github.com/tinylib/msgp/msgp",
 			"revision": "02d047e07459c5a7b02b1244161d0f2f6d8f660d",
@@ -433,6 +1100,19 @@
 			"path": "golang.org/x/crypto/pbkdf2",
 			"revision": "e1a4589e7d3ea14a3352255d04b6f1a418845e5e",
 			"revisionTime": "2017-05-23T23:42:09Z"
+		},
+		{
+			"checksumSHA1": "X1NTlfcau2XcV6WtAHF6b/DECOA=",
+			"path": "golang.org/x/crypto/ssh/terminal",
+			"revision": "b3c9a1d25cfbbbab0ff4780b71c4f54e6e92a0de",
+			"revisionTime": "2018-01-09T18:05:24Z"
+		},
+		{
+			"checksumSHA1": "WHc3uByvGaMcnSoI21fhzYgbOgg=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/golang.org/x/net/context/ctxhttp",
+			"path": "golang.org/x/net/context/ctxhttp",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
 		},
 		{
 			"checksumSHA1": "VLRrE1AnzGMZf5Eud41ysvU3HOA=",
@@ -465,10 +1145,29 @@
 			"revisionTime": "2017-09-25T09:26:47Z"
 		},
 		{
+			"checksumSHA1": "r9l4r3H6FOLQ0c2JaoXpopFjpnw=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/golang.org/x/net/proxy",
+			"path": "golang.org/x/net/proxy",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
+		},
+		{
 			"checksumSHA1": "u/r66lwYfgg682u5hZG7/E7+VCY=",
 			"path": "golang.org/x/net/trace",
 			"revision": "434ec0c7fe3742c984919a691b2018a6e9694425",
 			"revisionTime": "2017-09-25T09:26:47Z"
+		},
+		{
+			"checksumSHA1": "++MsxaBN30inOcAz7KvFGddE7ic=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "810d7000345868fc619eb81f46307107118f4ae1",
+			"revisionTime": "2018-01-09T14:25:55Z"
+		},
+		{
+			"checksumSHA1": "eQq+ZoTWPjyizS9XalhZwfGjQao=",
+			"path": "golang.org/x/sys/windows",
+			"revision": "810d7000345868fc619eb81f46307107118f4ae1",
+			"revisionTime": "2018-01-09T14:25:55Z"
 		},
 		{
 			"checksumSHA1": "CbpjEkkOeh0fdM/V8xKDdI0AA88=",
@@ -673,6 +1372,13 @@
 			"path": "gopkg.in/raintank/schema.v1/msg",
 			"revision": "a323316458b5df84827551e9b6b5f61cb2de423b",
 			"revisionTime": "2017-01-12T12:37:55Z"
+		},
+		{
+			"checksumSHA1": "qOmvuDm+F+2nQQecUZBVkZrTn6Y=",
+			"origin": "github.com/DataDog/datadog-agent/vendor/gopkg.in/yaml.v2",
+			"path": "gopkg.in/yaml.v2",
+			"revision": "252bf6f8663644929e0f60e95ec7152ec2213ca7",
+			"revisionTime": "2018-03-23T16:10:12Z"
 		}
 	],
 	"rootPath": "github.com/raintank/tsdb-gw"
