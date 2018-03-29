@@ -30,7 +30,7 @@ cd cmd/tsdb-gw
 CGO_ENABLED=1 go build -tags static -ldflags "-X main.GitHash=$GIT_VERSION" -o $BUILD_DIR/tsdb-gw
 cd ../tsdb-usage
 CGO_ENABLED=1 go build -tags static -ldflags "-X main.GitHash=$GIT_VERSION" -o $BUILD_DIR/tsdb-usage
-cd $SOURCE_DIR/cmd/cortex-gw
+cd ../cortex-gw
 go build -tags static -ldflags "-X main.GitHash=$GIT_VERSION" -o $BUILD_DIR/cortex-gw
 
 # delete temporary build dir of librdkafka, since it is linked statically we
