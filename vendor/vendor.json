@@ -362,6 +362,12 @@
 			"revisionTime": "2018-03-23T16:10:12Z"
 		},
 		{
+			"checksumSHA1": "spyv5/YFBjYyZLZa1U2LBfDR8PM=",
+			"path": "github.com/beorn7/perks/quantile",
+			"revision": "4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9",
+			"revisionTime": "2016-08-04T10:47:26Z"
+		},
+		{
 			"checksumSHA1": "1bK29RcAjCAMCYS2HS3O18w4m8k=",
 			"path": "github.com/cihub/seelog",
 			"revision": "f561c5e57575bb1e0a2167028b7339b3a8d16fb4",
@@ -762,20 +768,14 @@
 			"revisionTime": "2018-02-16T14:53:10Z"
 		},
 		{
-			"checksumSHA1": "p9Pr2HqLt59P0R1ps1x1bpHRlg4=",
-			"path": "github.com/grafana/metrictank/mdata/chunk",
-			"revision": "442188119462913f5a43c93a90453b17397d9202",
-			"revisionTime": "2018-02-16T14:53:10Z"
-		},
-		{
 			"checksumSHA1": "hK4POSb6q8utNbjmIIiSQiwgobA=",
 			"path": "github.com/grafana/metrictank/mdata/chunk",
 			"revision": "ee4db35580cfdc5c9ec2d8ada0c8305cfda62e53",
 			"revisionTime": "2017-08-31T15:46:53Z"
 		},
 		{
-			"checksumSHA1": "CN8+3osIDyJeSOGhRPgeubTw0Bs=",
-			"path": "github.com/grafana/metrictank/stats",
+			"checksumSHA1": "p9Pr2HqLt59P0R1ps1x1bpHRlg4=",
+			"path": "github.com/grafana/metrictank/mdata/chunk",
 			"revision": "442188119462913f5a43c93a90453b17397d9202",
 			"revisionTime": "2018-02-16T14:53:10Z"
 		},
@@ -784,6 +784,12 @@
 			"path": "github.com/grafana/metrictank/stats",
 			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
 			"revisionTime": "2017-06-01T08:43:28Z"
+		},
+		{
+			"checksumSHA1": "CN8+3osIDyJeSOGhRPgeubTw0Bs=",
+			"path": "github.com/grafana/metrictank/stats",
+			"revision": "442188119462913f5a43c93a90453b17397d9202",
+			"revisionTime": "2018-02-16T14:53:10Z"
 		},
 		{
 			"checksumSHA1": "KWKsNYbKmCJ3v6Bi+AijBpPHMhQ=",
@@ -911,6 +917,12 @@
 			"revisionTime": "2018-03-23T16:10:12Z"
 		},
 		{
+			"checksumSHA1": "bKMZjd2wPw13VwoE7mBeSv5djFA=",
+			"path": "github.com/matttproud/golang_protobuf_extensions/pbutil",
+			"revision": "c12348ce28de40eed0136aa2b644d0ee0650e56c",
+			"revisionTime": "2016-04-24T11:30:07Z"
+		},
+		{
 			"checksumSHA1": "j4CCNdvlzHLOMA7gyS7wzIfwBTw=",
 			"path": "github.com/metrics20/go-metrics20/carbon20",
 			"revision": "55e770486f161cc83baf4e7178f7bb928dbc5716",
@@ -974,6 +986,36 @@
 			"path": "github.com/pmezard/go-difflib/difflib",
 			"revision": "c679ae2cc0cb27ec3293fea7e254e47386f05d69",
 			"revisionTime": "2018-03-14T08:05:35Z"
+		},
+		{
+			"checksumSHA1": "hu0MsbTdFzZxNRyAxe2HmTFFFak=",
+			"path": "github.com/prometheus/client_golang/prometheus",
+			"revision": "661e31bf844dfca9aeba15f27ea8aa0d485ad212",
+			"revisionTime": "2017-12-01T12:22:22Z"
+		},
+		{
+			"checksumSHA1": "wsAkYlRRUNx+OAuUOIqdjO7dICM=",
+			"path": "github.com/prometheus/client_golang/prometheus/promhttp",
+			"revision": "661e31bf844dfca9aeba15f27ea8aa0d485ad212",
+			"revisionTime": "2017-12-01T12:22:22Z"
+		},
+		{
+			"checksumSHA1": "DvwvOlPNAgRntBzt3b3OSRMS2N4=",
+			"path": "github.com/prometheus/client_model/go",
+			"revision": "99fa1f4be8e564e8a6b613da7fa6f46c9edafc6c",
+			"revisionTime": "2017-11-17T10:05:41Z"
+		},
+		{
+			"checksumSHA1": "xfnn0THnqNwjwimeTClsxahYrIo=",
+			"path": "github.com/prometheus/common/expfmt",
+			"revision": "2e54d0b93cba2fd133edc32211dcc32c06ef72ca",
+			"revisionTime": "2017-11-17T16:30:51Z"
+		},
+		{
+			"checksumSHA1": "GWlM3d2vPYyNATtTFgftS10/A9w=",
+			"path": "github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg",
+			"revision": "2e54d0b93cba2fd133edc32211dcc32c06ef72ca",
+			"revisionTime": "2017-11-17T16:30:51Z"
 		},
 		{
 			"checksumSHA1": "YU+/K48IMawQnToO4ETE6a+hhj4=",
