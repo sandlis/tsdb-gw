@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
@@ -26,6 +27,7 @@ var (
 
 	tracingEnabled = flag.Bool("tracing-enabled", false, "enable/disable distributed opentracing via jaeger")
 	tracingAddr    = flag.String("tracing-addr", "localhost:6831", "address of the jaeger agent to send data to")
+	metricsAddr    = flag.String("metrics-addr", "localhost:8001", "http service address for the /metrics endpoint")
 )
 
 func main() {
@@ -65,13 +67,15 @@ func main() {
 	api := api.New(*authPlugin, app)
 	InitRoutes(api)
 
+	ms := newMetricsServer(*metricsAddr)
+
 	inputs := make([]Stoppable, 0)
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
 	log.Infoln("starting up")
 	done := make(chan struct{})
-	inputs = append(inputs, api.Start())
+	inputs = append(inputs, api.Start(), ms)
 	go handleShutdown(done, interrupt, inputs)
 
 	<-done
@@ -101,5 +105,30 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 func InitRoutes(a *api.Api) {
 	a.Router.Any("/api/prom/push", a.PromStats("cortex-write"), a.Auth(), cortex.Write)
 	a.Router.Any("/api/prom/*", a.PromStats("cortex-read"), a.Auth(), cortex.Proxy)
-	a.Router.Get("/metrics", promhttp.Handler())
+}
+
+type metricsServer struct {
+	srv *http.Server
+}
+
+func newMetricsServer(addr string) *metricsServer {
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: mux,
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil {
+			log.Fatal("Failed to start metrics server: %v", err)
+		}
+	}()
+
+	return &metricsServer{srv}
+}
+
+func (m *metricsServer) Stop() {
+	m.srv.Close()
 }
