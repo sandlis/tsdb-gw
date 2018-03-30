@@ -25,4 +25,5 @@ func InitLogger() {
 	case 6:
 		log.SetLevel(log.PanicLevel)
 	}
+	log.Infof("log level set to %v", log.GetLevel())
 }
