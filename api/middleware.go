@@ -14,11 +14,25 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	otLog "github.com/opentracing/opentracing-go/log"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/raintank/tsdb-gw/auth"
 	"github.com/raintank/tsdb-gw/usage"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/macaron.v1"
 )
+
+var (
+	requestDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: "tsdb_gw",
+		Name:      "request_duration_seconds",
+		Help:      "Time (in seconds) spent serving HTTP requests.",
+		Buckets:   []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10, 25, 50, 100},
+	}, []string{"method", "route", "status_code"})
+)
+
+func init() {
+	prometheus.MustRegister(requestDuration)
+}
 
 type Context struct {
 	*macaron.Context
@@ -172,6 +186,22 @@ func RequestStats() macaron.Handler {
 		if status < 300 {
 			stats.PathSize(ctx, path, rw.Size())
 		}
+	}
+}
+
+func (a *Api) PromStats(handler string) macaron.Handler {
+	return func(ctx *Context) {
+		start := time.Now()
+		rw := ctx.Resp.(macaron.ResponseWriter)
+		// call next handler. This will return after all handlers
+		// have completed and the request has been sent.
+		ctx.Next()
+
+		status := strconv.Itoa(rw.Status())
+		took := time.Since(start)
+		method := ctx.Req.Method
+
+		requestDuration.WithLabelValues(method, handler, status).Observe(took.Seconds())
 	}
 }
 
