@@ -17,8 +17,8 @@ import (
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/carbon"
 	"github.com/raintank/tsdb-gw/graphite"
+	"github.com/raintank/tsdb-gw/ingest"
 	"github.com/raintank/tsdb-gw/metrictank"
-	"github.com/raintank/tsdb-gw/metrictank/ingest"
 	"github.com/raintank/tsdb-gw/publish"
 	"github.com/raintank/tsdb-gw/publish/kafka"
 	"github.com/raintank/tsdb-gw/usage"
@@ -120,16 +120,13 @@ func main() {
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
 	api := api.New(*authPlugin, app)
-	InitRoutes(api)
+	initRoutes(api)
 
-	log.Info("starting up")
-
-	ms := newMetricsServer(*metricsAddr)
-
+	log.Infof("Starting %v ...", app)
 	done := make(chan struct{})
 	inputs = append(inputs, api.Start(), carbon.InitCarbon())
 	go handleShutdown(done, interrupt, inputs)
-
+	log.Infof("%v Started", app)
 	<-done
 }
 
@@ -179,7 +176,7 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 	close(done)
 }
 
-func InitRoutes(a *api.Api) {
+func initRoutes(a *api.Api) {
 	a.Router.Post("/metrics/delete", a.Auth(), metrictank.MetrictankProxy("/metrics/delete"))
 	a.Router.Post("/metrics", a.Auth(), metrictank.Metrics)
 	a.Router.Get("/metrics/index.json", a.Auth(), metrictank.MetrictankProxy("/metrics/index.json"))

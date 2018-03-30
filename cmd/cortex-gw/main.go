@@ -65,7 +65,7 @@ func main() {
 		log.Fatal("could not initialize cortex proxy: %s", err.Error())
 	}
 	api := api.New(*authPlugin, app)
-	InitRoutes(api)
+	initRoutes(api)
 
 	ms := newMetricsServer(*metricsAddr)
 
@@ -73,11 +73,11 @@ func main() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
-	log.Infoln("starting up")
+	log.Infof("Starting %v ...", app)
 	done := make(chan struct{})
 	inputs = append(inputs, api.Start(), ms)
 	go handleShutdown(done, interrupt, inputs)
-
+	log.Infof("%v Started", app)
 	<-done
 }
 
@@ -102,7 +102,7 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 }
 
 // InitRoutes initializes the routes.
-func InitRoutes(a *api.Api) {
+func initRoutes(a *api.Api) {
 	a.Router.Any("/api/prom/push", a.PromStats("cortex-write"), a.Auth(), cortex.Write)
 	a.Router.Any("/api/prom/*", a.PromStats("cortex-read"), a.Auth(), cortex.Proxy)
 }
