@@ -213,7 +213,7 @@ func pathSlug(p string) string {
 	return strings.Replace(strings.Replace(slug, "/", "_", -1), ".", "_", -1)
 }
 
-func Tracer(spanName string) macaron.Handler {
+func Tracer(componentName string) macaron.Handler {
 	return func(macCtx *macaron.Context) {
 		tracer := opentracing.GlobalTracer()
 		path := pathSlug(macCtx.Req.URL.Path)
@@ -222,7 +222,7 @@ func Tracer(spanName string) macaron.Handler {
 
 		ext.HTTPMethod.Set(span, macCtx.Req.Method)
 		ext.HTTPUrl.Set(span, macCtx.Req.URL.String())
-		ext.Component.Set(span, spanName)
+		ext.Component.Set(span, componentName+"/api")
 
 		macCtx.Req = macaron.Request{
 			Request: macCtx.Req.WithContext(opentracing.ContextWithSpan(macCtx.Req.Context(), span)),
