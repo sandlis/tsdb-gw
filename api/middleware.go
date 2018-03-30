@@ -26,7 +26,7 @@ var (
 		Namespace: "tsdb_gw",
 		Name:      "request_duration_seconds",
 		Help:      "Time (in seconds) spent serving HTTP requests.",
-		Buckets:   prometheus.ExponentialBuckets(.05, 2, 10),
+		Buckets:   []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10, 25, 50, 100},
 	}, []string{"method", "route", "status_code"})
 )
 

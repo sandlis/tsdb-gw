@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/grafana/globalconf"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/cortex"
 	"github.com/raintank/tsdb-gw/util"
@@ -76,6 +77,7 @@ func main() {
 	<-done
 }
 
+// Stoppable represents things that can be stopped.
 type Stoppable interface {
 	Stop()
 }
@@ -95,7 +97,9 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 	close(done)
 }
 
+// InitRoutes initializes the routes.
 func InitRoutes(a *api.Api) {
-	a.Router.Any("/api/prom/push", a.Auth(), cortex.Write)
-	a.Router.Any("/api/prom/*", a.Auth(), cortex.Proxy)
+	a.Router.Any("/api/prom/push", a.PromStats("cortex-write"), a.Auth(), cortex.Write)
+	a.Router.Any("/api/prom/*", a.PromStats("cortex-read"), a.Auth(), cortex.Proxy)
+	a.Router.Get("/metrics", promhttp.Handler())
 }
