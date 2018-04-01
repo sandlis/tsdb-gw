@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/grafana/globalconf"
 	"github.com/grafana/metrictank/stats"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/carbon"
 	"github.com/raintank/tsdb-gw/cortex"
@@ -45,6 +47,8 @@ var (
 
 	tracingEnabled = flag.Bool("tracing-enabled", false, "enable/disable distributed opentracing via jaeger")
 	tracingAddr    = flag.String("tracing-addr", "localhost:6831", "address of the jaeger agent to send data to")
+
+	metricsAddr = flag.String("metrics-addr", ":8001", "http service address for the /metrics endpoint")
 )
 
 func main() {
@@ -127,11 +131,41 @@ func main() {
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
 	log.Info("starting up")
+
+	ms := newMetricsServer(*metricsAddr)
+
 	done := make(chan struct{})
-	inputs = append(inputs, api.InitApi(), carbon.InitCarbon())
+	inputs = append(inputs, api.InitApi(), carbon.InitCarbon(), ms)
 	go handleShutdown(done, interrupt, inputs)
 
 	<-done
+}
+
+// metricsServer is the server for prometheus /metrics endpoint.
+type metricsServer struct {
+	srv *http.Server
+}
+
+func newMetricsServer(addr string) *metricsServer {
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: mux,
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil {
+			log.Fatal(4, "Failed to start metrics server: %v", err)
+		}
+	}()
+
+	return &metricsServer{srv}
+}
+
+func (m *metricsServer) Stop() {
+	m.srv.Close()
 }
 
 type Stoppable interface {
