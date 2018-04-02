@@ -2,8 +2,11 @@ package util
 
 import (
 	"flag"
+	"fmt"
+	"runtime"
+	"strings"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -13,17 +16,44 @@ var (
 func InitLogger() {
 	switch *level {
 	case 1:
-		log.SetLevel(log.DebugLevel)
+		logrus.SetLevel(logrus.DebugLevel)
 	case 2:
-		log.SetLevel(log.InfoLevel)
+		logrus.SetLevel(logrus.InfoLevel)
 	case 3:
-		log.SetLevel(log.WarnLevel)
+		logrus.SetLevel(logrus.WarnLevel)
 	case 4:
-		log.SetLevel(log.ErrorLevel)
+		logrus.SetLevel(logrus.ErrorLevel)
 	case 5:
-		log.SetLevel(log.FatalLevel)
+		logrus.SetLevel(logrus.FatalLevel)
 	case 6:
-		log.SetLevel(log.PanicLevel)
+		logrus.SetLevel(logrus.PanicLevel)
 	}
-	log.Infof("log level set to %v", log.GetLevel())
+	logrus.AddHook(&locationHook{})
+	logrus.Infof("log level set to %v", logrus.GetLevel())
+}
+
+type locationHook struct{}
+
+func (*locationHook) Fire(entry *logrus.Entry) error {
+	// This is the only way to do this as a hook currently, super messy. Official solution soon hopefully?
+	// TODO https://github.com/sirupsen/logrus/issues/63
+	_, file, line, ok := runtime.Caller(7)
+	if !ok {
+		file = "<???>"
+		line = 1
+	} else {
+		slash := strings.LastIndex(file, "/")
+		file = file[slash+1:]
+	}
+	entry.Data["source"] = fmt.Sprintf("%s:%d", file, line)
+
+	return nil
+}
+
+func (*locationHook) Levels() []logrus.Level {
+	return []logrus.Level{
+		logrus.ErrorLevel,
+		logrus.FatalLevel,
+		logrus.PanicLevel,
+	}
 }
