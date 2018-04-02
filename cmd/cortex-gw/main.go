@@ -122,7 +122,7 @@ func newMetricsServer(addr string) *metricsServer {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {
-			log.Fatal("Failed to start metrics server: %v", err)
+			log.Fatalf("Failed to start metrics server: %v", err)
 		}
 	}()
 
