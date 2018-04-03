@@ -7,12 +7,25 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/DataDog/datadog-agent/pkg/metrics"
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/publish"
 	log "github.com/sirupsen/logrus"
 	schema "gopkg.in/raintank/schema.v1"
 )
+
+// DataDogPayload struct to unmarshal datadog agent json
+type DataDogPayload struct {
+	Series []struct {
+		Name   string `json:"metric"`
+		Points []struct {
+			Ts    float64
+			Value float64
+		} `json:"points"`
+		Tags   []string `json:"tags"`
+		Host   string   `json:"host"`
+		Device string   `json:"device,omitempty"`
+	} `json:"series"`
+}
 
 func DataDogMTWrite(ctx *api.Context) {
 	if ctx.Req.Request.Body != nil {
@@ -30,7 +43,7 @@ func DataDogMTWrite(ctx *api.Context) {
 			body, err = ioutil.ReadAll(ctx.Req.Request.Body)
 		}
 
-		var series DataDogData
+		var series DataDogPayload
 		err = json.Unmarshal(body, &series)
 		if err != nil {
 			return
@@ -39,7 +52,7 @@ func DataDogMTWrite(ctx *api.Context) {
 		buf := make([]*schema.MetricData, 0)
 		for _, ts := range series.Series {
 			_, s := schemas.Match(ts.Name, 0)
-			tagSet := createTagSet(ts)
+			tagSet := createTagSet(ts.Host, ts.Device, ts.Tags)
 			for _, point := range ts.Points {
 				md := metricPool.Get()
 				*md = schema.MetricData{
@@ -73,17 +86,13 @@ func DataDogMTWrite(ctx *api.Context) {
 	ctx.JSON(400, "no data included in request.")
 }
 
-type DataDogData struct {
-	Series metrics.Series `json:"series,omitempty"`
-}
-
-func createTagSet(serie *metrics.Serie) []string {
+func createTagSet(host string, device string, ctags []string) []string {
 	tags := []string{}
-	if serie.Device != "" {
-		tags = append(tags, "device="+serie.Device)
+	if device != "" {
+		tags = append(tags, "device="+device)
 	}
-	tags = append(tags, "host="+serie.Host)
-	for _, t := range serie.Tags {
+	tags = append(tags, "host="+host)
+	for _, t := range ctags {
 		tSplit := strings.SplitN(":", t, 2)
 		if len(tSplit) == 0 {
 			continue
