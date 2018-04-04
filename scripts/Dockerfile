@@ -1,7 +1,7 @@
 ARG BASE_PATH=/go/src/github.com/raintank/tsdb-gw
 
 # build binaries inside an alpine3.7 container
-FROM golang:1.9.3-alpine3.7 AS build
+FROM golang:1.10.1-alpine3.7 AS build
 ARG BASE_PATH
 
 RUN apk --update add build-base linux-headers openssl-dev cyrus-sasl-dev bash python git
