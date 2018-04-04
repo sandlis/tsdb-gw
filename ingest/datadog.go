@@ -16,15 +16,12 @@ import (
 // DataDogPayload struct to unmarshal datadog agent json
 type DataDogPayload struct {
 	Series []struct {
-		Name   string `json:"metric"`
-		Points []struct {
-			Ts    float64
-			Value float64
-		} `json:"points"`
-		Tags   []string `json:"tags"`
-		Host   string   `json:"host"`
-		Mtype  string   `json:"types"`
-		Device string   `json:"device,omitempty"`
+		Name   string       `json:"metric"`
+		Points [][2]float64 `json:"points"`
+		Tags   []string     `json:"tags"`
+		Host   string       `json:"host"`
+		Mtype  string       `json:"type"`
+		Device string       `json:"device,omitempty"`
 	} `json:"series"`
 }
 
@@ -60,9 +57,9 @@ func DataDogMTWrite(ctx *api.Context) {
 					Name:     ts.Name,
 					Metric:   ts.Name,
 					Interval: s.Retentions[0].SecondsPerPoint,
-					Value:    point.Value,
+					Value:    point[1],
 					Unit:     "unknown",
-					Time:     int64(point.Ts),
+					Time:     int64(point[0]),
 					Mtype:    ts.Mtype,
 					Tags:     tagSet,
 					OrgId:    ctx.ID,
