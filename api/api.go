@@ -27,12 +27,6 @@ type Api struct {
 	Router     *macaron.Macaron
 }
 
-type ApiConfig struct {
-	Auth            string
-	AppName         string
-	Instrumentation string
-}
-
 func New(authPlugin string, appName string) *Api {
 	if *ssl && (*certFile == "" || *keyFile == "") {
 		log.Fatal("cert-file and key-file must be set when using SSL")
