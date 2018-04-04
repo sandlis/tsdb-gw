@@ -27,6 +27,12 @@ type Api struct {
 	Router     *macaron.Macaron
 }
 
+type ApiConfig struct {
+	Auth            string
+	AppName         string
+	Instrumentation string
+}
+
 func New(authPlugin string, appName string) *Api {
 	if *ssl && (*certFile == "" || *keyFile == "") {
 		log.Fatal("cert-file and key-file must be set when using SSL")
@@ -44,10 +50,12 @@ func New(authPlugin string, appName string) *Api {
 	}
 	a.l = l
 	m := macaron.New()
+
 	m.Use(macaron.Recovery())
 	m.Use(macaron.Renderer())
 	m.Use(Tracer(appName))
-	a.InitRoutes(m)
+	m.Use(GetContextHandler())
+	m.Get("/", index)
 
 	a.Router = m
 	return a
@@ -93,10 +101,4 @@ func (a *Api) Stop() {
 
 func index(ctx *macaron.Context) {
 	ctx.JSON(200, "ok")
-}
-
-func (a *Api) InitRoutes(m *macaron.Macaron) {
-	m.Use(GetContextHandler())
-	m.Use(RequestStats())
-	m.Get("/", index)
 }

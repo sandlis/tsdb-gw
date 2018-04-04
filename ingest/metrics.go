@@ -1,4 +1,4 @@
-package metrictank
+package ingest
 
 import (
 	"encoding/json"

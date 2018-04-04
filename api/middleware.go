@@ -84,12 +84,8 @@ func (a *Api) Auth() macaron.Handler {
 		}
 
 		if key == "" {
-			key = ctx.Req.Header.Get("Dd-Api-Key")
-			if key == "" {
-				ctx.JSON(401, "Unauthorized")
-				return
-			}
-			username = "api_key"
+			ctx.JSON(401, "Unauthorized")
+			return
 		}
 
 		user, err := a.authPlugin.Auth(username, key)

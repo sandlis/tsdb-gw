@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
@@ -14,7 +13,6 @@ import (
 
 	"github.com/grafana/globalconf"
 	"github.com/grafana/metrictank/stats"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/carbon"
 	"github.com/raintank/tsdb-gw/graphite"
@@ -131,33 +129,6 @@ func main() {
 	<-done
 }
 
-// metricsServer is the server for prometheus /metrics endpoint.
-type metricsServer struct {
-	srv *http.Server
-}
-
-func newMetricsServer(addr string) *metricsServer {
-	mux := http.NewServeMux()
-	mux.Handle("/metrics", promhttp.Handler())
-
-	srv := &http.Server{
-		Addr:    addr,
-		Handler: mux,
-	}
-
-	go func() {
-		if err := srv.ListenAndServe(); err != nil {
-			log.Fatal(4, "Failed to start metrics server: %v", err)
-		}
-	}()
-
-	return &metricsServer{srv}
-}
-
-func (m *metricsServer) Stop() {
-	m.srv.Close()
-}
-
 type Stoppable interface {
 	Stop()
 }
@@ -192,11 +163,12 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 }
 
 func initRoutes(a *api.Api) {
+	a.Router.Use(api.RequestStats())
 	a.Router.Post("/metrics/delete", a.Auth(), metrictank.MetrictankProxy("/metrics/delete"))
-	a.Router.Post("/metrics", a.Auth(), metrictank.Metrics)
 	a.Router.Get("/metrics/index.json", a.Auth(), metrictank.MetrictankProxy("/metrics/index.json"))
 	a.Router.Get("/graphite/metrics/index.json", a.Auth(), metrictank.MetrictankProxy("/metrics/index.json"))
 	a.Router.Any("/graphite/*", a.Auth(), graphite.GraphiteProxy)
+	a.Router.Post("/metrics", a.Auth(), ingest.Metrics)
 	a.Router.Post("/datadog/api/v1/series", a.Auth(), ingest.DataDogMTWrite)
 	a.Router.Post("/opentsdb/api/put", a.Auth(), ingest.OpenTSDBWrite)
 	a.Router.Any("/prometheus/write", a.Auth(), ingest.PrometheusMTWrite)
