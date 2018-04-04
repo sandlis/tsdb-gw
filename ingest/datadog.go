@@ -23,6 +23,7 @@ type DataDogPayload struct {
 		} `json:"points"`
 		Tags   []string `json:"tags"`
 		Host   string   `json:"host"`
+		Mtype  string   `json:"types"`
 		Device string   `json:"device,omitempty"`
 	} `json:"series"`
 }
@@ -62,7 +63,7 @@ func DataDogMTWrite(ctx *api.Context) {
 					Value:    point.Value,
 					Unit:     "unknown",
 					Time:     int64(point.Ts),
-					Mtype:    "gauge",
+					Mtype:    ts.Mtype,
 					Tags:     tagSet,
 					OrgId:    ctx.ID,
 				}
