@@ -14,12 +14,12 @@ import (
 	"github.com/grafana/globalconf"
 	"github.com/grafana/metrictank/stats"
 	"github.com/raintank/tsdb-gw/api"
-	"github.com/raintank/tsdb-gw/carbon"
-	"github.com/raintank/tsdb-gw/graphite"
 	"github.com/raintank/tsdb-gw/ingest"
-	"github.com/raintank/tsdb-gw/metrictank"
+	"github.com/raintank/tsdb-gw/ingest/carbon"
 	"github.com/raintank/tsdb-gw/publish"
 	"github.com/raintank/tsdb-gw/publish/kafka"
+	"github.com/raintank/tsdb-gw/query/graphite"
+	"github.com/raintank/tsdb-gw/query/metrictank"
 	"github.com/raintank/tsdb-gw/usage"
 	"github.com/raintank/tsdb-gw/util"
 	log "github.com/sirupsen/logrus"
@@ -167,10 +167,10 @@ func initRoutes(a *api.Api) {
 	a.Router.Post("/metrics/delete", a.Auth(), metrictank.MetrictankProxy("/metrics/delete"))
 	a.Router.Get("/metrics/index.json", a.Auth(), metrictank.MetrictankProxy("/metrics/index.json"))
 	a.Router.Get("/graphite/metrics/index.json", a.Auth(), metrictank.MetrictankProxy("/metrics/index.json"))
+	a.Router.Any("/prometheus/*", a.Auth(), metrictank.PrometheusProxy)
 	a.Router.Any("/graphite/*", a.Auth(), graphite.GraphiteProxy)
 	a.Router.Post("/metrics", a.Auth(), ingest.Metrics)
 	a.Router.Post("/datadog/api/v1/series", a.Auth(), ingest.DataDogMTWrite)
 	a.Router.Post("/opentsdb/api/put", a.Auth(), ingest.OpenTSDBWrite)
 	a.Router.Any("/prometheus/write", a.Auth(), ingest.PrometheusMTWrite)
-	a.Router.Any("/prometheus/*", a.Auth(), ingest.PrometheusProxy)
 }

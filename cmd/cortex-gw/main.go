@@ -14,7 +14,7 @@ import (
 	"github.com/grafana/globalconf"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/raintank/tsdb-gw/api"
-	"github.com/raintank/tsdb-gw/cortex"
+	"github.com/raintank/tsdb-gw/query/cortex"
 	"github.com/raintank/tsdb-gw/util"
 	log "github.com/sirupsen/logrus"
 )

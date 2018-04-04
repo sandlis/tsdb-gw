@@ -8,7 +8,6 @@ import (
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/prompb"
 	"github.com/raintank/tsdb-gw/api"
-	"github.com/raintank/tsdb-gw/metrictank"
 	"github.com/raintank/tsdb-gw/publish"
 	log "github.com/sirupsen/logrus"
 	schema "gopkg.in/raintank/schema.v1"
@@ -89,10 +88,4 @@ func PrometheusMTWrite(ctx *api.Context) {
 		return
 	}
 	ctx.JSON(400, "no data included in request.")
-}
-
-func PrometheusProxy(c *api.Context) {
-	proxyPath := c.Params("*")
-	proxy := metrictank.Proxy(c.ID, "/prometheus/"+proxyPath)
-	proxy.ServeHTTP(c.Resp, c.Req.Request)
 }

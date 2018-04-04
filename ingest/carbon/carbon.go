@@ -13,8 +13,8 @@ import (
 	"github.com/grafana/metrictank/stats"
 	m20 "github.com/metrics20/go-metrics20/carbon20"
 	"github.com/raintank/tsdb-gw/auth"
-	"github.com/raintank/tsdb-gw/metricpool"
 	"github.com/raintank/tsdb-gw/publish"
+	"github.com/raintank/tsdb-gw/util"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/raintank/schema.v1"
 )
@@ -38,7 +38,7 @@ var (
 	nonBlockingBuffer bool
 	authPlugin        string
 
-	metricPool = metricpool.NewMetricDataPool()
+	metricPool = util.NewMetricDataPool()
 )
 
 func init() {

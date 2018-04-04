@@ -1,4 +1,4 @@
-package metricpool
+package util
 
 import (
 	"sync"
