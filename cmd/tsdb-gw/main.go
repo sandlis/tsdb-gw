@@ -49,8 +49,6 @@ var (
 
 	tracingEnabled = flag.Bool("tracing-enabled", false, "enable/disable distributed opentracing via jaeger")
 	tracingAddr    = flag.String("tracing-addr", "localhost:6831", "address of the jaeger agent to send data to")
-
-	metricsAddr = flag.String("metrics-addr", ":8001", "http service address for the /metrics endpoint")
 )
 
 func main() {
