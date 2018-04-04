@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/grafana/globalconf"
 	"github.com/grafana/metrictank/stats"
@@ -163,7 +164,7 @@ type Stoppable interface {
 
 func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stoppable) {
 	<-interrupt
-	log.Info("shutdown started.")
+	log.Infoln("shutdown started.")
 	var wg sync.WaitGroup
 	for _, input := range inputs {
 		wg.Add(1)
@@ -172,7 +173,21 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 			wg.Done()
 		}(input)
 	}
-	wg.Wait()
+
+	complete := make(chan struct{})
+
+	go func() {
+		wg.Wait()
+		close(complete)
+	}()
+
+	timer := time.NewTimer(time.Minute * 2)
+	select {
+	case <-timer.C:
+		log.Errorln("shutdown taking too long, giving up waiting on plugins")
+	case <-complete:
+		log.Infof("shutdown complete")
+	}
 	close(done)
 }
 
