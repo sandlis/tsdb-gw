@@ -232,5 +232,5 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 }
 
 func (*mtPublisher) Type() string {
-	return "MetricTank"
+	return "Metrictank"
 }

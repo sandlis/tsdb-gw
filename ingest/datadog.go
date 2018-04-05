@@ -26,62 +26,69 @@ type DataDogPayload struct {
 }
 
 func DataDogMTWrite(ctx *api.Context) {
-	if ctx.Req.Request.Body != nil {
-		defer ctx.Req.Request.Body.Close()
+	if ctx.Req.Request.Body == nil {
+		ctx.JSON(400, "no data included in request.")
+		return
+	}
+	defer ctx.Req.Request.Body.Close()
 
-		var body []byte
-		var err error
-		if ctx.Req.Request.Header.Get("Content-Encoding") == "deflate" {
-			zr, err := zlib.NewReader(ctx.Req.Request.Body)
-			if err != nil {
-				panic(err)
-			}
-			body, err = ioutil.ReadAll(zr)
-		} else {
-			body, err = ioutil.ReadAll(ctx.Req.Request.Body)
-		}
-
-		var series DataDogPayload
-		err = json.Unmarshal(body, &series)
+	var body []byte
+	var err error
+	if ctx.Req.Request.Header.Get("Content-Encoding") == "deflate" {
+		zr, err := zlib.NewReader(ctx.Req.Request.Body)
 		if err != nil {
-			return
-		}
-
-		buf := make([]*schema.MetricData, 0)
-		for _, ts := range series.Series {
-			_, s := schemas.Match(ts.Name, 0)
-			tagSet := createTagSet(ts.Host, ts.Device, ts.Tags)
-			for _, point := range ts.Points {
-				md := metricPool.Get()
-				*md = schema.MetricData{
-					Name:     ts.Name,
-					Metric:   ts.Name,
-					Interval: s.Retentions[0].SecondsPerPoint,
-					Value:    point[1],
-					Unit:     "unknown",
-					Time:     int64(point[0]),
-					Mtype:    ts.Mtype,
-					Tags:     tagSet,
-					OrgId:    ctx.ID,
-				}
-				md.SetId()
-				buf = append(buf, md)
-			}
-		}
-
-		err = publish.Publish(buf)
-		for _, m := range buf {
-			metricPool.Put(m)
-		}
-		if err != nil {
-			log.Errorf("failed to publish prom write metrics. %s", err)
+			log.Errorf("unable to decode json: %v", err)
 			ctx.JSON(500, err)
 			return
 		}
-		ctx.JSON(200, "ok")
+		body, err = ioutil.ReadAll(zr)
+	} else {
+		body, err = ioutil.ReadAll(ctx.Req.Request.Body)
+	}
+
+	var series DataDogPayload
+	err = json.Unmarshal(body, &series)
+	if err != nil {
 		return
 	}
-	ctx.JSON(400, "no data included in request.")
+
+	buf := make([]*schema.MetricData, 0)
+	for _, ts := range series.Series {
+		_, s := schemas.Match(ts.Name, 0)
+		tagSet := createTagSet(ts.Host, ts.Device, ts.Tags)
+		for _, point := range ts.Points {
+			md := metricPool.Get()
+			*md = schema.MetricData{
+				Name:     ts.Name,
+				Metric:   ts.Name,
+				Interval: s.Retentions[0].SecondsPerPoint,
+				Value:    point[1],
+				Unit:     "unknown",
+				Time:     int64(point[0]),
+				Mtype:    ts.Mtype,
+				Tags:     tagSet,
+				OrgId:    ctx.ID,
+			}
+			md.SetId()
+			buf = append(buf, md)
+		}
+	}
+
+	err = publish.Publish(buf)
+
+	defer func(buf []*schema.MetricData) {
+		for _, m := range buf {
+			metricPool.Put(m)
+		}
+	}(buf)
+
+	if err != nil {
+		log.Errorf("failed to publish datadog metrics. %s", err)
+		ctx.JSON(500, err)
+		return
+	}
+	ctx.JSON(200, "ok")
+	return
 }
 
 func createTagSet(host string, device string, ctags []string) []string {
