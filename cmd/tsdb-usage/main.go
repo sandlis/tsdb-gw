@@ -15,7 +15,8 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/grafana/globalconf"
-	"github.com/raintank/tsdb-gw/metric_publish"
+	"github.com/raintank/tsdb-gw/publish"
+	"github.com/raintank/tsdb-gw/publish/kafka"
 	"github.com/raintank/tsdb-gw/usage"
 )
 
@@ -44,7 +45,7 @@ func main() {
 	glog.Info("tsdb-usage starting up")
 
 	// initialize our publisher that sends metrics to Kafka
-	metric_publish.Init(*broker)
+	publish.Init(kafka.New(*broker))
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)

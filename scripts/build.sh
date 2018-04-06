@@ -19,9 +19,6 @@ fi
 # get git version
 GIT_VERSION=`git describe --always`
 
-# Enable CGO for builds because we're using the librdkafka.
-export CGO_ENABLED=1
-
 # Make dir
 mkdir -p $BUILD_DIR
 
@@ -29,9 +26,12 @@ mkdir -p $BUILD_DIR
 rm -rf $BUILD_DIR/*
 
 # Build binary
-go build -tags static -ldflags "-X main.GitHash=$GIT_VERSION" -o $BUILD_DIR/tsdb-gw
-cd cmd/tsdb-usage
-go build -tags static -ldflags "-X main.GitHash=$GIT_VERSION" -o $BUILD_DIR/tsdb-usage
+cd cmd/tsdb-gw
+CGO_ENABLED=1 go build -tags static -ldflags "-X main.GitHash=$GIT_VERSION" -o $BUILD_DIR/tsdb-gw
+cd ../tsdb-usage
+CGO_ENABLED=1 go build -tags static -ldflags "-X main.GitHash=$GIT_VERSION" -o $BUILD_DIR/tsdb-usage
+cd ../cortex-gw
+go build -ldflags "-X main.GitHash=$GIT_VERSION" -o $BUILD_DIR/cortex-gw
 
 # delete temporary build dir of librdkafka, since it is linked statically we
 # don't need it anymore

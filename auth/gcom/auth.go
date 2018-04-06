@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/raintank/worldping-api/pkg/log"
+	log "github.com/sirupsen/logrus"
 )
 
 type int64SliceFlag []int64
@@ -155,10 +155,10 @@ func Auth(adminKey, keyString string) (*SignedInUser, error) {
 	user, cached := cache.Get(keyString)
 	if cached {
 		if user != nil {
-			log.Debug("Auth: valid key cached")
+			log.Debugln("Auth: valid key cached")
 			return user, nil
 		}
-		log.Debug("Auth: invalid key cached")
+		log.Debugln("Auth: invalid key cached")
 		return nil, ErrInvalidApiKey
 	}
 
@@ -170,7 +170,7 @@ func Auth(adminKey, keyString string) (*SignedInUser, error) {
 		// if we have an expired cached entry for the user, reset the cache expiration and return that
 		// this allows the service to remain available if grafana.net is unreachable
 		if user != nil {
-			log.Debug("Auth: re-caching validKey response for %d seconds", validTTL/time.Second)
+			log.Debugf("Auth: re-caching validKey response for %d seconds", validTTL/time.Second)
 			cache.Set(keyString, user, validTTL)
 			return user, nil
 		}
@@ -185,7 +185,7 @@ func Auth(adminKey, keyString string) (*SignedInUser, error) {
 		// if we have an expired cached entry for the user, reset the cache expiration and return that
 		// this allows the service to remain available if grafana.net is unreachable
 		if user != nil {
-			log.Debug("Auth: re-caching validKey response for %d seconds", validTTL/time.Second)
+			log.Debugf("Auth: re-caching validKey response for %d seconds", validTTL/time.Second)
 			cache.Set(keyString, user, validTTL)
 			return user, nil
 		}
@@ -195,7 +195,7 @@ func Auth(adminKey, keyString string) (*SignedInUser, error) {
 
 	if res.StatusCode != 200 {
 		// add the invalid key to the cache
-		log.Debug("Auth: Caching invalidKey response for %d seconds", invalidTTL/time.Second)
+		log.Debugf("Auth: Caching invalidKey response for %d seconds", invalidTTL/time.Second)
 		cache.Set(keyString, nil, invalidTTL)
 
 		return nil, ErrInvalidApiKey
@@ -221,12 +221,12 @@ func Auth(adminKey, keyString string) (*SignedInUser, error) {
 	}
 
 	if !valid {
-		log.Debug("Auth: orgID is not listed in auth-valid-org-id setting.")
+		log.Debugln("Auth: orgID is not listed in auth-valid-org-id setting.")
 		return nil, ErrInvalidOrgId
 	}
 
 	// add the user to the cache.
-	log.Debug("Auth: Caching validKey response for %d seconds", validTTL/time.Second)
+	log.Debugf("Auth: Caching validKey response for %d seconds", validTTL/time.Second)
 	cache.Set(keyString, user, validTTL)
 	return user, nil
 }
@@ -238,15 +238,15 @@ func (u *SignedInUser) CheckInstance(instanceID string) error {
 	instanceSlug := u.OrgSlug + "-" + instanceID
 
 	// check the cache
-	log.Debug("Auth: Checking cache for instance")
+	log.Debugln("Auth: Checking cache for instance")
 	valid, cached := instanceCache.Get(instanceSlug)
 	if cached {
 		if valid {
-			log.Debug("Auth: valid instance key cached")
+			log.Debugln("Auth: valid instance key cached")
 			return nil
 		}
 
-		log.Debug("Auth: invalid instance key cached")
+		log.Debugln("Auth: invalid instance key cached")
 		return ErrInvalidInstanceID
 	}
 
@@ -255,7 +255,7 @@ func (u *SignedInUser) CheckInstance(instanceID string) error {
 		// if we have an expired cached entry for the user, reset the cache expiration and return that
 		// this allows the service to remain available if grafana.net is unreachable
 		if valid {
-			log.Debug("Auth: re-caching valid instance response for %d seconds", validTTL/time.Second)
+			log.Debugf("Auth: re-caching valid instance response for %d seconds", validTTL/time.Second)
 			instanceCache.Set(instanceSlug, true, validTTL)
 			return nil
 		}
@@ -270,7 +270,7 @@ func (u *SignedInUser) CheckInstance(instanceID string) error {
 		// if we have an expired cached entry for the user, reset the cache expiration and return that
 		// this allows the service to remain available if grafana.net is unreachable
 		if valid {
-			log.Debug("Auth: re-caching valid instance response for %d seconds", validTTL/time.Second)
+			log.Debugf("Auth: re-caching valid instance response for %d seconds", validTTL/time.Second)
 			instanceCache.Set(instanceSlug, true, validTTL)
 			return nil
 		}
@@ -281,13 +281,13 @@ func (u *SignedInUser) CheckInstance(instanceID string) error {
 	body, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 
-	log.Debug("Auth: hosted-metrics response was: %s", body)
+	log.Debugf("Auth: hosted-metrics response was: %s", body)
 
 	if res.StatusCode >= 500 {
 		// if we have an expired cached entry for the instanceID, reset the cache expiration and return that
 		// this allows the service to remain available if grafana.net is unreachable
 		if valid {
-			log.Debug("Auth: re-caching valid instance response for %d seconds", validTTL/time.Second)
+			log.Debugf("Auth: re-caching valid instance response for %d seconds", validTTL/time.Second)
 			instanceCache.Set(instanceSlug, true, validTTL)
 			return nil
 		}
@@ -297,7 +297,7 @@ func (u *SignedInUser) CheckInstance(instanceID string) error {
 
 	// add the invalid instance ID to the cache
 	if res.StatusCode != 200 {
-		log.Debug("Auth: Caching invalid instance ID response for %d seconds", invalidTTL/time.Second)
+		log.Debugf("Auth: Caching invalid instance ID response for %d seconds", invalidTTL/time.Second)
 		instanceCache.Set(instanceSlug, false, invalidTTL)
 		return ErrInvalidInstanceID
 	}
@@ -309,11 +309,11 @@ func (u *SignedInUser) CheckInstance(instanceID string) error {
 	}
 
 	if strconv.Itoa(int(instance.ID)) != instanceID {
-		log.Error(3, "Auth: instanceID returned from grafana.com doesnt match requested instanceID. %d != %s", instance.ID, instanceID)
+		log.Errorf("Auth: instanceID returned from grafana.com doesnt match requested instanceID. %d != %s", instance.ID, instanceID)
 		return fmt.Errorf("instance.ID returned from grafana.com doesnt match requested instanceID")
 	}
 
-	log.Debug("Auth: Caching valid instance response for %d seconds", validTTL/time.Second)
+	log.Debugf("Auth: Caching valid instance response for %d seconds", validTTL/time.Second)
 	instanceCache.Set(instanceSlug, true, validTTL)
 	return nil
 }

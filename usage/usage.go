@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/raintank/worldping-api/pkg/log"
+	log "github.com/sirupsen/logrus"
 )
 
 type EventType byte
@@ -95,14 +95,14 @@ func (t *TsdbUsage) process() {
 			case t.out <- output{buf: t.buf, ts: ts}:
 				t.buf = make([]string, 0, 1000)
 			default:
-				log.Warn("Usage: output buffer full.")
+				log.Warnln("Usage: output buffer full.")
 			}
 		case <-t.shutdown:
 			select {
 			case t.out <- output{buf: t.buf, ts: time.Now()}:
 				t.buf = make([]string, 0, 1000)
 			default:
-				log.Warn("Usage: output buffer full.")
+				log.Warnln("Usage: output buffer full.")
 			}
 			close(t.out)
 			return
@@ -136,9 +136,9 @@ LOOP:
 				if err != nil {
 					t.conn.Close()
 					t.conn = nil
-					log.Error(3, "error while writting to connection. %v", err)
+					log.Errorf("error while writting to connection. %v", err)
 					if deadline.Sub(time.Now()) < time.Duration(0) {
-						log.Error(3, "Usage: failed to write data before deadline.")
+						log.Errorf("Usage: failed to write data before deadline.")
 						continue LOOP
 					}
 					connected := t.reconnect(deadline)
@@ -165,7 +165,7 @@ func (t *TsdbUsage) reconnect(deadline time.Time) bool {
 			break
 		}
 		t.conn = nil
-		log.Error(3, "failed to connect to tsdb-usage server. %v", err)
+		log.Errorf("failed to connect to tsdb-usage server. %v", err)
 		time.Sleep(time.Second)
 	}
 	return connected

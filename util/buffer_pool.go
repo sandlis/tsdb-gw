@@ -4,6 +4,7 @@ import (
 	"sync"
 )
 
+// BufferPool is used to buffer proxied query requests and kakfka messages
 type BufferPool struct {
 	pool sync.Pool
 }

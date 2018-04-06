@@ -17,7 +17,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/raintank/tsdb-gw/auth"
 	"github.com/raintank/tsdb-gw/usage"
-	"github.com/raintank/worldping-api/pkg/log"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/macaron.v1"
 )
 
@@ -94,7 +94,7 @@ func (a *Api) Auth() macaron.Handler {
 				ctx.JSON(401, err.Error())
 				return
 			}
-			log.Error(3, "failed to perform authentication: %q", err.Error())
+			log.Errorf("failed to perform authentication: %q", err.Error())
 			ctx.JSON(500, err.Error())
 			return
 		}
@@ -209,7 +209,7 @@ func pathSlug(p string) string {
 	return strings.Replace(strings.Replace(slug, "/", "_", -1), ".", "_", -1)
 }
 
-func Tracer() macaron.Handler {
+func Tracer(componentName string) macaron.Handler {
 	return func(macCtx *macaron.Context) {
 		tracer := opentracing.GlobalTracer()
 		path := pathSlug(macCtx.Req.URL.Path)
@@ -218,7 +218,7 @@ func Tracer() macaron.Handler {
 
 		ext.HTTPMethod.Set(span, macCtx.Req.Method)
 		ext.HTTPUrl.Set(span, macCtx.Req.URL.String())
-		ext.Component.Set(span, "tsdb-gw/api")
+		ext.Component.Set(span, componentName+"/api")
 
 		macCtx.Req = macaron.Request{
 			Request: macCtx.Req.WithContext(opentracing.ContextWithSpan(macCtx.Req.Context(), span)),
