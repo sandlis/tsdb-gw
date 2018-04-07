@@ -1,8 +1,10 @@
 package auth
 
 import (
-	"github.com/raintank/tsdb-gw/auth/gcom"
 	"strconv"
+
+	"github.com/raintank/tsdb-gw/auth/gcom"
+	log "github.com/sirupsen/logrus"
 )
 
 type GrafanaComInstanceAuth struct {
@@ -16,6 +18,7 @@ func (a *GrafanaComInstanceAuth) Auth(username, password string) (*User, error) 
 	// ensure that the username is an integer.
 	instanceID, err := strconv.ParseInt(username, 10, 64)
 	if err != nil {
+		log.Debugf("unable to parse username: %v", username)
 		return nil, ErrInvalidCredentials
 	}
 	u, err := gcom.Auth(AdminKey, password)
@@ -31,6 +34,7 @@ func (a *GrafanaComInstanceAuth) Auth(username, password string) (*User, error) 
 
 	err = u.CheckInstance(username)
 	if err != nil {
+		log.Debugf("invalid credentials, %v", err)
 		return nil, ErrInvalidCredentials
 	}
 
