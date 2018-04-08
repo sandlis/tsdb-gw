@@ -19,7 +19,7 @@ RUN apk --update add ca-certificates
 RUN apk add openssl cyrus-sasl
 
 RUN mkdir -p /etc/
-COPY scripts/config/tsdb.ini /etc/tsdb.ini
+COPY scripts/config/tsdb-gw.ini /etc/tsdb-gw.ini
 COPY scripts/entrypoint.sh /usr/bin/
 
 # copy the built binaries from the build image
@@ -30,4 +30,4 @@ EXPOSE 80
 EXPOSE 443
 
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
-CMD ["/usr/bin/tsdb-gw", "-config=/etc/tsdb.ini"]
+CMD ["/usr/bin/tsdb-gw", "-config=/etc/tsdb-gw.ini"]

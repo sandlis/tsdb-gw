@@ -23,4 +23,4 @@ umask 022
 console log # log stdout/stderr to /var/log/upstart/
 
 
-exec /usr/bin/tsdb-gw --config=/etc/raintank/tsdb.ini
+exec /usr/bin/tsdb-gw --config=/etc/tsdb-gw.ini
