@@ -42,7 +42,6 @@ var (
 		},
 		[]string{},
 	)
-
 	succeededSamplesTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "cortex_gw",
@@ -52,6 +51,13 @@ var (
 		},
 		[]string{},
 	)
+	requestDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: "cortex_gw",
+		Subsystem: "publisher",
+		Name:      "publish_duration_seconds",
+		Help:      "Time (in seconds) spent publishing metrics to cortex.",
+		Buckets:   prometheus.ExponentialBuckets(.05, 2, 10),
+	}, []string{"status"})
 )
 
 const maxErrMsgLen = 256
@@ -73,6 +79,7 @@ func init() {
 
 	prometheus.MustRegister(droppedSamplesTotal)
 	prometheus.MustRegister(succeededSamplesTotal)
+	prometheus.MustRegister(requestDuration)
 }
 
 type cortexPublisher struct {
@@ -105,7 +112,7 @@ func NewCortexPublisher() *cortexPublisher {
 }
 
 func (c *cortexPublisher) Publish(metrics []*schema.MetricData) error {
-
+	start := time.Now()
 	series := []*prompb.TimeSeries{}
 	for _, metric := range metrics {
 		ts, err := packageMetric(metric)
@@ -118,9 +125,17 @@ func (c *cortexPublisher) Publish(metrics []*schema.MetricData) error {
 		series = append(series, ts)
 	}
 
-	return c.Write(&prompb.WriteRequest{
+	err := c.Write(&prompb.WriteRequest{
 		Timeseries: series,
 	})
+	took := time.Since(start)
+	if err != nil {
+		requestDuration.WithLabelValues("failed").Observe(took.Seconds())
+		return err
+	}
+
+	requestDuration.WithLabelValues("succeeded").Observe(took.Seconds())
+	return nil
 }
 
 func (c *cortexPublisher) Type() string {
