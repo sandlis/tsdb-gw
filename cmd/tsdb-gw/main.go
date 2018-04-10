@@ -31,7 +31,7 @@ var (
 	showVersion = flag.Bool("version", false, "print version string")
 
 	authPlugin = flag.String("api-auth-plugin", "grafana", "auth plugin to use. (grafana|file)")
-	confFile   = flag.String("config", "/etc/tsdb-gw.ini", "configuration file path")
+	confFile   = flag.String("config", "/etc/gw/tsdb-gw.ini", "configuration file path")
 
 	broker = flag.String("kafka-tcp-addr", "localhost:9092", "kafka tcp address for metrics")
 

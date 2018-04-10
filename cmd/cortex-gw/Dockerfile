@@ -17,8 +17,8 @@ ARG BASE_PATH
 RUN apk --update add ca-certificates
 RUN apk add openssl cyrus-sasl
 
-RUN mkdir -p /etc/
-COPY scripts/config/cortex-gw.ini /etc/cortex-gw.ini
+RUN mkdir -p /etc/gw/
+COPY scripts/config/cortex-gw.ini /etc/gw/cortex-gw.ini
 COPY scripts/entrypoint.sh /usr/bin/
 
 # copy the built binaries from the build image
@@ -29,4 +29,4 @@ EXPOSE 443
 EXPOSE 8001
 
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
-CMD ["/usr/bin/cortex-gw", "-config=/etc/cortex-gw.ini"]
+CMD ["/usr/bin/cortex-gw", "-config=/etc/gw/cortex-gw.ini"]
