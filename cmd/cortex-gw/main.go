@@ -14,6 +14,10 @@ import (
 	"github.com/grafana/globalconf"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/raintank/tsdb-gw/api"
+	"github.com/raintank/tsdb-gw/ingest"
+	"github.com/raintank/tsdb-gw/ingest/carbon"
+	"github.com/raintank/tsdb-gw/publish"
+	cortex_publish "github.com/raintank/tsdb-gw/publish/cortex"
 	"github.com/raintank/tsdb-gw/query/cortex"
 	"github.com/raintank/tsdb-gw/util"
 	log "github.com/sirupsen/logrus"
@@ -62,6 +66,13 @@ func main() {
 	}
 	defer traceCloser.Close()
 
+	publisher := cortex_publish.NewCortexPublisher()
+	if publisher == nil {
+		publish.Init(nil)
+	} else {
+		publish.Init(publisher)
+	}
+
 	if err := cortex.Init(); err != nil {
 		log.Fatal("could not initialize cortex proxy: %s", err.Error())
 	}
@@ -76,7 +87,7 @@ func main() {
 
 	log.Infof("Starting %v ...", app)
 	done := make(chan struct{})
-	inputs = append(inputs, api.Start(), ms)
+	inputs = append(inputs, api.Start(), ms, carbon.InitCarbon())
 	go handleShutdown(done, interrupt, inputs)
 	log.Infof("%v Started", app)
 	<-done
@@ -118,8 +129,10 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 
 // InitRoutes initializes the routes.
 func initRoutes(a *api.Api) {
-	a.Router.Any("/api/prom/push", a.PromStats("cortex-write"), a.Auth(), cortex.Write)
+	a.Router.Any("/api/prom/push", a.PromStats("cortex-write"), a.Auth(), cortex_publish.Write)
 	a.Router.Any("/api/prom/*", a.PromStats("cortex-read"), a.Auth(), cortex.Proxy)
+	a.Router.Post("/datadog/api/v1/series", a.Auth(), ingest.DataDogMTWrite)
+	a.Router.Post("/opentsdb/api/put", a.Auth(), ingest.OpenTSDBWrite)
 }
 
 type metricsServer struct {
