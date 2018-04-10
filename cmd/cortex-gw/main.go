@@ -24,11 +24,12 @@ import (
 )
 
 var (
-	app         = "cortex-gw"
-	GitHash     = "(none)"
-	showVersion = flag.Bool("version", false, "print version string")
-	confFile    = flag.String("config", "/etc/gw/cortex-gw.ini", "configuration file path")
-	authPlugin  = flag.String("api-auth-plugin", "grafana-instance", "auth plugin to use. (grafana-instance|file)")
+	app                = "cortex-gw"
+	GitHash            = "(none)"
+	showVersion        = flag.Bool("version", false, "print version string")
+	confFile           = flag.String("config", "/etc/gw/cortex-gw.ini", "configuration file path")
+	authPlugin         = flag.String("api-auth-plugin", "grafana-instance", "auth plugin to use. (grafana-instance|file)")
+	cortexWriteEnabled = flag.Bool("cortex-publish-enabled", false, "enable writing to cortex with non standard agents")
 
 	tracingEnabled = flag.Bool("tracing-enabled", false, "enable/disable distributed opentracing via jaeger")
 	tracingAddr    = flag.String("tracing-addr", "localhost:6831", "address of the jaeger agent to send data to")
@@ -66,11 +67,13 @@ func main() {
 	}
 	defer traceCloser.Close()
 
-	publisher := cortex_publish.NewCortexPublisher()
-	if publisher == nil {
-		publish.Init(nil)
+	inputs := make([]Stoppable, 0)
+
+	if *cortexWriteEnabled {
+		publish.Init(cortex_publish.NewCortexPublisher())
+		inputs = append(inputs, carbon.InitCarbon())
 	} else {
-		publish.Init(publisher)
+		publish.Init(nil)
 	}
 
 	if err := cortex.Init(); err != nil {
@@ -81,13 +84,12 @@ func main() {
 
 	ms := newMetricsServer(*metricsAddr)
 
-	inputs := make([]Stoppable, 0)
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
 	log.Infof("Starting %v ...", app)
 	done := make(chan struct{})
-	inputs = append(inputs, api.Start(), ms, carbon.InitCarbon())
+	inputs = append(inputs, api.Start(), ms)
 	go handleShutdown(done, interrupt, inputs)
 	log.Infof("%v Started", app)
 	<-done

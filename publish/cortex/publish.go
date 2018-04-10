@@ -1,29 +1,36 @@
 package cortex
 
 import (
+	"bufio"
+	"bytes"
+	"context"
+	"errors"
 	"flag"
-	"log"
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strconv"
+	"strings"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
+	"github.com/golang/snappy"
 	"github.com/oxtoacart/bpool"
-	"github.com/prometheus/common/config"
-	"github.com/prometheus/prometheus/storage/remote"
-	"github.com/raintank/tsdb-gw/api"
+	"github.com/prometheus/prometheus/prompb"
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/net/context/ctxhttp"
 	schema "gopkg.in/raintank/schema.v1"
 )
 
 var (
-	cortexWriteURL = flag.String("cortex-write-url", "http://localhost:9000", "cortex write address")
-
 	cortexWriteBPoolSize  = flag.Int("cortex-bpool-size", 100, "max number of byte buffers in the cortex write buffer pool")
 	cortexWriteBPoolWidth = flag.Int("cortex-bpool-width", 1024, "capacity of byte array provided by cortex write buffer pool")
+	cortexWriteURL        = flag.String("cortex-write-url", "http://localhost:9000", "cortex write address")
 
-	// WriteProxy handles all write requests to cortex
 	writeProxy *httputil.ReverseProxy
+
+	errBadTag = errors.New("unable to parse tags")
 )
 
 const maxErrMsgLen = 256
@@ -66,12 +73,6 @@ func NewCortexPublisher() *cortexPublisher {
 		},
 	}
 
-	remote.NewClient(0, &remote.ClientConfig{
-		URL: &config.URL{
-			CortexWriteURL,
-		},
-	})
-
 	return &cortexPublisher{
 		url:     CortexWriteURL,
 		client:  httpClient,
@@ -80,57 +81,96 @@ func NewCortexPublisher() *cortexPublisher {
 }
 
 func (c *cortexPublisher) Publish(metrics []*schema.MetricData) error {
-	return nil
+
+	series := []*prompb.TimeSeries{}
+	for _, metric := range metrics {
+		ts, err := packageMetric(metric)
+		if err != nil {
+			log.Debugf("unable to package metric '%v', %v", metric, err)
+		}
+		series = append(series, ts)
+	}
+	return c.Write(&prompb.WriteRequest{
+		Timeseries: series,
+	})
 }
 
 func (c *cortexPublisher) Type() string {
 	return "cortex"
 }
 
-func Write(c *api.Context) {
-	c.Req.Request.Header.Set("X-Scope-OrgID", strconv.Itoa(c.User.ID))
-	writeProxy.ServeHTTP(c.Resp, c.Req.Request)
+// Store sends a batch of samples to the HTTP endpoint.
+func (c *cortexPublisher) Write(req *prompb.WriteRequest) error {
+	data, err := proto.Marshal(req)
+	if err != nil {
+		return err
+	}
+
+	compressed := snappy.Encode(nil, data)
+	httpReq, err := http.NewRequest("POST", c.url.String(), bytes.NewReader(compressed))
+	if err != nil {
+		// Errors from NewRequest are from unparseable URLs, so are not
+		// recoverable.
+		return err
+	}
+	httpReq.Header.Add("Content-Encoding", "snappy")
+	httpReq.Header.Set("Content-Type", "application/x-protobuf")
+	httpReq.Header.Set("X-Prometheus-Remote-Write-Version", "0.1.0")
+
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+
+	httpResp, err := ctxhttp.Do(ctx, c.client, httpReq)
+	if err != nil {
+		// Errors from client.Do are from (for example) network errors, so are
+		// recoverable.
+		return err
+	}
+	defer httpResp.Body.Close()
+
+	if httpResp.StatusCode/100 != 2 {
+		scanner := bufio.NewScanner(io.LimitReader(httpResp.Body, maxErrMsgLen))
+		line := ""
+		if scanner.Scan() {
+			line = scanner.Text()
+		}
+		err = fmt.Errorf("server returned HTTP status %s: %s", httpResp.Status, line)
+	}
+	if httpResp.StatusCode/100 == 5 {
+		return err
+	}
+	return err
 }
 
-// // Store sends a batch of samples to the HTTP endpoint.
-// func (c *cortexPublisher) Write(req *prompb.WriteRequest) error {
-// 	data, err := proto.Marshal(req)
-// 	if err != nil {
-// 		return err
-// 	}
+func packageMetric(metric *schema.MetricData) (*prompb.TimeSeries, error) {
+	labels := []*prompb.Label{}
+	labels = append(labels, &prompb.Label{
+		Name:  "__name__",
+		Value: slugifyName(metric.Name),
+	})
 
-// 	compressed := snappy.Encode(nil, data)
-// 	httpReq, err := http.NewRequest("POST", c.url.String(), bytes.NewReader(compressed))
-// 	if err != nil {
-// 		// Errors from NewRequest are from unparseable URLs, so are not
-// 		// recoverable.
-// 		return err
-// 	}
-// 	httpReq.Header.Add("Content-Encoding", "snappy")
-// 	httpReq.Header.Set("Content-Type", "application/x-protobuf")
-// 	httpReq.Header.Set("X-Prometheus-Remote-Write-Version", "0.1.0")
+	for _, tag := range metric.Tags {
+		m := strings.SplitN(tag, "=", 2)
+		if len(m) < 2 {
+			return nil, errBadTag
+		}
+		labels = append(labels, &prompb.Label{
+			Name:  m[0],
+			Value: m[1],
+		})
+	}
 
-// 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
-// 	defer cancel()
+	return &prompb.TimeSeries{
+		Labels: labels,
+		Samples: []*prompb.Sample{
+			&prompb.Sample{
+				Value:     metric.Value,
+				Timestamp: metric.Time * 1000,
+			},
+		},
+	}, nil
+}
 
-// 	httpResp, err := ctxhttp.Do(ctx, c.client, httpReq)
-// 	if err != nil {
-// 		// Errors from client.Do are from (for example) network errors, so are
-// 		// recoverable.
-// 		return err
-// 	}
-// 	defer httpResp.Body.Close()
-
-// 	if httpResp.StatusCode/100 != 2 {
-// 		scanner := bufio.NewScanner(io.LimitReader(httpResp.Body, maxErrMsgLen))
-// 		line := ""
-// 		if scanner.Scan() {
-// 			line = scanner.Text()
-// 		}
-// 		err = fmt.Errorf("server returned HTTP status %s: %s", httpResp.Status, line)
-// 	}
-// 	if httpResp.StatusCode/100 == 5 {
-// 		return err
-// 	}
-// 	return err
-// }
+func slugifyName(name string) string {
+	return strings.Replace(name, ".", "_", -1)
+}

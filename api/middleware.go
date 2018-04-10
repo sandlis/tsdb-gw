@@ -84,6 +84,7 @@ func (a *Api) Auth() macaron.Handler {
 		}
 
 		if key == "" {
+			log.Debugf("no key specified")
 			ctx.JSON(401, "Unauthorized")
 			return
 		}

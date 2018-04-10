@@ -15,7 +15,7 @@ var (
 	ingestEnabled = flag.Bool("api-ingest", true, "enable api ingest for datadog/opentsdb/prometheus for metrictank")
 )
 
-func IngestInit() {
+func init() {
 	if !*ingestEnabled {
 		return
 	}
