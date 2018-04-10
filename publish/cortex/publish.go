@@ -17,6 +17,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
 	"github.com/oxtoacart/bpool"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/prometheus/prompb"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context/ctxhttp"
@@ -31,6 +32,26 @@ var (
 	writeProxy *httputil.ReverseProxy
 
 	errBadTag = errors.New("unable to parse tags")
+
+	droppedSamplesTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "cortex_gw",
+			Subsystem: "publisher",
+			Name:      "dropped_samples_total",
+			Help:      "Total number of samples which were dropped.",
+		},
+		[]string{},
+	)
+
+	succeededSamplesTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "cortex_gw",
+			Subsystem: "publisher",
+			Name:      "succeeded_samples_total",
+			Help:      "Total number of samples successfully sent.",
+		},
+		[]string{},
+	)
 )
 
 const maxErrMsgLen = 256
@@ -49,6 +70,9 @@ func init() {
 		},
 		BufferPool: bpool.NewBytePool(*cortexWriteBPoolSize, *cortexWriteBPoolWidth),
 	}
+
+	prometheus.MustRegister(droppedSamplesTotal)
+	prometheus.MustRegister(succeededSamplesTotal)
 }
 
 type cortexPublisher struct {
@@ -87,9 +111,13 @@ func (c *cortexPublisher) Publish(metrics []*schema.MetricData) error {
 		ts, err := packageMetric(metric)
 		if err != nil {
 			log.Debugf("unable to package metric '%v', %v", metric, err)
+			droppedSamplesTotal.WithLabelValues().Inc()
+			continue
 		}
+		succeededSamplesTotal.WithLabelValues().Inc()
 		series = append(series, ts)
 	}
+
 	return c.Write(&prompb.WriteRequest{
 		Timeseries: series,
 	})
