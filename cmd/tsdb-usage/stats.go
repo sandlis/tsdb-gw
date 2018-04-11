@@ -100,7 +100,6 @@ func emitStats(flushChan chan TsdbStats) {
 				continue
 			}
 			metrics = append(metrics, &schema.MetricData{
-				Metric:   "hosted-metrics.usage.active_series",
 				Name:     "hosted-metrics.usage.active_series",
 				Interval: int(flushInterval.Seconds()),
 				Mtype:    "gauge",
@@ -108,7 +107,6 @@ func emitStats(flushChan chan TsdbStats) {
 				Value:    float64(s.ActiveSeries),
 				Time:     ts.Unix(),
 			}, &schema.MetricData{
-				Metric:   "hosted-metrics.usage.datapoints_per_minute",
 				Name:     "hosted-metrics.usage.datapoints_per_minute",
 				Interval: int(flushInterval.Seconds()),
 				Mtype:    "rate",
@@ -118,7 +116,6 @@ func emitStats(flushChan chan TsdbStats) {
 			})
 			for path, count := range s.RequestCounts {
 				metrics = append(metrics, &schema.MetricData{
-					Metric:   fmt.Sprintf("hosted-metrics.usage.%s", path),
 					Name:     fmt.Sprintf("hosted-metrics.usage.%s", path),
 					Interval: int(flushInterval.Seconds()),
 					Mtype:    "rate",

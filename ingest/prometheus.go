@@ -56,7 +56,6 @@ func PrometheusMTWrite(ctx *api.Context) {
 					md := metricPool.Get()
 					*md = schema.MetricData{
 						Name:     name,
-						Metric:   name,
 						Interval: s.Retentions[0].SecondsPerPoint,
 						Value:    sample.Value,
 						Unit:     "unknown",

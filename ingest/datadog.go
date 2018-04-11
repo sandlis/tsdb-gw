@@ -60,7 +60,6 @@ func DataDogMTWrite(ctx *api.Context) {
 			md := metricPool.Get()
 			*md = schema.MetricData{
 				Name:     ts.Name,
-				Metric:   ts.Name,
 				Interval: s.Retentions[0].SecondsPerPoint,
 				Value:    point[1],
 				Unit:     "unknown",

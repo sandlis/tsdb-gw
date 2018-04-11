@@ -50,9 +50,6 @@ func metricsJson(ctx *api.Context) {
 
 		if ctx.IsAdmin {
 			for _, m := range metrics {
-				if m.Metric == "" {
-					m.Metric = m.Name
-				}
 				if m.Mtype == "" {
 					m.Mtype = "gauge"
 				}
@@ -65,9 +62,6 @@ func metricsJson(ctx *api.Context) {
 		} else {
 			for _, m := range metrics {
 				m.OrgId = ctx.ID
-				if m.Metric == "" {
-					m.Metric = m.Name
-				}
 				if m.Mtype == "" {
 					m.Mtype = "gauge"
 				}
@@ -125,9 +119,6 @@ func metricsBinary(ctx *api.Context, compressed bool) {
 
 		if ctx.IsAdmin {
 			for _, m := range metricData.Metrics {
-				if m.Metric == "" {
-					m.Metric = m.Name
-				}
 				if m.Mtype == "" {
 					m.Mtype = "gauge"
 				}
@@ -141,9 +132,6 @@ func metricsBinary(ctx *api.Context, compressed bool) {
 		} else {
 			for _, m := range metricData.Metrics {
 				m.OrgId = ctx.ID
-				if m.Metric == "" {
-					m.Metric = m.Name
-				}
 				if m.Mtype == "" {
 					m.Mtype = "gauge"
 				}

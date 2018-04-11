@@ -55,7 +55,6 @@ func parseMetric(buf []byte, schemas *conf.Schemas, orgId int) (*schema.MetricDa
 	md := metricPool.Get()
 	*md = schema.MetricData{
 		Name:     name,
-		Metric:   name,
 		Interval: s.Retentions[0].SecondsPerPoint,
 		Value:    val,
 		Unit:     "unknown",

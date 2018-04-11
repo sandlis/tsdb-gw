@@ -16,7 +16,6 @@ func getMetricData(orgId, depth, count, interval int, prefix string) []*schema.M
 
 		data[i] = &schema.MetricData{
 			Name:     s,
-			Metric:   s,
 			OrgId:    orgId,
 			Interval: interval,
 		}
