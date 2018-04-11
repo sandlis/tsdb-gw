@@ -58,21 +58,23 @@ var (
 		Help:      "Time (in seconds) spent publishing metrics to cortex.",
 		Buckets:   prometheus.ExponentialBuckets(.05, 2, 10),
 	}, []string{"status"})
+
+	cortexURL *url.URL
 )
 
 const maxErrMsgLen = 256
 
 // Init initializes the cortex reverse proxies
 func init() {
-	CortexWriteURL, err := url.Parse(*cortexWriteURL)
+	cortexURL, err := url.Parse(*cortexWriteURL)
 	if err != nil {
 		log.Fatalf("unable to parse cortex write url '%s': %v", *cortexWriteURL, err)
 	}
 	// Seperate Proxy for Writes, add BufferPool for perf reasons if needed
 	writeProxy = &httputil.ReverseProxy{
 		Director: func(req *http.Request) {
-			req.URL.Scheme = CortexWriteURL.Scheme
-			req.URL.Host = CortexWriteURL.Host
+			req.URL.Scheme = cortexURL.Scheme
+			req.URL.Host = cortexURL.Host
 		},
 		BufferPool: bpool.NewBytePool(*cortexWriteBPoolSize, *cortexWriteBPoolWidth),
 	}
@@ -89,24 +91,17 @@ type cortexPublisher struct {
 }
 
 func NewCortexPublisher() *cortexPublisher {
-	CortexWriteURL, err := url.Parse(*cortexWriteURL)
-	if err != nil {
-		log.Fatalf("unable to parse cortex write url '%v': %v", *cortexWriteURL, err)
-	}
-
-	httpClient := &http.Client{
-		Transport: &http.Transport{
-			MaxIdleConns:        20000,
-			MaxIdleConnsPerHost: 1000,
-			DisableKeepAlives:   false,
-			DisableCompression:  true,
-			IdleConnTimeout:     5 * time.Minute,
-		},
-	}
-
 	return &cortexPublisher{
-		url:     CortexWriteURL,
-		client:  httpClient,
+		url: cortexURL,
+		client: &http.Client{
+			Transport: &http.Transport{
+				MaxIdleConns:        20000,
+				MaxIdleConnsPerHost: 1000,
+				DisableKeepAlives:   false,
+				DisableCompression:  true,
+				IdleConnTimeout:     5 * time.Minute,
+			},
+		},
 		timeout: time.Second * 60,
 	}
 }
