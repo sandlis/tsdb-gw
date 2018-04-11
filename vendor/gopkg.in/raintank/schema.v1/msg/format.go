@@ -8,9 +8,6 @@ type Format uint8
 const (
 	FormatMetricDataArrayJson Format = iota
 	FormatMetricDataArrayMsgp
-)
-
-const (
-	FormatProbeEventJson Format = iota
-	FormatProbeEventMsgp
+	FormatMetricPoint
+	FormatMetricPointWithoutOrg
 )
