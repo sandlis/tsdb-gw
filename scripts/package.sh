@@ -17,9 +17,9 @@ PACKAGE_NAME="${BUILD}/tsdb-gw-${VERSION}_${ARCH}.deb"
 
 mkdir -p ${BUILD}/usr/bin
 mkdir -p ${BUILD}/etc/init
-mkdir -p ${BUILD}/etc/raintank
+mkdir -p ${BUILD}/etc/gw
 
-cp ${BASE}/config/tsdb.ini ${BUILD}/etc/raintank/
+cp ${BASE}/config/tsdb-gw.ini ${BUILD}/etc/gw/
 cp ${BUILD_ROOT}/tsdb-gw ${BUILD}/usr/bin/
 cp ${BUILD_ROOT}/tsdb-usage ${BUILD}/usr/bin/
 
@@ -34,17 +34,17 @@ BUILD=${BUILD_ROOT}/systemd
 PACKAGE_NAME="${BUILD}/tsdb-gw-${VERSION}_${ARCH}.deb"
 mkdir -p ${BUILD}/usr/bin
 mkdir -p ${BUILD}/lib/systemd/system/
-mkdir -p ${BUILD}/etc/raintank
+mkdir -p ${BUILD}/etc/gw
 mkdir -p ${BUILD}/var/run/raintank
 
-cp ${BASE}/config/tsdb.ini ${BUILD}/etc/raintank/
+cp ${BASE}/config/tsdb-gw.ini ${BUILD}/etc/gw/
 cp ${BUILD_ROOT}/tsdb-gw ${BUILD}/usr/bin/
 cp ${BUILD_ROOT}/tsdb-usage ${BUILD}/usr/bin/
 cp ${BASE}/config/systemd/tsdb-gw.service $BUILD/lib/systemd/system
 
 fpm -s dir -t deb \
   -v ${VERSION} -n tsdb-gw -a ${ARCH} --description "HTTP gateway service for metrictank TSDB" \
-  --config-files /etc/raintank/ \
+  --config-files /etc/gw/ \
   -m "Raintank Inc. <hello@raintank.io>" --vendor "raintank.io" \
   --replaces tsdb \
   --license "Apache2.0" -C ${BUILD} -p ${PACKAGE_NAME} .
@@ -53,10 +53,10 @@ BUILD=${BUILD_ROOT}/systemd-centos7
 
 mkdir -p ${BUILD}/usr/sbin
 mkdir -p ${BUILD}/lib/systemd/system/
-mkdir -p ${BUILD}/etc/raintank
+mkdir -p ${BUILD}/etc/gw/
 mkdir -p ${BUILD}/var/run/raintank
 
-cp ${BASE}/config/tsdb.ini ${BUILD}/etc/raintank/
+cp ${BASE}/config/tsdb-gw.ini ${BUILD}/etc/gw/
 cp ${BUILD_ROOT}/tsdb-gw ${BUILD}/usr/bin/
 cp ${BUILD_ROOT}/tsdb-usage ${BUILD}/usr/bin/
 cp ${BASE}/config/systemd/tsdb-gw.service $BUILD/lib/systemd/system
@@ -65,7 +65,7 @@ PACKAGE_NAME="${BUILD}/tsdb-gw-${VERSION}.el7.${ARCH}.rpm"
 
 fpm -s dir -t rpm \
   -v ${VERSION} -n tsdb-gw -a ${ARCH} --description "HTTP gateway service for metrictank TSDB" \
-  --config-files /etc/raintank/ \
+  --config-files /etc/gw/ \
   -m "Raintank Inc. <hello@raintank.io>" --vendor "raintank.io" \
   --replaces tsdb \
   --license "Apache2.0" -C ${BUILD} -p ${PACKAGE_NAME} .
@@ -77,9 +77,9 @@ PACKAGE_NAME="${BUILD}/tsdb-gw-${VERSION}.el6.${ARCH}.rpm"
 
 mkdir -p ${BUILD}/usr/bin
 mkdir -p ${BUILD}/etc/init
-mkdir -p ${BUILD}/etc/raintank
+mkdir -p ${BUILD}/etc/gw
 
-cp ${BASE}/config/tsdb.ini ${BUILD}/etc/raintank/
+cp ${BASE}/config/tsdb-gw.ini ${BUILD}/etc/gw/
 cp ${BUILD_ROOT}/tsdb-gw ${BUILD}/usr/bin/
 cp ${BUILD_ROOT}/tsdb-usage ${BUILD}/usr/bin/
 cp ${BASE}/config/upstart-0.6.5/tsdb-gw.conf $BUILD/etc/init

@@ -11,7 +11,7 @@ import (
 var (
 	metricPool    = util.NewMetricDataPool()
 	schemas       *conf.Schemas
-	schemaFile    = flag.String("api-schemas-file", "/etc/storage-schemas.conf", "path to carbon storage-schemas.conf file")
+	schemaFile    = flag.String("api-schemas-file", "/etc/gw/storage-schemas.conf", "path to carbon storage-schemas.conf file")
 	ingestEnabled = flag.Bool("api-ingest", true, "enable api ingest for datadog/opentsdb/prometheus for metrictank")
 )
 

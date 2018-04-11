@@ -23,7 +23,7 @@ var (
 	app         = "cortex-gw"
 	GitHash     = "(none)"
 	showVersion = flag.Bool("version", false, "print version string")
-	confFile    = flag.String("config", "/etc/tsdb.ini", "configuration file path")
+	confFile    = flag.String("config", "/etc/gw/cortex-gw.ini", "configuration file path")
 	authPlugin  = flag.String("api-auth-plugin", "grafana-instance", "auth plugin to use. (grafana-instance|file)")
 
 	tracingEnabled = flag.Bool("tracing-enabled", false, "enable/disable distributed opentracing via jaeger")

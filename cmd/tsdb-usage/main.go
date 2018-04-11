@@ -23,7 +23,7 @@ import (
 var (
 	broker   = flag.String("kafka-tcp-addr", "localhost:9092", "kafka tcp address for metrics")
 	addr     = flag.String("addr", "localhost:2004", "listen address")
-	confFile = flag.String("config", "/etc/raintank/tsdb.ini", "configuration file path")
+	confFile = flag.String("config", "/etc/gw/tsdb-usage.ini", "configuration file path")
 )
 
 func main() {

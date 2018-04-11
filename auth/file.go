@@ -33,7 +33,7 @@ type FileAuth struct {
 var filePath string
 
 func init() {
-	flag.StringVar(&filePath, "auth-file-path", "/etc/raintank/tsdb-auth.ini", "path to ini file containing user details")
+	flag.StringVar(&filePath, "auth-file-path", "/etc/gw/auth.ini", "path to ini file containing user details")
 }
 
 func NewFileAuth() *FileAuth {

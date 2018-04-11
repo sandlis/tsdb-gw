@@ -5,7 +5,7 @@ Description=HTTP gateway for metrictank TSDB
 Type=simple
 User=root
 Group=root
-ExecStart=/usr/bin/tsdb-gw "--config=/etc/raintank/tsdb.ini"
+ExecStart=/usr/bin/tsdb-gw "--config=/etc/gw/tsdb-gw.ini"
 Restart=always
 
 [Install]
