@@ -113,21 +113,16 @@ func NewCortexPublisher() *cortexPublisher {
 
 func (c *cortexPublisher) Publish(metrics []*schema.MetricData) error {
 	start := time.Now()
-	series := []*prompb.TimeSeries{}
-	for _, metric := range metrics {
-		ts, err := packageMetric(metric)
-		if err != nil {
-			log.Debugf("unable to package metric '%v', %v", metric, err)
-			droppedSamplesTotal.WithLabelValues().Inc()
-			continue
-		}
-		succeededSamplesTotal.WithLabelValues().Inc()
-		series = append(series, ts)
+	req, err := packageMetrics(metrics)
+	if err != nil {
+		log.Debugf("unable to package metrics, %v", err)
+		droppedSamplesTotal.WithLabelValues().Add(float64(len(metrics)))
+		return err
 	}
 
-	err := c.Write(&prompb.WriteRequest{
-		Timeseries: series,
-	})
+	succeededSamplesTotal.WithLabelValues().Add(float64(len(metrics)))
+
+	err = c.Write(req)
 	took := time.Since(start)
 	if err != nil {
 		requestDuration.WithLabelValues("failed").Observe(took.Seconds())
@@ -185,35 +180,38 @@ func (c *cortexPublisher) Write(req *prompb.WriteRequest) error {
 	return err
 }
 
-func packageMetric(metric *schema.MetricData) (*prompb.TimeSeries, error) {
-	labels := []*prompb.Label{}
-	labels = append(labels, &prompb.Label{
-		Name:  "__name__",
-		Value: slugifyName(metric.Name),
-	})
-
-	for _, tag := range metric.Tags {
-		m := strings.SplitN(tag, "=", 2)
-		if len(m) < 2 {
-			return nil, errBadTag
+func packageMetrics(metrics []*schema.MetricData) (*prompb.WriteRequest, error) {
+	req := &prompb.WriteRequest{
+		Timeseries: make([]*prompb.TimeSeries, 0, len(metrics)),
+	}
+	for _, m := range metrics {
+		labels := make([]*prompb.Label, 0, len(m.Tags)+1)
+		labels = append(labels,
+			&prompb.Label{
+				Name:  "__name__",
+				Value: strings.Replace(m.Name, ".", "_", -1),
+			},
+		)
+		for _, tag := range m.Tags {
+			tv := strings.SplitN(tag, "=", 2)
+			if len(tv) < 2 || tv[1] == "" {
+				return nil, errBadTag
+			}
+			labels = append(labels, &prompb.Label{
+				Name:  tv[0],
+				Value: tv[1],
+			})
 		}
-		labels = append(labels, &prompb.Label{
-			Name:  m[0],
-			Value: m[1],
+		req.Timeseries = append(req.Timeseries, &prompb.TimeSeries{
+			Labels: labels,
+			Samples: []*prompb.Sample{
+				{
+					Value:     m.Value,
+					Timestamp: m.Time * 1000,
+				},
+			},
 		})
 	}
 
-	return &prompb.TimeSeries{
-		Labels: labels,
-		Samples: []*prompb.Sample{
-			&prompb.Sample{
-				Value:     metric.Value,
-				Timestamp: metric.Time * 1000,
-			},
-		},
-	}, nil
-}
-
-func slugifyName(name string) string {
-	return strings.Replace(name, ".", "_", -1)
+	return req, nil
 }
