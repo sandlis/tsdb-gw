@@ -133,7 +133,7 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 func initRoutes(a *api.Api) {
 	a.Router.Any("/api/prom/push", a.PromStats("cortex-write"), a.Auth(), cortex_publish.Write)
 	a.Router.Any("/api/prom/*", a.PromStats("cortex-read"), a.Auth(), cortex.Proxy)
-	a.Router.Post("/datadog/api/v1/series", a.Auth(), ingest.DataDogMTWrite)
+	a.Router.Post("/datadog/api/v1/series", a.Auth(), ingest.DataDogWrite)
 	a.Router.Post("/opentsdb/api/put", a.Auth(), ingest.OpenTSDBWrite)
 }
 

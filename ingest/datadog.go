@@ -25,7 +25,7 @@ type DataDogPayload struct {
 	} `json:"series"`
 }
 
-func DataDogMTWrite(ctx *api.Context) {
+func DataDogWrite(ctx *api.Context) {
 	if ctx.Req.Request.Body == nil {
 		ctx.JSON(400, "no data included in request.")
 		return
