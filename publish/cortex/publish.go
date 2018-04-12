@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -31,7 +32,8 @@ var (
 
 	writeProxy *httputil.ReverseProxy
 
-	errBadTag = errors.New("unable to parse tags")
+	errBadTag    = errors.New("unable to parse tags")
+	errNoMetrics = errors.New("no metrics provided in write request")
 
 	droppedSamplesTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -133,8 +135,8 @@ func (c *cortexPublisher) Type() string {
 }
 
 // Store sends a batch of samples to the HTTP endpoint.
-func (c *cortexPublisher) Write(req *prompb.WriteRequest) error {
-	data, err := proto.Marshal(req)
+func (c *cortexPublisher) Write(req writeRequest) error {
+	data, err := proto.Marshal(req.Request)
 	if err != nil {
 		return err
 	}
@@ -149,6 +151,7 @@ func (c *cortexPublisher) Write(req *prompb.WriteRequest) error {
 	httpReq.Header.Add("Content-Encoding", "snappy")
 	httpReq.Header.Set("Content-Type", "application/x-protobuf")
 	httpReq.Header.Set("X-Prometheus-Remote-Write-Version", "0.1.0")
+	httpReq.Header.Set("X-Scope-OrgID", strconv.Itoa(req.orgID))
 
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
@@ -175,9 +178,17 @@ func (c *cortexPublisher) Write(req *prompb.WriteRequest) error {
 	return err
 }
 
-func packageMetrics(metrics []*schema.MetricData) (*prompb.WriteRequest, error) {
+type writeRequest struct {
+	Request *prompb.WriteRequest
+	orgID   int
+}
+
+func packageMetrics(metrics []*schema.MetricData) (*writeRequest, error) {
 	req := &prompb.WriteRequest{
 		Timeseries: make([]*prompb.TimeSeries, 0, len(metrics)),
+	}
+	if len(metrics) < 1 {
+		return nil, errNoMetrics
 	}
 	for _, m := range metrics {
 		labels := make([]*prompb.Label, 0, len(m.Tags)+1)
@@ -208,5 +219,8 @@ func packageMetrics(metrics []*schema.MetricData) (*prompb.WriteRequest, error) 
 		})
 	}
 
-	return req, nil
+	return &writeRequest{
+		Request: req,
+		orgID:   metrics[0].OrgId,
+	}, nil
 }
