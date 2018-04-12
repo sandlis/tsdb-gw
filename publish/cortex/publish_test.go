@@ -12,7 +12,7 @@ func Test_packageMetrics(t *testing.T) {
 	tests := []struct {
 		name    string
 		metrics []*schema.MetricData
-		want    *prompb.WriteRequest
+		want    *writeRequest
 		wantErr bool
 	}{
 		{
@@ -20,14 +20,16 @@ func Test_packageMetrics(t *testing.T) {
 			metrics: []*schema.MetricData{
 				&schema.MetricData{Name: "example_metric"},
 			},
-			want: &prompb.WriteRequest{
-				Timeseries: []*prompb.TimeSeries{
-					&prompb.TimeSeries{
-						Labels: []*prompb.Label{
-							&prompb.Label{Name: "__name__", Value: "example_metric"},
-						},
-						Samples: []*prompb.Sample{
-							&prompb.Sample{Value: 0, Timestamp: 0},
+			want: &writeRequest{
+				Request: &prompb.WriteRequest{
+					Timeseries: []*prompb.TimeSeries{
+						&prompb.TimeSeries{
+							Labels: []*prompb.Label{
+								&prompb.Label{Name: "__name__", Value: "example_metric"},
+							},
+							Samples: []*prompb.Sample{
+								&prompb.Sample{Value: 0, Timestamp: 0},
+							},
 						},
 					},
 				},
@@ -39,14 +41,16 @@ func Test_packageMetrics(t *testing.T) {
 			metrics: []*schema.MetricData{
 				&schema.MetricData{Name: "example.metric"},
 			},
-			want: &prompb.WriteRequest{
-				Timeseries: []*prompb.TimeSeries{
-					&prompb.TimeSeries{
-						Labels: []*prompb.Label{
-							&prompb.Label{Name: "__name__", Value: "example_metric"},
-						},
-						Samples: []*prompb.Sample{
-							&prompb.Sample{Value: 0, Timestamp: 0},
+			want: &writeRequest{
+				Request: &prompb.WriteRequest{
+					Timeseries: []*prompb.TimeSeries{
+						&prompb.TimeSeries{
+							Labels: []*prompb.Label{
+								&prompb.Label{Name: "__name__", Value: "example_metric"},
+							},
+							Samples: []*prompb.Sample{
+								&prompb.Sample{Value: 0, Timestamp: 0},
+							},
 						},
 					},
 				},
@@ -61,15 +65,17 @@ func Test_packageMetrics(t *testing.T) {
 					Tags: []string{"example=tag"},
 				},
 			},
-			want: &prompb.WriteRequest{
-				Timeseries: []*prompb.TimeSeries{
-					&prompb.TimeSeries{
-						Labels: []*prompb.Label{
-							&prompb.Label{Name: "__name__", Value: "example_metric"},
-							&prompb.Label{Name: "example", Value: "tag"},
-						},
-						Samples: []*prompb.Sample{
-							&prompb.Sample{Value: 0, Timestamp: 0},
+			want: &writeRequest{
+				Request: &prompb.WriteRequest{
+					Timeseries: []*prompb.TimeSeries{
+						&prompb.TimeSeries{
+							Labels: []*prompb.Label{
+								&prompb.Label{Name: "__name__", Value: "example_metric"},
+								&prompb.Label{Name: "example", Value: "tag"},
+							},
+							Samples: []*prompb.Sample{
+								&prompb.Sample{Value: 0, Timestamp: 0},
+							},
 						},
 					},
 				},
@@ -95,16 +101,18 @@ func Test_packageMetrics(t *testing.T) {
 					Tags: []string{"example1=tag", "example2=tag"},
 				},
 			},
-			want: &prompb.WriteRequest{
-				Timeseries: []*prompb.TimeSeries{
-					&prompb.TimeSeries{
-						Labels: []*prompb.Label{
-							&prompb.Label{Name: "__name__", Value: "example_metric"},
-							&prompb.Label{Name: "example1", Value: "tag"},
-							&prompb.Label{Name: "example2", Value: "tag"},
-						},
-						Samples: []*prompb.Sample{
-							&prompb.Sample{Value: 0, Timestamp: 0},
+			want: &writeRequest{
+				Request: &prompb.WriteRequest{
+					Timeseries: []*prompb.TimeSeries{
+						&prompb.TimeSeries{
+							Labels: []*prompb.Label{
+								&prompb.Label{Name: "__name__", Value: "example_metric"},
+								&prompb.Label{Name: "example1", Value: "tag"},
+								&prompb.Label{Name: "example2", Value: "tag"},
+							},
+							Samples: []*prompb.Sample{
+								&prompb.Sample{Value: 0, Timestamp: 0},
+							},
 						},
 					},
 				},
