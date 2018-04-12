@@ -45,6 +45,7 @@ var (
 	batchNumMessages int
 	partitionCount   int32
 	v2               bool
+	v2Org            bool
 	v2StaleThresh    time.Duration
 	v2PruneInterval  time.Duration
 
@@ -100,6 +101,7 @@ func init() {
 	flag.IntVar(&batchNumMessages, "batch-num-messages", 10000, "Maximum number of messages batched in one MessageSet")
 
 	flag.BoolVar(&v2, "v2", true, "enable optimized MetricPoint payload")
+	flag.BoolVar(&v2Org, "v2-org", true, "encode org-id in messages")
 	flag.DurationVar(&v2StaleThresh, "v2-stale-thresh", 6*time.Hour, "expire keys (and resend MetricData if seen again) if not seen for this much time")
 	flag.DurationVar(&v2PruneInterval, "v2-prune-interval", time.Hour, "check interval for expiring keys")
 }
@@ -184,9 +186,15 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 					Value: metric.Value,
 					Time:  uint32(metric.Time),
 				}
-				data[:1][0] = byte(msg.FormatMetricPoint)
-				_, err = mp.Marshal32(data[1:])
-				data = data[:33]
+				if v2Org {
+					data[:1][0] = byte(msg.FormatMetricPoint)
+					_, err = mp.Marshal32(data[1:])
+					data = data[:33]
+				} else {
+					data[:1][0] = byte(msg.FormatMetricPointWithoutOrg)
+					_, err = mp.MarshalWithoutOrg28(data[1:])
+					data = data[:29]
+				}
 			} else {
 				data = bufferPool.Get()
 				data, err = metric.MarshalMsg(data)
