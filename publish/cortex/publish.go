@@ -134,7 +134,7 @@ func (c *cortexPublisher) Type() string {
 	return "cortex"
 }
 
-// Store sends a batch of samples to the HTTP endpoint.
+// Write sends a batch of samples to the HTTP endpoint.
 func (c *cortexPublisher) Write(req writeRequest) error {
 	data, err := proto.Marshal(req.Request)
 	if err != nil {
