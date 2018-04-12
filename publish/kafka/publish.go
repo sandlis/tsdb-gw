@@ -186,6 +186,7 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 				}
 				data[:1][0] = byte(msg.FormatMetricPoint)
 				_, err = mp.Marshal32(data[1:])
+				data = data[:33]
 			} else {
 				data = bufferPool.Get()
 				data, err = metric.MarshalMsg(data)
