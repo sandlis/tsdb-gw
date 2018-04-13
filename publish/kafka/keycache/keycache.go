@@ -7,16 +7,16 @@ import (
 	schema "gopkg.in/raintank/schema.v1"
 )
 
-type SubKey [15]byte
-
+// KeyCache tracks for all orgs, which keys have been seen, and when was the last time
 type KeyCache struct {
-	staleThresh   uint8 // number of 10-minutely periods
+	staleThresh   Duration // number of 10-minutely periods
 	pruneInterval time.Duration
 
 	sync.RWMutex
 	caches map[uint32]*Cache
 }
 
+// NewKeyCache creates a new KeyCache
 func NewKeyCache(staleThresh, pruneInterval time.Duration) *KeyCache {
 	if staleThresh.Hours() > 40 {
 		panic("stale time may not exceed 40 hours due to resolution of internal bookkeeping")
@@ -26,14 +26,15 @@ func NewKeyCache(staleThresh, pruneInterval time.Duration) *KeyCache {
 	}
 	k := &KeyCache{
 		pruneInterval: pruneInterval,
-		staleThresh:   uint8(staleThresh.Nanoseconds() / 1e9 / 600),
+		staleThresh:   Duration(int(staleThresh.Seconds()) / 600),
 		caches:        make(map[uint32]*Cache),
 	}
 	go k.prune()
 	return k
 }
 
-// marks the key as seen and returns whether it was seen before
+// Touch marks the key as seen and returns whether it was seen before
+// callers should assure that t >= ref and t-ref <= 42 hours
 func (k *KeyCache) Touch(key schema.MKey, t time.Time) bool {
 	k.RLock()
 	cache, ok := k.caches[key.Org]
@@ -52,6 +53,7 @@ func (k *KeyCache) Touch(key schema.MKey, t time.Time) bool {
 	return cache.Touch(key.Key, t)
 }
 
+// Len returns the size across all orgs
 func (k *KeyCache) Len() int {
 	var sum int
 	k.RLock()
@@ -66,6 +68,7 @@ func (k *KeyCache) Len() int {
 	return sum
 }
 
+// prune makes sure each org's cache is pruned
 func (k *KeyCache) prune() {
 	tick := time.NewTicker(k.pruneInterval)
 	for now := range tick.C {

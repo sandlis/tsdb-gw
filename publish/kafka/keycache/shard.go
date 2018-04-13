@@ -7,98 +7,94 @@ import (
 	schema "gopkg.in/raintank/schema.v1"
 )
 
-// stamp is a compacted way to represent a timestamp
-// bucketed in 10minutely buckets, which allows us to cover
-// a timeframe of 42 hours (just over a day and a half)
-// 6 (10m periods per hour) *42 (hours) = 252 (10m periods)
-type Stamp uint8
+// SubKey is the last 15 bytes of a 16 byte Key
+// We can track Key-identified metrics with a SubKey because
+// we shard by the first byte of the Key.
+type SubKey [15]byte
 
-// callers responsability that t >= ref and t-ref <= 42 hours
-func NewStamp(ref Ref, t time.Time) Stamp {
-	unix := t.Unix()
-	diff := uint32(unix/600) - uint32(ref)
-	return Stamp(diff)
-}
-
-// ref is simply a unix timestamp bucketed in 10m buckets
-type Ref uint32
-
-func NewRef(t time.Time) Ref {
-	unix := t.Unix()
-	return Ref(unix / 600)
-}
-
+// Shard tracks for each SubKey when it was last seen
+// we know the last seen timestamp with ~10 minute precision
+// because all SubKey's Duration's are relative to the ref
 type Shard struct {
 	sync.Mutex
-	ref Ref
-	m   map[SubKey]Stamp
+	ref  Ref
+	data map[SubKey]Duration
 }
 
+// NewShard creates a new shard
 func NewShard(ref Ref) Shard {
 	return Shard{
-		ref: ref,
-		m:   make(map[SubKey]Stamp),
+		ref:  ref,
+		data: make(map[SubKey]Duration),
 	}
 }
 
-// callers responsability that t >= ref and t-ref <= 42 hours
+// Touch marks the key as seen and returns whether it was seen before
+// callers should assure that t >= ref and t-ref <= 42 hours
 func (s *Shard) Touch(key schema.Key, t time.Time) bool {
 	var sub SubKey
 	copy(sub[:], key[1:])
 	s.Lock()
-	_, ok := s.m[sub]
-	s.m[sub] = NewStamp(s.ref, t)
+	_, ok := s.data[sub]
+	s.data[sub] = NewDuration(s.ref, t)
 	s.Unlock()
 	return ok
 }
 
+// Len returns the length of the shard
 func (s *Shard) Len() int {
 	s.Lock()
-	l := len(s.m)
+	l := len(s.data)
 	s.Unlock()
 	return l
 }
 
+// Prune removes stale entries from the shard.
 // important that we update ref of the shard at least every 42 hours
-// so that stamp doesn't overflow
-func (s *Shard) Prune(now time.Time, diff uint8) int {
+// so that duration doesn't overflow
+func (s *Shard) Prune(now time.Time, diff Duration) int {
 	newRef := NewRef(now)
-	var remaining int
 	s.Lock()
 
-	// the amount to subtract of a stamp for it to be based on the new reference
-	subtract := newRef - s.ref
+	// the amount to subtract of a duration for it to be based on the new reference
+	// we know subtract fits into a Duration since we call Prune at least every 42 hours
+	subtract := Duration(newRef - s.ref)
 
-	for subkey, stamp := range s.m {
+	cutoff := newRef - Ref(diff)
+
+	for subkey, duration := range s.data {
 		// remove entry if it is too old, e.g. if:
 		// newRef - diff > "timestamp of the entry in 10minutely buckets"
-		// newRef - diff > ref + stamp
-		if uint32(newRef)-uint32(diff) > uint32(s.ref)+uint32(stamp) {
-			delete(s.m, subkey)
+		// newRef - diff > ref + duration
+		if cutoff > s.ref+Ref(duration) {
+			delete(s.data, subkey)
 			continue
 		}
 
-		// note that the update formula is only correct in these 2 cases:
-		// 1) it does not underflow.
-		// this must: stamp - subtract >= 0
-		// or: stap >= subtract (1)
-		// and we already know from above:
-		// newRef - diff <= ref + stamp (2)
-		// we also know that subtract == newRef - ref.
-		// putting this into (1):
-		// stamp >= newRef - ref
-		// filling that into (2):
+		// note that the update formula is only correct if these 2 conditions:
+		// A) it does not underflow
+		// iow: duration - subtract >= 0
+		// iow: duration >= subtract          (1)
+		// we already know from above:
+		// newRef - diff <= ref + duration    (2)
+		// we also know that:
+		// subtract == newRef - ref.          (3)
+		//
+		// put (3) into (1):
+		// duration >= newRef - ref           (4)
+		// put (4) into (2):
 		// newRef - diff <= ref + newRef - ref
-		// - diff <= 0
-		// diff >= 0
-		// 2) the result fits into a uint8. but since we decrease the amount, to a new >= 0 amount,
+		// iow: - diff <= 0
+		// iow: diff >= 0
+		// we know this is true, so there is no underflow.
+
+		// B) the result fits into a uint8. but since we decrease the amount, to a new >= 0 amount,
 		// we know it does
 
-		// we know subtract fits into a Stamp since we call Prune at least every 42 hours
-		s.m[subkey] = stamp - Stamp(subtract)
-		remaining++
+		s.data[subkey] = duration - subtract
 	}
 	s.ref = newRef
+	remaining := len(s.data)
 	s.Unlock()
 	return remaining
 }
