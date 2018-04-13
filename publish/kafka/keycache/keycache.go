@@ -13,7 +13,7 @@ type KeyCache struct {
 	staleThresh   uint8 // number of 10-minutely periods
 	pruneInterval time.Duration
 
-	sync.Mutex
+	sync.RWMutex
 	caches map[uint32]*Cache
 }
 
@@ -35,24 +35,31 @@ func NewKeyCache(staleThresh, pruneInterval time.Duration) *KeyCache {
 
 // marks the key as seen and returns whether it was seen before
 func (k *KeyCache) Touch(key schema.MKey, t time.Time) bool {
-	k.Lock()
+	k.RLock()
 	cache, ok := k.caches[key.Org]
+	k.RUnlock()
+	// most likely this branch won't execute
 	if !ok {
-		cache = NewCache(NewRef(t))
-		k.caches[key.Org] = cache
+		k.Lock()
+		// check again in case another routine has just added it
+		cache, ok = k.caches[key.Org]
+		if !ok {
+			cache = NewCache(NewRef(t))
+			k.caches[key.Org] = cache
+		}
+		k.Unlock()
 	}
-	k.Unlock()
 	return cache.Touch(key.Key, t)
 }
 
 func (k *KeyCache) Len() int {
 	var sum int
-	k.Lock()
+	k.RLock()
 	caches := make([]*Cache, 0, len(k.caches))
 	for _, c := range k.caches {
 		caches = append(caches, c)
 	}
-	k.Unlock()
+	k.RUnlock()
 	for _, c := range caches {
 		sum += c.Len()
 	}
@@ -68,7 +75,7 @@ func (k *KeyCache) prune() {
 			cache *Cache
 		}
 
-		k.Lock()
+		k.RLock()
 		targets := make([]target, 0, len(k.caches))
 		for org, c := range k.caches {
 			targets = append(targets, target{
@@ -76,7 +83,7 @@ func (k *KeyCache) prune() {
 				c,
 			})
 		}
-		k.Unlock()
+		k.RUnlock()
 
 		for _, t := range targets {
 			size := t.cache.Prune(now, k.staleThresh)
