@@ -18,11 +18,14 @@ type KeyCache struct {
 
 // NewKeyCache creates a new KeyCache
 func NewKeyCache(staleThresh, pruneInterval time.Duration) *KeyCache {
-	if staleThresh.Hours() > 40 {
-		panic("stale time may not exceed 40 hours due to resolution of internal bookkeeping")
+	if staleThresh.Hours() > 42 {
+		panic("stale time may not exceed 42 hours due to resolution of internal bookkeeping")
 	}
-	if pruneInterval.Hours() > 40 {
-		panic("prune interval may not exceed 40 hours due to resolution of internal bookkeeping")
+	if pruneInterval.Hours() > 42 {
+		panic("prune interval may not exceed 42 hours due to resolution of internal bookkeeping")
+	}
+	if pruneInterval.Minutes() < 10 {
+		panic("prune interval less than 10 minutes is useless due to resolution of internal bookkeeping")
 	}
 	k := &KeyCache{
 		pruneInterval: pruneInterval,

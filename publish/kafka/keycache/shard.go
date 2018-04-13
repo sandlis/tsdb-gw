@@ -50,51 +50,64 @@ func (s *Shard) Len() int {
 }
 
 // Prune removes stale entries from the shard.
-// important that we update ref of the shard at least every 42 hours
-// so that duration doesn't overflow
-func (s *Shard) Prune(now time.Time, diff Duration) int {
-	newRef := NewRef(now)
+// for this to work effectively,
+// call this with a frequency > 10 min and < 42 hours
+func (s *Shard) Prune(now time.Time, cutoff Duration) int {
+
 	s.Lock()
+	defer s.Unlock()
+
+	// establish the new reference.
+	// any values older will be pruned
+	// any values newer or equal will have their duration adjusted relative to newRef
+	newref := NewRef(now) - Ref(cutoff)
+
+	// in this case, nothing we can do.
+	// this happens when:
+	// caller prunes too often (more frequently than every 10 minutes)
+	// clock was adjusted and we went back in time
+	// the cutoff has increased from one call to the next
+	if newref <= s.ref {
+		return len(s.data)
+	}
+
+	// if we went further ahead in time than our bookkeeping resolution
+	// prune everything
+	// this happens when:
+	// clock jumps ahead
+	// missed ticker reads
+	// poorly configured prune interval
+	if newref > s.ref+255 {
+		s.data = make(map[SubKey]Duration)
+		return 0
+	}
+
+	// now that we know for sure that s.ref < newref <= s.ref+255
+	// or 0 < newref - s.ref <= 255                                                     (1)
+	// we can do precise pruning
 
 	// the amount to subtract of a duration for it to be based on the new reference
-	// we know subtract fits into a Duration since we call Prune at least every 42 hours
-	subtract := Duration(newRef - s.ref)
-
-	cutoff := newRef - Ref(diff)
+	subtract := Duration(newref - s.ref)
 
 	for subkey, duration := range s.data {
 		// remove entry if it is too old, e.g. if:
-		// newRef - diff > "timestamp of the entry in 10minutely buckets"
-		// newRef - diff > ref + duration
-		if cutoff > s.ref+Ref(duration) {
+		// newref > "timestamp of the entry in 10minutely buckets"
+		// newref > s.ref + duration                                                (2)
+		if newref > s.ref+Ref(duration) {
 			delete(s.data, subkey)
 			continue
 		}
 
-		// note that the update formula is only correct if these 2 conditions:
-		// A) it does not underflow
-		// iow: duration - subtract >= 0
-		// iow: duration >= subtract          (1)
-		// we already know from above:
-		// newRef - diff <= ref + duration    (2)
-		// we also know that:
-		// subtract == newRef - ref.          (3)
-		//
-		// put (3) into (1):
-		// duration >= newRef - ref           (4)
-		// put (4) into (2):
-		// newRef - diff <= ref + newRef - ref
-		// iow: - diff <= 0
-		// iow: diff >= 0
-		// we know this is true, so there is no underflow.
-
-		// B) the result fits into a uint8. but since we decrease the amount, to a new >= 0 amount,
-		// we know it does
-
+		// adjust the duration to be based on the new reference
+		// for this to be correct we must assert that there is no underflow,
+		// ie. that: duration - subtract >= 0
+		// because of (2) we know that:
+		// newref <= s.ref+duration
+		// iow duration >= newref - s.ref
+		// iow duration >= subtract
+		// iow duration - bustract >=0 (QED)
 		s.data[subkey] = duration - subtract
 	}
-	s.ref = newRef
-	remaining := len(s.data)
-	s.Unlock()
-	return remaining
+	s.ref = newref
+	return len(s.data)
 }
