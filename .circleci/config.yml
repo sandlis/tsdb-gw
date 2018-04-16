@@ -3,9 +3,10 @@ jobs:
   build:
     working_directory: /go/src/github.com/raintank/tsdb-gw
     docker:
-      - image: circleci/golang:1.9.3
+      - image: circleci/golang:1.10.1-stretch
     steps:
-      - run: sudo apt-get install libssl-dev openssl libsasl2-2 libsasl2-dev zlib1g-dev
+      - run: sudo apt-get update
+      - run: sudo apt-get install -y libssl-dev openssl libsasl2-2 libsasl2-dev zlib1g-dev
       - checkout
       - run: scripts/build.sh
       - persist_to_workspace:
@@ -16,9 +17,10 @@ jobs:
   test:
     working_directory: /go/src/github.com/raintank/tsdb-gw
     docker:
-      - image: circleci/golang:1.9.3
+      - image: circleci/golang:1.10.1-stretch
     steps:
-      - run: sudo apt-get install libssl-dev openssl libsasl2-2 libsasl2-dev zlib1g-dev
+      - run: sudo apt-get update
+      - run: sudo apt-get install -y libssl-dev openssl libsasl2-2 libsasl2-dev zlib1g-dev
       - checkout
       - run: scripts/tests.sh
       - run: scripts/vendor_health.sh
