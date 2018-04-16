@@ -187,13 +187,13 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 					Time:  uint32(metric.Time),
 				}
 				if v2Org {
-					data[:1][0] = byte(msg.FormatMetricPoint)
-					_, err = mp.Marshal32(data[1:])
-					data = data[:33]
+					data = data[:33]                      // this range will contain valid data
+					data[0] = byte(msg.FormatMetricPoint) // store version in first byte
+					_, err = mp.Marshal32(data[:1])       // Marshal will fill up space between length and cap, i.e. bytes 2-33
 				} else {
-					data[:1][0] = byte(msg.FormatMetricPointWithoutOrg)
-					_, err = mp.MarshalWithoutOrg28(data[1:])
-					data = data[:29]
+					data = data[:29]                                // this range will contain valid data
+					data[0] = byte(msg.FormatMetricPointWithoutOrg) // store version in first byte
+					_, err = mp.MarshalWithoutOrg28(data[:1])       // Marshal will fill up space between length and cap, i.e. bytes 2-29
 				}
 			} else {
 				data = bufferPool.Get()
