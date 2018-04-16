@@ -59,12 +59,6 @@
 			"revisionTime": "2016-08-04T10:47:26Z"
 		},
 		{
-			"checksumSHA1": "n6WHmaVaxufQthaT1tYnqTmtSsY=",
-			"path": "github.com/codeskyblue/go-uuid",
-			"revision": "952abbca900b023c1a80bc522ff4795db50d9d6c",
-			"revisionTime": "2014-02-08T11:57:53Z"
-		},
-		{
 			"checksumSHA1": "dvabztWVQX8f6oMLRyv4dLH+TGY=",
 			"path": "github.com/davecgh/go-spew/spew",
 			"revision": "346938d642f2ec3594ed81d874461961cd0faa76",
@@ -747,13 +741,13 @@
 			"revisionTime": "2017-02-13T09:12:08Z"
 		},
 		{
-			"checksumSHA1": "coHpC7KbWRXTjC0JM/bwnBn8zmY=",
+			"checksumSHA1": "yU85KoEMIvZ/2CO03pYYODO/YLE=",
 			"path": "gopkg.in/raintank/schema.v1",
 			"revision": "a323316458b5df84827551e9b6b5f61cb2de423b",
 			"revisionTime": "2017-01-12T12:37:55Z"
 		},
 		{
-			"checksumSHA1": "MjwLYwIckCtBwXhQMt5ji/L5lJA=",
+			"checksumSHA1": "v8/JH6Fux8FVf+r6UVmgBom1YrY=",
 			"path": "gopkg.in/raintank/schema.v1/msg",
 			"revision": "a323316458b5df84827551e9b6b5f61cb2de423b",
 			"revisionTime": "2017-01-12T12:37:55Z"

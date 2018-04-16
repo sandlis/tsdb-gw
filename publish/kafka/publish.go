@@ -11,16 +11,23 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	p "github.com/grafana/metrictank/cluster/partitioner"
 	"github.com/grafana/metrictank/stats"
+	"github.com/raintank/tsdb-gw/publish/kafka/keycache"
 	"github.com/raintank/tsdb-gw/usage"
 	"github.com/raintank/tsdb-gw/util"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/raintank/schema.v1"
+	"gopkg.in/raintank/schema.v1/msg"
 )
 
 var (
 	config   *kafka.ConfigMap
 	producer *kafka.Producer
 	brokers  []string
+	keyCache *keycache.KeyCache
+	// partitioner only needs to be initialized once since its configuration
+	// won't change during runtime and a single instance can be used by many
+	// threads
+	kafkaPartitioner *p.Kafka
 
 	metricsPublished = stats.NewCounter32("metrics.published")
 	messagesSize     = stats.NewMeter32("metrics.message_size", false)
@@ -37,12 +44,13 @@ var (
 	bufferMaxMsgs    int
 	batchNumMessages int
 	partitionCount   int32
-	// partitioner only needs to be initialized once since its configuration
-	// won't change during runtime and a single instance can be used by many
-	// threads
-	kafkaPartitioner *p.Kafka
+	v2               bool
+	v2Org            bool
+	v2StaleThresh    time.Duration
+	v2PruneInterval  time.Duration
 
 	bufferPool      = util.NewBufferPool()
+	bufferPool33    = util.NewBufferPool33()
 	partitionerPool sync.Pool
 )
 
@@ -91,6 +99,11 @@ func init() {
 	flag.IntVar(&bufferMaxMsgs, "metrics-buffer-max-msgs", 100000, "Maximum number of messages allowed on the producer queue. Publishing attempts will be rejected once this limit is reached.")
 	flag.IntVar(&bufferMaxMs, "metrics-buffer-max-ms", 100, "Delay in milliseconds to wait for messages in the producer queue to accumulate before constructing message batches (MessageSets) to transmit to brokers")
 	flag.IntVar(&batchNumMessages, "batch-num-messages", 10000, "Maximum number of messages batched in one MessageSet")
+
+	flag.BoolVar(&v2, "v2", true, "enable optimized MetricPoint payload")
+	flag.BoolVar(&v2Org, "v2-org", true, "encode org-id in messages")
+	flag.DurationVar(&v2StaleThresh, "v2-stale-thresh", 6*time.Hour, "expire keys (and resend MetricData if seen again) if not seen for this much time")
+	flag.DurationVar(&v2PruneInterval, "v2-prune-interval", time.Hour, "check interval for expiring keys")
 }
 
 func New(broker string) *mtPublisher {
@@ -131,6 +144,10 @@ func New(broker string) *mtPublisher {
 		log.Fatalf("failed to initialize partitioner. %s", err)
 	}
 
+	if v2 {
+		keyCache = keycache.NewKeyCache(v2StaleThresh, v2PruneInterval)
+	}
+
 	partitionerPool = sync.Pool{
 		New: func() interface{} { return NewPartitioner() },
 	}
@@ -153,10 +170,44 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 	partitioner := partitionerPool.Get().(Partitioner)
 
 	for i, metric := range metrics {
-		data := bufferPool.Get()
-		data, err = metric.MarshalMsg(data)
-		if err != nil {
-			return err
+		var data []byte
+		if v2 {
+			var mkey schema.MKey
+			mkey, err = schema.MKeyFromString(metric.Id)
+			if err != nil {
+				return err
+			}
+			ok := keyCache.Touch(mkey, pre)
+			// we've seen this key recently. we can use the optimized format
+			if ok {
+				data = bufferPool33.Get()
+				mp := schema.MetricPoint{
+					MKey:  mkey,
+					Value: metric.Value,
+					Time:  uint32(metric.Time),
+				}
+				if v2Org {
+					data[:1][0] = byte(msg.FormatMetricPoint)
+					_, err = mp.Marshal32(data[1:])
+					data = data[:33]
+				} else {
+					data[:1][0] = byte(msg.FormatMetricPointWithoutOrg)
+					_, err = mp.MarshalWithoutOrg28(data[1:])
+					data = data[:29]
+				}
+			} else {
+				data = bufferPool.Get()
+				data, err = metric.MarshalMsg(data)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			data = bufferPool.Get()
+			data, err = metric.MarshalMsg(data)
+			if err != nil {
+				return err
+			}
 		}
 
 		part, key, err := partitioner.partition(metric)
@@ -185,7 +236,11 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 		var buf []byte
 		for _, msg := range payload {
 			buf = msg.Value
-			bufferPool.Put(buf)
+			if cap(buf) == 33 {
+				bufferPool33.Put(buf)
+			} else {
+				bufferPool.Put(buf)
+			}
 		}
 	}()
 

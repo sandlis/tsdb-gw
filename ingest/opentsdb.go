@@ -49,7 +49,6 @@ func OpenTSDBWrite(ctx *api.Context) {
 			md := metricPool.Get()
 			*md = schema.MetricData{
 				Name:     ts.Metric,
-				Metric:   ts.Metric,
 				Interval: s.Retentions[0].SecondsPerPoint,
 				Value:    ts.Value,
 				Unit:     "unknown",
