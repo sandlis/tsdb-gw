@@ -29,11 +29,12 @@ var (
 	// threads
 	kafkaPartitioner *p.Kafka
 
-	metricsPublished = stats.NewCounter32("metrics.published")
-	messagesSize     = stats.NewMeter32("metrics.message_size", false)
-	publishDuration  = stats.NewLatencyHistogram15s32("metrics.publish")
-	sendErrProducer  = stats.NewCounter32("metrics.send_error.producer")
-	sendErrOther     = stats.NewCounter32("metrics.send_error.other")
+	publishedMD     = stats.NewCounter32("output.kafka.published.metricdata")
+	publishedMP     = stats.NewCounter32("output.kafka.published.metricpoint")
+	messagesSize    = stats.NewMeter32("metrics.message_size", false)
+	publishDuration = stats.NewLatencyHistogram15s32("metrics.publish")
+	sendErrProducer = stats.NewCounter32("metrics.send_error.producer")
+	sendErrOther    = stats.NewCounter32("metrics.send_error.other")
 
 	topic            string
 	codec            string
@@ -169,6 +170,9 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 	deliveryChan := make(chan kafka.Event, len(metrics))
 	partitioner := partitionerPool.Get().(Partitioner)
 
+	pubMD := 0
+	pubMP := 0
+
 	for i, metric := range metrics {
 		var data []byte
 		if v2 {
@@ -195,12 +199,14 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 					data[0] = byte(msg.FormatMetricPointWithoutOrg) // store version in first byte
 					_, err = mp.MarshalWithoutOrg28(data[:1])       // Marshal will fill up space between length and cap, i.e. bytes 2-29
 				}
+				pubMP++
 			} else {
 				data = bufferPool.Get()
 				data, err = metric.MarshalMsg(data)
 				if err != nil {
 					return err
 				}
+				pubMD++
 			}
 		} else {
 			data = bufferPool.Get()
@@ -208,6 +214,7 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 			if err != nil {
 				return err
 			}
+			pubMD++
 		}
 
 		part, key, err := partitioner.partition(metric)
@@ -278,8 +285,9 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 	}
 
 	publishDuration.Value(time.Since(pre))
-	metricsPublished.Add(len(metrics))
-	log.Debugf("published %d metrics", len(metrics))
+	publishedMD.Add(pubMD)
+	publishedMP.Add(pubMP)
+	log.Debugf("published %d metrics", pubMD+pubMP)
 	for _, metric := range metrics {
 		usage.LogDataPoint(metric.Id)
 	}
