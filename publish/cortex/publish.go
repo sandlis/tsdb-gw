@@ -172,9 +172,7 @@ func (c *cortexPublisher) Write(req *writeRequest) error {
 		}
 		err = fmt.Errorf("server returned HTTP status %s: %s", httpResp.Status, line)
 	}
-	if httpResp.StatusCode/100 == 5 {
-		return err
-	}
+
 	return err
 }
 
@@ -184,11 +182,12 @@ type writeRequest struct {
 }
 
 func packageMetrics(metrics []*schema.MetricData) (*writeRequest, error) {
-	req := &prompb.WriteRequest{
-		Timeseries: make([]*prompb.TimeSeries, 0, len(metrics)),
-	}
 	if len(metrics) < 1 {
 		return nil, errNoMetrics
+	}
+
+	req := prompb.WriteRequest{
+		Timeseries: make([]*prompb.TimeSeries, 0, len(metrics)),
 	}
 	for _, m := range metrics {
 		labels := make([]*prompb.Label, 0, len(m.Tags)+1)
@@ -200,7 +199,8 @@ func packageMetrics(metrics []*schema.MetricData) (*writeRequest, error) {
 		)
 		for _, tag := range m.Tags {
 			tv := strings.SplitN(tag, "=", 2)
-			if len(tv) < 2 || tv[1] == "" {
+			if len(tv) < 2 || tv[0] == "" || tv[1] == "" {
+				log.Debugf("tag: '%v' is not able to be decoded", tv)
 				return nil, errBadTag
 			}
 			labels = append(labels, &prompb.Label{
@@ -220,7 +220,7 @@ func packageMetrics(metrics []*schema.MetricData) (*writeRequest, error) {
 	}
 
 	return &writeRequest{
-		Request: req,
+		Request: &req,
 		orgID:   metrics[0].OrgId,
 	}, nil
 }
