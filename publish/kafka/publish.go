@@ -3,6 +3,7 @@ package kafka
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"hash"
 	"hash/fnv"
 	"sync"
@@ -129,18 +130,12 @@ func New(broker string) *mtPublisher {
 		log.Fatalf("failed to initialize kafka producer. %s", err)
 	}
 
-	meta, err := producer.GetMetadata(&topic, false, 30000)
+	meta, err := tryGetMetadata(producer, topic, 3)
 	if err != nil {
-		log.Fatalf("failed to initialize kafka partitioner. %s", err)
+		log.Fatalf("Failed to get topics from kafka: %s", err)
 	}
 
-	var t kafka.TopicMetadata
-	var ok bool
-	if t, ok = meta.Topics[topic]; !ok {
-		log.Fatalf("failed to get metadata about topic %s", topic)
-	}
-
-	partitionCount = int32(len(t.Partitions))
+	partitionCount = int32(len(meta.Topics[topic].Partitions))
 	kafkaPartitioner, err = p.NewKafka(partitionScheme)
 	if err != nil {
 		log.Fatalf("failed to initialize partitioner. %s", err)
@@ -154,6 +149,22 @@ func New(broker string) *mtPublisher {
 		New: func() interface{} { return NewPartitioner() },
 	}
 	return &mtPublisher{}
+}
+
+func tryGetMetadata(producer *kafka.Producer, topic string, attempts int) (*kafka.Metadata, error) {
+	for attempt := 0; attempt < attempts; attempt++ {
+		meta, err := producer.GetMetadata(&topic, false, 30000)
+		if err != nil {
+			return nil, err
+		}
+
+		if t, ok := meta.Topics[topic]; ok && len(t.Partitions) > 0 {
+			return meta, nil
+		}
+		time.Sleep(time.Second)
+	}
+
+	return nil, fmt.Errorf("Could not get partitions after %d attempts", attempts)
 }
 
 func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
