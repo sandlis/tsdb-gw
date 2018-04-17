@@ -68,6 +68,8 @@ const maxErrMsgLen = 256
 
 // Init initializes the cortex reverse proxies
 func init() {
+	flag.Parse()
+
 	cortexURL, err := url.Parse(*cortexWriteURL)
 	if err != nil {
 		log.Fatalf("unable to parse cortex write url '%s': %v", *cortexWriteURL, err)
