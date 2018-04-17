@@ -24,12 +24,12 @@ import (
 )
 
 var (
-	app                = "cortex-gw"
-	GitHash            = "(none)"
-	showVersion        = flag.Bool("version", false, "print version string")
-	confFile           = flag.String("config", "/etc/gw/cortex-gw.ini", "configuration file path")
-	authPlugin         = flag.String("api-auth-plugin", "grafana-instance", "auth plugin to use. (grafana-instance|file)")
-	cortexWriteEnabled = flag.Bool("cortex-forward-3rdparty", false, "enable writing to cortex with non standard agents")
+	app             = "cortex-gw"
+	GitHash         = "(none)"
+	showVersion     = flag.Bool("version", false, "print version string")
+	confFile        = flag.String("config", "/etc/gw/cortex-gw.ini", "configuration file path")
+	authPlugin      = flag.String("api-auth-plugin", "grafana-instance", "auth plugin to use. (grafana-instance|file)")
+	forward3rdParty = flag.Bool("forward-3rdparty", false, "enable writing to cortex with non standard agents")
 
 	tracingEnabled = flag.Bool("tracing-enabled", false, "enable/disable distributed opentracing via jaeger")
 	tracingAddr    = flag.String("tracing-addr", "localhost:6831", "address of the jaeger agent to send data to")
@@ -69,7 +69,7 @@ func main() {
 
 	var inputs []Stoppable
 
-	if *cortexWriteEnabled {
+	if *forward3rdParty {
 		publish.Init(cortexPublish.NewCortexPublisher())
 		inputs = append(inputs, carbon.InitCarbon())
 	} else {
