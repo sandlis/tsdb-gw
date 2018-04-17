@@ -31,6 +31,7 @@ var (
 
 	publishedMD     = stats.NewCounter32("output.kafka.published.metricdata")
 	publishedMP     = stats.NewCounter32("output.kafka.published.metricpoint")
+	publishedMPNO   = stats.NewCounter32("output.kafka.published.metricpoint_no_org")
 	messagesSize    = stats.NewMeter32("metrics.message_size", false)
 	publishDuration = stats.NewLatencyHistogram15s32("metrics.publish")
 	sendErrProducer = stats.NewCounter32("metrics.send_error.producer")
@@ -172,6 +173,7 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 
 	pubMD := 0
 	pubMP := 0
+	pubMPNO := 0
 
 	for i, metric := range metrics {
 		var data []byte
@@ -194,12 +196,13 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 					data = data[:33]                      // this range will contain valid data
 					data[0] = byte(msg.FormatMetricPoint) // store version in first byte
 					_, err = mp.Marshal32(data[:1])       // Marshal will fill up space between length and cap, i.e. bytes 2-33
+					pubMP++
 				} else {
 					data = data[:29]                                // this range will contain valid data
 					data[0] = byte(msg.FormatMetricPointWithoutOrg) // store version in first byte
 					_, err = mp.MarshalWithoutOrg28(data[:1])       // Marshal will fill up space between length and cap, i.e. bytes 2-29
+					pubMPNO++
 				}
-				pubMP++
 			} else {
 				data = bufferPool.Get()
 				data, err = metric.MarshalMsg(data)
@@ -287,6 +290,7 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 	publishDuration.Value(time.Since(pre))
 	publishedMD.Add(pubMD)
 	publishedMP.Add(pubMP)
+	publishedMPNO.Add(pubMPNO)
 	log.Debugf("published %d metrics", pubMD+pubMP)
 	for _, metric := range metrics {
 		usage.LogDataPoint(metric.Id)
