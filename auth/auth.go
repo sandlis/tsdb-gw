@@ -35,6 +35,7 @@ type AuthPlugin interface {
 }
 
 func GetAuthPlugin(name string) AuthPlugin {
+	log.Debugf("initializing auth plugin %s", name)
 	switch name {
 	case "grafana":
 		return NewGrafanaComAuth()

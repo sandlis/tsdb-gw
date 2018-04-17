@@ -31,7 +31,6 @@ var (
 
 	Enabled           bool
 	addr              string
-	schemasConf       string
 	concurrency       int
 	bufferSize        int
 	flushInterval     time.Duration
@@ -44,7 +43,6 @@ var (
 func init() {
 	flag.StringVar(&addr, "carbon-addr", "0.0.0.0:2003", "listen address for carbon input")
 	flag.BoolVar(&Enabled, "carbon-enabled", false, "enable carbon input")
-	flag.StringVar(&schemasConf, "schemas-file", "/etc/gw/storage-schemas.conf", "path to carbon storage-schemas.conf file")
 	flag.DurationVar(&flushInterval, "carbon-flush-interval", time.Second, "maximum time between flushs to kafka")
 	flag.IntVar(&concurrency, "carbon-concurrency", 1, "number of goroutines for handling metrics")
 	flag.IntVar(&bufferSize, "carbon-buffer-size", 100000, "number of metrics to hold in an input buffer. Once this buffer fills metrics will be dropped")
@@ -72,12 +70,6 @@ func InitCarbon() *Carbon {
 
 	log.Infof("Carbon input listening on %s", addr)
 	c.buf = make(chan []byte, bufferSize)
-
-	schemas, err := getSchemas(schemasConf)
-	if err != nil {
-		log.Fatalf("failed to load schemas config. %s", err)
-	}
-	c.schemas = schemas
 
 	laddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {

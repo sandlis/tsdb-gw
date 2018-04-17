@@ -9,6 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/grafana/metrictank/conf"
+
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	p "github.com/grafana/metrictank/cluster/partitioner"
 	"github.com/grafana/metrictank/stats"
@@ -29,6 +31,8 @@ var (
 	// won't change during runtime and a single instance can be used by many
 	// threads
 	kafkaPartitioner *p.Kafka
+
+	schemasConf string
 
 	publishedMD     = stats.NewCounter32("output.kafka.published.metricdata")
 	publishedMP     = stats.NewCounter32("output.kafka.published.metricpoint")
@@ -57,7 +61,9 @@ var (
 	partitionerPool sync.Pool
 )
 
-type mtPublisher struct{}
+type mtPublisher struct {
+	schemas *conf.Schemas
+}
 
 type Partitioner interface {
 	partition(schema.PartitionedMetric) (int32, []byte, error)
@@ -107,6 +113,8 @@ func init() {
 	flag.BoolVar(&v2Org, "v2-org", true, "encode org-id in messages")
 	flag.DurationVar(&v2StaleThresh, "v2-stale-thresh", 6*time.Hour, "expire keys (and resend MetricData if seen again) if not seen for this much time")
 	flag.DurationVar(&v2PruneInterval, "v2-prune-interval", time.Hour, "check interval for expiring keys")
+
+	flag.StringVar(&schemasConf, "schemas-file", "/etc/gw/storage-schemas.conf", "path to carbon storage-schemas.conf file")
 }
 
 func New(broker string) *mtPublisher {
@@ -114,6 +122,11 @@ func New(broker string) *mtPublisher {
 		return nil
 	}
 	var err error
+
+	schemas, err := getSchemas(schemasConf)
+	if err != nil {
+		log.Fatalf("failed to load schemas config. %s", err)
+	}
 
 	config := kafka.ConfigMap{}
 	config.SetKey("request.required.acks", "all")
@@ -148,7 +161,9 @@ func New(broker string) *mtPublisher {
 	partitionerPool = sync.Pool{
 		New: func() interface{} { return NewPartitioner() },
 	}
-	return &mtPublisher{}
+	return &mtPublisher{
+		schemas: schemas,
+	}
 }
 
 func tryGetMetadata(producer *kafka.Producer, topic string, attempts int) (*kafka.Metadata, error) {
@@ -187,6 +202,12 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 	pubMPNO := 0
 
 	for i, metric := range metrics {
+		if metric.Interval == 0 {
+			_, s := m.schemas.Match(metric.Name, 0)
+			metric.Interval = s.Retentions[0].SecondsPerPoint
+			metric.SetId()
+		}
+
 		var data []byte
 		if v2 {
 			var mkey schema.MKey

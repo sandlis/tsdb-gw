@@ -27,6 +27,7 @@ func Publish(metrics []*schema.MetricData) error {
 	return publisher.Publish(metrics)
 }
 
+// nullPublisher drops all metrics passed through the publish interface
 type nullPublisher struct{}
 
 func (*nullPublisher) Publish(metrics []*schema.MetricData) error {

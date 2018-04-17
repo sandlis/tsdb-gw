@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	addr     = flag.String("addr", "localhost:80", "http service address")
+	addr     = flag.String("addr", ":80", "http service address")
 	ssl      = flag.Bool("ssl", false, "use https")
 	certFile = flag.String("cert-file", "", "SSL certificate file")
 	keyFile  = flag.String("key-file", "", "SSL key file")

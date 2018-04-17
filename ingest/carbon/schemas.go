@@ -51,11 +51,10 @@ func parseMetric(buf []byte, schemas *conf.Schemas, orgId int) (*schema.MetricDa
 		return nil, fmt.Errorf("can't parse timestamp: %s", err)
 	}
 
-	_, s := schemas.Match(name, 0)
 	md := metricPool.Get()
 	*md = schema.MetricData{
 		Name:     name,
-		Interval: s.Retentions[0].SecondsPerPoint,
+		Interval: 0,
 		Value:    val,
 		Unit:     "unknown",
 		Time:     int64(timestamp),

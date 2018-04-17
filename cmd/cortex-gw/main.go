@@ -14,17 +14,22 @@ import (
 	"github.com/grafana/globalconf"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/raintank/tsdb-gw/api"
+	"github.com/raintank/tsdb-gw/ingest"
+	"github.com/raintank/tsdb-gw/ingest/carbon"
+	"github.com/raintank/tsdb-gw/publish"
+	cortexPublish "github.com/raintank/tsdb-gw/publish/cortex"
 	"github.com/raintank/tsdb-gw/query/cortex"
 	"github.com/raintank/tsdb-gw/util"
 	log "github.com/sirupsen/logrus"
 )
 
 var (
-	app         = "cortex-gw"
-	GitHash     = "(none)"
-	showVersion = flag.Bool("version", false, "print version string")
-	confFile    = flag.String("config", "/etc/gw/cortex-gw.ini", "configuration file path")
-	authPlugin  = flag.String("api-auth-plugin", "grafana-instance", "auth plugin to use. (grafana-instance|file)")
+	app             = "cortex-gw"
+	GitHash         = "(none)"
+	showVersion     = flag.Bool("version", false, "print version string")
+	confFile        = flag.String("config", "/etc/gw/cortex-gw.ini", "configuration file path")
+	authPlugin      = flag.String("api-auth-plugin", "grafana-instance", "auth plugin to use. (grafana-instance|file)")
+	forward3rdParty = flag.Bool("forward-3rdparty", false, "enable writing to cortex with non standard agents")
 
 	tracingEnabled = flag.Bool("tracing-enabled", false, "enable/disable distributed opentracing via jaeger")
 	tracingAddr    = flag.String("tracing-addr", "localhost:6831", "address of the jaeger agent to send data to")
@@ -62,6 +67,15 @@ func main() {
 	}
 	defer traceCloser.Close()
 
+	var inputs []Stoppable
+
+	if *forward3rdParty {
+		publish.Init(cortexPublish.NewCortexPublisher())
+		inputs = append(inputs, carbon.InitCarbon())
+	} else {
+		publish.Init(nil)
+	}
+
 	if err := cortex.Init(); err != nil {
 		log.Fatal("could not initialize cortex proxy: %s", err.Error())
 	}
@@ -70,7 +84,6 @@ func main() {
 
 	ms := newMetricsServer(*metricsAddr)
 
-	inputs := make([]Stoppable, 0)
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
@@ -118,8 +131,10 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 
 // InitRoutes initializes the routes.
 func initRoutes(a *api.Api) {
-	a.Router.Any("/api/prom/push", a.PromStats("cortex-write"), a.Auth(), cortex.Write)
+	a.Router.Any("/api/prom/push", a.PromStats("cortex-write"), a.Auth(), cortexPublish.Write)
 	a.Router.Any("/api/prom/*", a.PromStats("cortex-read"), a.Auth(), cortex.Proxy)
+	a.Router.Post("/datadog/api/v1/series", a.Auth(), ingest.DataDogWrite)
+	a.Router.Post("/opentsdb/api/put", a.Auth(), ingest.OpenTSDBWrite)
 }
 
 type metricsServer struct {

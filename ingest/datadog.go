@@ -25,7 +25,7 @@ type DataDogPayload struct {
 	} `json:"series"`
 }
 
-func DataDogMTWrite(ctx *api.Context) {
+func DataDogWrite(ctx *api.Context) {
 	if ctx.Req.Request.Body == nil {
 		ctx.JSON(400, "no data included in request.")
 		return
@@ -54,13 +54,12 @@ func DataDogMTWrite(ctx *api.Context) {
 
 	buf := make([]*schema.MetricData, 0)
 	for _, ts := range series.Series {
-		_, s := schemas.Match(ts.Name, 0)
 		tagSet := createTagSet(ts.Host, ts.Device, ts.Tags)
 		for _, point := range ts.Points {
 			md := metricPool.Get()
 			*md = schema.MetricData{
 				Name:     ts.Name,
-				Interval: s.Retentions[0].SecondsPerPoint,
+				Interval: 0,
 				Value:    point[1],
 				Unit:     "unknown",
 				Time:     int64(point[0]),

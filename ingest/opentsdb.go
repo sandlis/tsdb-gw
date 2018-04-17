@@ -45,11 +45,10 @@ func OpenTSDBWrite(ctx *api.Context) {
 
 		var buf []*schema.MetricData
 		for _, ts := range req {
-			_, s := schemas.Match(ts.Metric, 0)
 			md := metricPool.Get()
 			*md = schema.MetricData{
 				Name:     ts.Metric,
-				Interval: s.Retentions[0].SecondsPerPoint,
+				Interval: 0,
 				Value:    ts.Value,
 				Unit:     "unknown",
 				Time:     ts.Timestamp,

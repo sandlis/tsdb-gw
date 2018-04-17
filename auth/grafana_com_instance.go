@@ -24,9 +24,11 @@ func (a *GrafanaComInstanceAuth) Auth(username, password string) (*User, error) 
 	u, err := gcom.Auth(AdminKey, password)
 	if err != nil {
 		if err == gcom.ErrInvalidApiKey {
+			log.Debugf("failed to authenticate request: %v", err)
 			return nil, ErrInvalidCredentials
 		}
 		if err == gcom.ErrInvalidOrgId {
+			log.Debugf("failed to authenticate request: %v", err)
 			return nil, ErrInvalidOrgId
 		}
 		return nil, err
