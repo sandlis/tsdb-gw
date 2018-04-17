@@ -202,9 +202,11 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 	pubMPNO := 0
 
 	for i, metric := range metrics {
-		_, s := m.schemas.Match(metric.Name, 0)
-		metric.Interval = s.Retentions[0].SecondsPerPoint
-		metric.SetId()
+		if metric.Interval == 0 {
+			_, s := m.schemas.Match(metric.Name, 0)
+			metric.Interval = s.Retentions[0].SecondsPerPoint
+			metric.SetId()
+		}
 
 		var data []byte
 		if v2 {
