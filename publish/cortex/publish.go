@@ -135,8 +135,8 @@ func (c *cortexPublisher) Type() string {
 }
 
 // Write sends a batch of samples to the HTTP endpoint.
-func (c *cortexPublisher) Write(req *writeRequest) error {
-	data, err := proto.Marshal(req.Request)
+func (c *cortexPublisher) Write(req writeRequest) error {
+	data, err := proto.Marshal(&req.Request)
 	if err != nil {
 		return err
 	}
@@ -144,8 +144,6 @@ func (c *cortexPublisher) Write(req *writeRequest) error {
 	compressed := snappy.Encode(nil, data)
 	httpReq, err := http.NewRequest("POST", c.url.String(), bytes.NewReader(compressed))
 	if err != nil {
-		// Errors from NewRequest are from unparseable URLs, so are not
-		// recoverable.
 		return err
 	}
 	httpReq.Header.Add("Content-Encoding", "snappy")
@@ -158,8 +156,6 @@ func (c *cortexPublisher) Write(req *writeRequest) error {
 
 	httpResp, err := ctxhttp.Do(ctx, c.client, httpReq)
 	if err != nil {
-		// Errors from client.Do are from (for example) network errors, so are
-		// recoverable.
 		return err
 	}
 	defer httpResp.Body.Close()
@@ -177,13 +173,13 @@ func (c *cortexPublisher) Write(req *writeRequest) error {
 }
 
 type writeRequest struct {
-	Request *prompb.WriteRequest
+	Request prompb.WriteRequest
 	orgID   int
 }
 
-func packageMetrics(metrics []*schema.MetricData) (*writeRequest, error) {
+func packageMetrics(metrics []*schema.MetricData) (writeRequest, error) {
 	if len(metrics) < 1 {
-		return nil, errNoMetrics
+		return writeRequest{}, errNoMetrics
 	}
 
 	req := prompb.WriteRequest{
@@ -201,7 +197,7 @@ func packageMetrics(metrics []*schema.MetricData) (*writeRequest, error) {
 			tv := strings.SplitN(tag, "=", 2)
 			if len(tv) < 2 || tv[0] == "" || tv[1] == "" {
 				log.Debugf("tag: '%v' is not able to be decoded", tv)
-				return nil, errBadTag
+				return writeRequest{}, errBadTag
 			}
 			labels = append(labels, &prompb.Label{
 				Name:  tv[0],
@@ -219,8 +215,8 @@ func packageMetrics(metrics []*schema.MetricData) (*writeRequest, error) {
 		})
 	}
 
-	return &writeRequest{
-		Request: &req,
+	return writeRequest{
+		Request: req,
 		orgID:   metrics[0].OrgId,
 	}, nil
 }

@@ -17,7 +17,7 @@ import (
 	"github.com/raintank/tsdb-gw/ingest"
 	"github.com/raintank/tsdb-gw/ingest/carbon"
 	"github.com/raintank/tsdb-gw/publish"
-	cortex_publish "github.com/raintank/tsdb-gw/publish/cortex"
+	cortexPublish "github.com/raintank/tsdb-gw/publish/cortex"
 	"github.com/raintank/tsdb-gw/query/cortex"
 	"github.com/raintank/tsdb-gw/util"
 	log "github.com/sirupsen/logrus"
@@ -67,10 +67,10 @@ func main() {
 	}
 	defer traceCloser.Close()
 
-	inputs := make([]Stoppable, 0)
+	var inputs []Stoppable
 
 	if *cortexWriteEnabled {
-		publish.Init(cortex_publish.NewCortexPublisher())
+		publish.Init(cortexPublish.NewCortexPublisher())
 		inputs = append(inputs, carbon.InitCarbon())
 	} else {
 		publish.Init(nil)
@@ -131,7 +131,7 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 
 // InitRoutes initializes the routes.
 func initRoutes(a *api.Api) {
-	a.Router.Any("/api/prom/push", a.PromStats("cortex-write"), a.Auth(), cortex_publish.Write)
+	a.Router.Any("/api/prom/push", a.PromStats("cortex-write"), a.Auth(), cortexPublish.Write)
 	a.Router.Any("/api/prom/*", a.PromStats("cortex-read"), a.Auth(), cortex.Proxy)
 	a.Router.Post("/datadog/api/v1/series", a.Auth(), ingest.DataDogWrite)
 	a.Router.Post("/opentsdb/api/put", a.Auth(), ingest.OpenTSDBWrite)

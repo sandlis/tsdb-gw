@@ -50,13 +50,11 @@ func PrometheusMTWrite(ctx *api.Context) {
 				}
 			}
 			if name != "" {
-				_, s := schemas.Match(name, 0)
-
 				for _, sample := range ts.Samples {
 					md := metricPool.Get()
 					*md = schema.MetricData{
 						Name:     name,
-						Interval: s.Retentions[0].SecondsPerPoint,
+						Interval: 0,
 						Value:    sample.Value,
 						Unit:     "unknown",
 						Time:     (sample.Timestamp / 1000),

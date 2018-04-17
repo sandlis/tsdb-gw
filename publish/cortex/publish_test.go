@@ -12,7 +12,7 @@ func Test_packageMetrics(t *testing.T) {
 	tests := []struct {
 		name    string
 		metrics []*schema.MetricData
-		want    *writeRequest
+		want    writeRequest
 		wantErr bool
 	}{
 		{
@@ -20,8 +20,8 @@ func Test_packageMetrics(t *testing.T) {
 			metrics: []*schema.MetricData{
 				&schema.MetricData{Name: "example_metric"},
 			},
-			want: &writeRequest{
-				Request: &prompb.WriteRequest{
+			want: writeRequest{
+				Request: prompb.WriteRequest{
 					Timeseries: []*prompb.TimeSeries{
 						&prompb.TimeSeries{
 							Labels: []*prompb.Label{
@@ -41,8 +41,8 @@ func Test_packageMetrics(t *testing.T) {
 			metrics: []*schema.MetricData{
 				&schema.MetricData{Name: "example.metric"},
 			},
-			want: &writeRequest{
-				Request: &prompb.WriteRequest{
+			want: writeRequest{
+				Request: prompb.WriteRequest{
 					Timeseries: []*prompb.TimeSeries{
 						&prompb.TimeSeries{
 							Labels: []*prompb.Label{
@@ -65,8 +65,8 @@ func Test_packageMetrics(t *testing.T) {
 					Tags: []string{"example=tag"},
 				},
 			},
-			want: &writeRequest{
-				Request: &prompb.WriteRequest{
+			want: writeRequest{
+				Request: prompb.WriteRequest{
 					Timeseries: []*prompb.TimeSeries{
 						&prompb.TimeSeries{
 							Labels: []*prompb.Label{
@@ -90,7 +90,7 @@ func Test_packageMetrics(t *testing.T) {
 					Tags: []string{"example="},
 				},
 			},
-			want:    nil,
+			want:    writeRequest{},
 			wantErr: true,
 		},
 		{
@@ -101,8 +101,8 @@ func Test_packageMetrics(t *testing.T) {
 					Tags: []string{"example1=tag", "example2=tag"},
 				},
 			},
-			want: &writeRequest{
-				Request: &prompb.WriteRequest{
+			want: writeRequest{
+				Request: prompb.WriteRequest{
 					Timeseries: []*prompb.TimeSeries{
 						&prompb.TimeSeries{
 							Labels: []*prompb.Label{
