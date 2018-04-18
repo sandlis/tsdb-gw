@@ -69,6 +69,7 @@ func main() {
 
 	var inputs []Stoppable
 
+	cortexPublish.Init()
 	if *forward3rdParty {
 		publish.Init(cortexPublish.NewCortexPublisher())
 		inputs = append(inputs, carbon.InitCarbon())
