@@ -7,10 +7,11 @@ import (
 	"strconv"
 
 	"github.com/raintank/tsdb-gw/api"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
-	cortexReadURL = flag.String("cortex-read-url", "http://localhost:9000", "cortex read address")
+	readURL = flag.String("read-url", "http://localhost:9000", "cortex read address")
 
 	// Proxy handles all non write requests to cortex
 	proxy *httputil.ReverseProxy
@@ -19,11 +20,12 @@ var (
 // Init initializes the cortex reverse proxies
 func Init() error {
 
-	CortexReadURL, err := url.Parse(*cortexReadURL)
+	cortexURL, err := url.Parse(*readURL)
 	if err != nil {
 		return err
 	}
-	proxy = httputil.NewSingleHostReverseProxy(CortexReadURL)
+	proxy = httputil.NewSingleHostReverseProxy(cortexURL)
+	log.Infof("cortex read proxy intitialized, backend=%v", cortexURL)
 
 	return nil
 }

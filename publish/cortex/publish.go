@@ -26,9 +26,9 @@ import (
 )
 
 var (
-	cortexWriteBPoolSize  = flag.Int("cortex-bpool-size", 100, "max number of byte buffers in the cortex write buffer pool")
-	cortexWriteBPoolWidth = flag.Int("cortex-bpool-width", 1024, "capacity of byte array provided by cortex write buffer pool")
-	cortexWriteURL        = flag.String("cortex-write-url", "http://localhost:9000", "cortex write address")
+	writeBPoolSize  = flag.Int("bpool-size", 100, "max number of byte buffers in the cortex write buffer pool")
+	writeBPoolWidth = flag.Int("bpool-width", 1024, "capacity of byte array provided by cortex write buffer pool")
+	writeURL        = flag.String("write-url", "http://localhost:9000", "cortex write address")
 
 	writeProxy *httputil.ReverseProxy
 
@@ -67,12 +67,10 @@ var (
 const maxErrMsgLen = 256
 
 // Init initializes the cortex reverse proxies
-func init() {
-	flag.Parse()
-
-	cortexURL, err := url.Parse(*cortexWriteURL)
+func Init() {
+	cortexURL, err := url.Parse(*writeURL)
 	if err != nil {
-		log.Fatalf("unable to parse cortex write url '%s': %v", *cortexWriteURL, err)
+		log.Fatalf("unable to parse cortex write url '%s': %v", *writeURL, err)
 	}
 	// Seperate Proxy for Writes, add BufferPool for perf reasons if needed
 	writeProxy = &httputil.ReverseProxy{
@@ -80,9 +78,10 @@ func init() {
 			req.URL.Scheme = cortexURL.Scheme
 			req.URL.Host = cortexURL.Host
 		},
-		BufferPool: bpool.NewBytePool(*cortexWriteBPoolSize, *cortexWriteBPoolWidth),
+		BufferPool: bpool.NewBytePool(*writeBPoolSize, *writeBPoolWidth),
 	}
 
+	log.Infof("cortex write proxy intitialized, backend=%v", cortexURL)
 	prometheus.MustRegister(droppedSamplesTotal)
 	prometheus.MustRegister(succeededSamplesTotal)
 	prometheus.MustRegister(requestDuration)
