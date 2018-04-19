@@ -198,8 +198,8 @@ func packageMetrics(metrics []*schema.MetricData) (writeRequest, error) {
 		for _, tag := range m.Tags {
 			tv := strings.SplitN(tag, "=", 2)
 			if len(tv) < 2 || tv[0] == "" || tv[1] == "" {
-				log.Debugf("tag: '%v' is not able to be decoded", tv)
-				return writeRequest{}, errBadTag
+				log.Warnf("tag: '%v' is not able to be encoded", tv)
+				continue
 			}
 			labels = append(labels, &prompb.Label{
 				Name:  tv[0],
