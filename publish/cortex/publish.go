@@ -68,7 +68,8 @@ const maxErrMsgLen = 256
 
 // Init initializes the cortex reverse proxies
 func Init() {
-	cortexURL, err := url.Parse(*writeURL)
+	var err error
+	cortexURL, err = url.Parse(*writeURL)
 	if err != nil {
 		log.Fatalf("unable to parse cortex write url '%s': %v", *writeURL, err)
 	}
@@ -143,7 +144,7 @@ func (c *cortexPublisher) Write(req writeRequest) error {
 	}
 
 	compressed := snappy.Encode(nil, data)
-	httpReq, err := http.NewRequest("POST", c.url.String(), bytes.NewReader(compressed))
+	httpReq, err := http.NewRequest("POST", c.url.String()+"/api/prom/push", bytes.NewReader(compressed))
 	if err != nil {
 		return err
 	}
