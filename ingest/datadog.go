@@ -3,7 +3,6 @@ package ingest
 import (
 	"compress/zlib"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"sort"
 	"strings"
@@ -97,9 +96,7 @@ func createTagSet(host string, device string, ctags []string) []string {
 	}
 	tags = append(tags, "host="+host)
 	for _, t := range ctags {
-		fmt.Println(t)
 		tSplit := strings.SplitN(t, ":", 2)
-		fmt.Println(tSplit)
 		if len(tSplit) == 0 {
 			continue
 		}
