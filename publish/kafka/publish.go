@@ -101,7 +101,7 @@ func (p *partitionerFnv1a) partition(m schema.PartitionedMetric) (int32, []byte,
 
 func init() {
 	flag.StringVar(&topic, "metrics-topic", "mdm", "topic for metrics")
-	flag.StringVar(&codec, "metrics-kafka-comp", "snappy", "compression: none|gzip|snappy")
+	flag.StringVar(&codec, "metrics-kafka-comp", "snappy", "compression: none|gzip|snappy|lz4")
 	flag.BoolVar(&enabled, "metrics-publish", false, "enable metric publishing")
 	flag.StringVar(&partitionScheme, "metrics-partition-scheme", "bySeries", "method used for paritioning metrics. (byOrg|bySeries)")
 	flag.IntVar(&maxInFlight, "metrics-max-in-flight", 1000000, "The maximum number of requests in flight per broker connection")
@@ -126,6 +126,10 @@ func New(broker string) *mtPublisher {
 	schemas, err := getSchemas(schemasConf)
 	if err != nil {
 		log.Fatalf("failed to load schemas config. %s", err)
+	}
+
+	if codec != "none" && codec != "gzip" && codec != "snappy" && codec != "lz4" {
+		log.Fatalf("invalid compression codec. must be one of: none|gzip|snappy|lz4")
 	}
 
 	config := kafka.ConfigMap{}
