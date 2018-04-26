@@ -54,6 +54,7 @@ func metricsJson(ctx *api.Context) {
 					m.Mtype = "gauge"
 				}
 				if err := m.Validate(); err != nil {
+					log.Debugf("unable to validate metric: %v %v %v", m.Name, m.OrgId, m.Tags)
 					metricsRejected.Add(len(metrics))
 					ctx.JSON(400, err.Error())
 					return
@@ -66,6 +67,7 @@ func metricsJson(ctx *api.Context) {
 					m.Mtype = "gauge"
 				}
 				if err := m.Validate(); err != nil {
+					log.Debugf("unable to validate metric: %v %v %v", m.Name, m.OrgId, m.Tags)
 					metricsRejected.Add(len(metrics))
 					ctx.JSON(400, err.Error())
 					return
@@ -125,6 +127,7 @@ func metricsBinary(ctx *api.Context, compressed bool) {
 
 				if err := m.Validate(); err != nil {
 					metricsRejected.Add(len(metricData.Metrics))
+					log.Debugf("unable to validate metric: %v %v %v", m.Name, m.OrgId, m.Tags)
 					ctx.JSON(400, err.Error())
 					return
 				}
@@ -136,6 +139,7 @@ func metricsBinary(ctx *api.Context, compressed bool) {
 					m.Mtype = "gauge"
 				}
 				if err := m.Validate(); err != nil {
+					log.Debugf("unable to validate metric: %v %v %v", m.Name, m.OrgId, m.Tags)
 					metricsRejected.Add(len(metricData.Metrics))
 					ctx.JSON(400, err.Error())
 					return

@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/raintank/tsdb-gw/persister/persist"
+
 	"github.com/grafana/globalconf"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/raintank/tsdb-gw/api"
@@ -34,6 +36,10 @@ var (
 	tracingEnabled = flag.Bool("tracing-enabled", false, "enable/disable distributed opentracing via jaeger")
 	tracingAddr    = flag.String("tracing-addr", "localhost:6831", "address of the jaeger agent to send data to")
 	metricsAddr    = flag.String("metrics-addr", ":8001", "http service address for the /metrics endpoint")
+
+	persisterAddr    = flag.String("persister-addr", "http://localhost:9001/persist", "url of persister service")
+	persisterAPIKey  = flag.String("persister-key", "", "api key for persister service")
+	persisterEnabled = flag.Bool("persister-enabled", true, "enable the persister service")
 )
 
 func main() {
@@ -66,6 +72,10 @@ func main() {
 		log.Fatal("Could not initialize jaeger tracer: %s", err.Error())
 	}
 	defer traceCloser.Close()
+
+	if *persisterEnabled {
+		persist.Init(*persisterAddr, *persisterAPIKey)
+	}
 
 	var inputs []Stoppable
 
@@ -134,8 +144,11 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 func initRoutes(a *api.Api) {
 	a.Router.Any("/api/prom/push", a.PromStats("cortex-write"), a.Auth(), cortexPublish.Write)
 	a.Router.Any("/api/prom/*", a.PromStats("cortex-read"), a.Auth(), cortex.Proxy)
-	a.Router.Post("/datadog/api/v1/series", a.Auth(), ingest.DataDogWrite)
+	a.Router.Post("/datadog/api/v1/series", a.Auth(), ingest.DataDogSeries)
+	a.Router.Post("/datadog/api/v1/check_run", a.Auth(), ingest.DataDogCheck)
+	a.Router.Post("/datadog/intake", a.Auth(), ingest.DataDogIntake)
 	a.Router.Post("/opentsdb/api/put", a.Auth(), ingest.OpenTSDBWrite)
+	a.Router.Post("/metrics", a.Auth(), ingest.Metrics)
 }
 
 type metricsServer struct {
