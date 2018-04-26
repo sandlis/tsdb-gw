@@ -90,8 +90,21 @@ func Test_packageMetrics(t *testing.T) {
 					Tags: []string{"example="},
 				},
 			},
-			want:    writeRequest{},
-			wantErr: true,
+			want: writeRequest{
+				Request: prompb.WriteRequest{
+					Timeseries: []*prompb.TimeSeries{
+						&prompb.TimeSeries{
+							Labels: []*prompb.Label{
+								&prompb.Label{Name: "__name__", Value: "example_metric"},
+							},
+							Samples: []*prompb.Sample{
+								&prompb.Sample{Value: 0, Timestamp: 0},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
 		},
 		{
 			name: "tagged metric",
@@ -118,6 +131,12 @@ func Test_packageMetrics(t *testing.T) {
 				},
 			},
 			wantErr: false,
+		},
+		{
+			name:    "no metrics",
+			metrics: []*schema.MetricData{},
+			want:    writeRequest{},
+			wantErr: true,
 		},
 	}
 

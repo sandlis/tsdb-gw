@@ -96,7 +96,7 @@ func createTagSet(host string, device string, ctags []string) []string {
 	}
 	tags = append(tags, "host="+host)
 	for _, t := range ctags {
-		tSplit := strings.SplitN(":", t, 2)
+		tSplit := strings.SplitN(t, ":", 2)
 		if len(tSplit) == 0 {
 			continue
 		}
