@@ -20,6 +20,10 @@ Application: persister-gw
 persister-gw is stores and persists metrics to a configure publisher backend. It will store metrics
 */
 
+var (
+	addr = flag.String("addr", "0.0.0.0:9001", "http service address")
+)
+
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("ok"))
 }
@@ -45,7 +49,7 @@ func main() {
 	go p.Push(make(chan struct{}))
 
 	srv := &http.Server{
-		Addr:         "0.0.0.0:9001",
+		Addr:         *addr,
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,

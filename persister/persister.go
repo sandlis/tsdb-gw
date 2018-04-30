@@ -25,13 +25,16 @@ type Persister struct {
 }
 
 type Config struct {
+	orgID               int
 	MetricsClientConfig metrics_client.Config
 	StorageClientConfig gcp.Config
 }
 
 // RegisterFlags adds the flags required to config this to the given FlagSet
 func (cfg *Config) RegisterFlags(f *flag.FlagSet) {
+	f.IntVar(&cfg.orgID, "orgID", 1, "org id for the persister to manage")
 	cfg.MetricsClientConfig.RegisterFlags(f)
+	cfg.StorageClientConfig.RegisterFlags(f)
 }
 
 func NewPersister(cfg *Config) (*Persister, error) {
@@ -41,10 +44,16 @@ func NewPersister(cfg *Config) (*Persister, error) {
 	}
 
 	store, err := gcp.NewStorageClient(context.Background(), cfg.StorageClientConfig)
+	if err != nil {
+		return nil, err
+	}
 
+	metrics, err := store.Retrieve(cfg.orgID)
+
+	log.Infof("loaded %v metrics to persist from storage", len(metrics))
 	return &Persister{
 		&sync.Mutex{},
-		[]*schema.MetricData{},
+		metrics,
 		client,
 		store,
 	}, nil
