@@ -12,7 +12,7 @@ ret=0
 
 external=$(govendor list +external)
 missing=$(govendor list +missing)
-unused=$(govendor list +unused | grep -v librdkafka)
+unused=$(govendor list +unused)
 
 [ -n "$external" ] && ret=1 && echo -e "packages missing in vendor that are in gopath:\n$external\n"
 [ -n "$missing"  ] && ret=1 && echo -e "packages missing in vendor that are not found:\n$missing\n"
