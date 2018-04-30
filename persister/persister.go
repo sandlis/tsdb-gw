@@ -1,6 +1,7 @@
 package persister
 
 import (
+	"context"
 	"flag"
 	"io/ioutil"
 	"net/http"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/golang/snappy"
 	"github.com/raintank/tsdb-gw/metrics_client"
+	"github.com/raintank/tsdb-gw/persister/storage"
+	"github.com/raintank/tsdb-gw/persister/storage/gcp"
 	log "github.com/sirupsen/logrus"
 	schema "gopkg.in/raintank/schema.v1"
 	"gopkg.in/raintank/schema.v1/msg"
@@ -18,26 +21,32 @@ type Persister struct {
 	*sync.Mutex
 	metrics []*schema.MetricData
 	client  *metrics_client.Client
+	store   storage.Storage
 }
 
 type Config struct {
-	clientConfig metrics_client.Config
+	MetricsClientConfig metrics_client.Config
+	StorageClientConfig gcp.Config
 }
 
 // RegisterFlags adds the flags required to config this to the given FlagSet
 func (cfg *Config) RegisterFlags(f *flag.FlagSet) {
-	cfg.clientConfig.RegisterFlags(f)
+	cfg.MetricsClientConfig.RegisterFlags(f)
 }
 
 func NewPersister(cfg *Config) (*Persister, error) {
-	client, err := metrics_client.New(cfg.clientConfig)
+	client, err := metrics_client.New(cfg.MetricsClientConfig)
 	if err != nil {
 		return nil, err
 	}
+
+	store, err := gcp.NewStorageClient(context.Background(), cfg.StorageClientConfig)
+
 	return &Persister{
 		&sync.Mutex{},
 		[]*schema.MetricData{},
 		client,
+		store,
 	}, nil
 }
 
@@ -78,6 +87,10 @@ func (p *Persister) PersistHandler(w http.ResponseWriter, r *http.Request) {
 func (p *Persister) Persist(metrics []*schema.MetricData) {
 	log.Infof("persisting %v metrics", len(metrics))
 	p.Lock()
+	err := p.store.Store(metrics)
+	if err != nil {
+		log.Error(err)
+	}
 	p.metrics = append(p.metrics, metrics...)
 	p.Unlock()
 }

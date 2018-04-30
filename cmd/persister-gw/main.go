@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/raintank/tsdb-gw/persister"
 	"github.com/raintank/tsdb-gw/util"
 	log "github.com/sirupsen/logrus"
@@ -27,6 +28,7 @@ func main() {
 	cfg := &persister.Config{}
 	util.RegisterFlags(cfg)
 	flag.Parse()
+	util.InitLogger()
 
 	p, err := persister.NewPersister(cfg)
 	if err != nil {
@@ -36,6 +38,7 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", indexHandler)
 	r.HandleFunc("/persist", p.PersistHandler)
+	r.Handle("/metrics", promhttp.Handler())
 
 	loggedRouter := handlers.CombinedLoggingHandler(os.Stdout, r)
 

@@ -121,20 +121,11 @@ func DataDogCheck(ctx *api.Context) {
 		body, err = ioutil.ReadAll(ctx.Req.Request.Body)
 	}
 
-	// var prettyJSON bytes.Buffer
-	// err = json.Indent(&prettyJSON, body, "", "\t")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println(string(prettyJSON.Bytes()))
-
 	var checks DataDogCheckPayload
 	err = json.Unmarshal(body, &checks)
 	if err != nil {
 		return
 	}
-
-	log.Println(checks)
 
 	buf := make([]*schema.MetricData, 0)
 	for _, check := range checks {
@@ -208,6 +199,7 @@ type DataDogIntakePayload struct {
 		SocketFqdn     string `json:"socket-fqdn"`
 		Hostname       string `json:"hostname"`
 	} `json:"meta"`
+	Gohai string `json:"gohai"`
 }
 
 func (i *DataDogIntakePayload) GeneratePersistantMetrics(orgID int) []*schema.MetricData {
@@ -259,7 +251,7 @@ func DataDogIntake(ctx *api.Context) {
 		return
 	}
 
-	if info.Meta.Hostname != "" {
+	if info.Gohai != "" {
 		err = persist.Persist(info.GeneratePersistantMetrics(ctx.ID))
 		if err != nil {
 			log.Errorf("failed to persist datadog info. %s", err)

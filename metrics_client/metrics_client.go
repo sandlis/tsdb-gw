@@ -17,6 +17,19 @@ import (
 	"gopkg.in/raintank/schema.v1/msg"
 )
 
+var (
+	sendDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: "metrics_client",
+		Name:      "send_duration_seconds",
+		Help:      "Time spent sending a sample batch to multiple replicated ingesters.",
+		Buckets:   []float64{.001, .0025, .005, .01, .025, .05, .1, .25, .5, 1},
+	}, []string{"status_code"})
+)
+
+func init() {
+	prometheus.MustRegister(sendDuration)
+}
+
 type Config struct {
 	Addr   string
 	APIKey string
@@ -29,10 +42,9 @@ func (cfg *Config) RegisterFlags(f *flag.FlagSet) {
 }
 
 type Client struct {
-	gwURL        *url.URL
-	gwAPIKey     string
-	client       *http.Client
-	sendDuration *prometheus.HistogramVec
+	gwURL    *url.URL
+	gwAPIKey string
+	client   *http.Client
 }
 
 func New(cfg Config) (*Client, error) {
@@ -45,12 +57,6 @@ func New(cfg Config) (*Client, error) {
 		gwURL:    u,
 		gwAPIKey: cfg.APIKey,
 		client:   &http.Client{},
-		sendDuration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
-			Namespace: "persister",
-			Name:      "gw_send_duration_seconds",
-			Help:      "Time spent sending a sample batch to multiple replicated ingesters.",
-			Buckets:   []float64{.001, .0025, .005, .01, .025, .05, .1, .25, .5, 1},
-		}, []string{"status_code"}),
 	}, nil
 }
 
@@ -65,7 +71,7 @@ func (c *Client) Push(metrics []*schema.MetricData) error {
 
 	took := time.Since(now)
 	status := strconv.Itoa(statusCode)
-	c.sendDuration.WithLabelValues(status).Observe(took.Seconds())
+	sendDuration.WithLabelValues(status).Observe(took.Seconds())
 
 	return nil
 }
