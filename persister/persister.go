@@ -19,13 +19,15 @@ import (
 
 type Persister struct {
 	*sync.Mutex
-	metrics []*schema.MetricData
-	client  *metrics_client.Client
-	store   storage.Storage
+	metrics  []*schema.MetricData
+	client   *metrics_client.Client
+	store    storage.Storage
+	interval int
 }
 
 type Config struct {
 	orgID               int
+	interval            int
 	MetricsClientConfig metrics_client.Config
 	StorageClientConfig gcp.Config
 }
@@ -33,6 +35,7 @@ type Config struct {
 // RegisterFlags adds the flags required to config this to the given FlagSet
 func (cfg *Config) RegisterFlags(f *flag.FlagSet) {
 	f.IntVar(&cfg.orgID, "orgID", 1, "org id for the persister to manage")
+	f.IntVar(&cfg.interval, "persister-interval", 60, "seconds between sending persisted metrics")
 	cfg.MetricsClientConfig.RegisterFlags(f)
 	cfg.StorageClientConfig.RegisterFlags(f)
 }
@@ -56,6 +59,7 @@ func NewPersister(cfg *Config) (*Persister, error) {
 		metrics,
 		client,
 		store,
+		cfg.interval,
 	}, nil
 }
 
@@ -105,7 +109,7 @@ func (p *Persister) Persist(metrics []*schema.MetricData) {
 }
 
 func (p *Persister) Push(quit chan struct{}) {
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(time.Duration(p.interval) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
@@ -113,7 +117,7 @@ func (p *Persister) Push(quit chan struct{}) {
 			p.Lock()
 			for _, metric := range p.metrics {
 				metric.Time = now
-				metric.Interval = 5
+				metric.Interval = p.interval
 			}
 			if len(p.metrics) > 0 {
 				err := p.client.Push(p.metrics)
