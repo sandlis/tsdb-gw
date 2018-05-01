@@ -48,6 +48,7 @@ func init() {
 	flag.IntVar(&concurrency, "carbon-concurrency", 1, "number of goroutines for handling metrics")
 	flag.IntVar(&bufferSize, "carbon-buffer-size", 100000, "number of metrics to hold in an input buffer. Once this buffer fills metrics will be dropped")
 	flag.BoolVar(&nonBlockingBuffer, "carbon-non-blocking-buffer", false, "dont block trying to write to the input buffer, just drop metrics.")
+	flag.StringVar(&authPlugin, "carbon-auth-plugin", "grafana", "auth plugin to use. (grafana|file)")
 }
 
 type Carbon struct {
@@ -222,9 +223,9 @@ func (c *Carbon) flush() {
 			}
 
 			parts := bytes.SplitN(b, []byte("."), 2)
-			user, err := c.authPlugin.Auth("", string(parts[0]))
+			user, err := c.authPlugin.Auth("api_key", string(parts[0]))
 			if err != nil {
-				log.Debugf("invalid auth key. %s", b)
+				log.Debugf("invalid auth key. %s, reason: %v", parts[0], err)
 				metricsDroppedAuthFail.Inc()
 				continue
 			}

@@ -17,7 +17,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/ingest"
-	"github.com/raintank/tsdb-gw/ingest/carbon"
 	"github.com/raintank/tsdb-gw/publish"
 	cortexPublish "github.com/raintank/tsdb-gw/publish/cortex"
 	"github.com/raintank/tsdb-gw/query/cortex"
@@ -82,7 +81,6 @@ func main() {
 	cortexPublish.Init()
 	if *forward3rdParty {
 		publish.Init(cortexPublish.NewCortexPublisher())
-		inputs = append(inputs, carbon.InitCarbon())
 	} else {
 		publish.Init(nil)
 	}
