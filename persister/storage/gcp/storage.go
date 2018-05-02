@@ -7,8 +7,8 @@ import (
 	"strconv"
 
 	"cloud.google.com/go/bigtable"
-	log "github.com/Sirupsen/logrus"
 	"github.com/raintank/tsdb-gw/persister/storage"
+	log "github.com/sirupsen/logrus"
 	schema "gopkg.in/raintank/schema.v1"
 )
 
