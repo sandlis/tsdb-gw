@@ -42,6 +42,8 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", indexHandler)
 	r.HandleFunc("/persist", p.PersistHandler)
+	r.HandleFunc("/remove", p.RemoveHandler)
+	r.HandleFunc("/index", p.IndexHandler)
 	r.Handle("/metrics", promhttp.Handler())
 
 	loggedRouter := handlers.CombinedLoggingHandler(os.Stdout, r)

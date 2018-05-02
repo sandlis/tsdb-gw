@@ -3,11 +3,12 @@ package gcp
 import (
 	"context"
 	"flag"
+	"fmt"
 	"strconv"
 
 	"cloud.google.com/go/bigtable"
+	log "github.com/Sirupsen/logrus"
 	"github.com/raintank/tsdb-gw/persister/storage"
-	"github.com/sirupsen/logrus"
 	schema "gopkg.in/raintank/schema.v1"
 )
 
@@ -41,27 +42,27 @@ func NewStorageClient(ctx context.Context, cfg Config) (storage.Storage, error) 
 
 	tables, err := adminClient.Tables(context.Background())
 	if err != nil {
-		logrus.Errorf("Could not fetch table list", err)
+		log.Errorf("Could not fetch table list", err)
 		return nil, err
 	}
 
 	if !sliceContains(tables, cfg.tablename) {
-		logrus.Printf("Creating table %s", cfg.tablename)
+		log.Printf("Creating table %s", cfg.tablename)
 		if err := adminClient.CreateTable(context.Background(), cfg.tablename); err != nil {
-			logrus.Errorf("Could not create table %s", cfg.tablename)
+			log.Errorf("Could not create table %s", cfg.tablename)
 			return nil, err
 		}
 	}
 
 	tblInfo, err := adminClient.TableInfo(context.Background(), cfg.tablename)
 	if err != nil {
-		logrus.Errorf("Could not read info for table %s", cfg.tablename)
+		log.Errorf("Could not read info for table %s", cfg.tablename)
 		return nil, err
 	}
 
 	if !sliceContains(tblInfo.Families, "metrics") {
 		if err := adminClient.CreateColumnFamily(context.Background(), cfg.tablename, "metrics"); err != nil {
-			logrus.Errorf("Could not create column family %v", "metrics")
+			log.Errorf("Could not create column family %v", "metrics")
 			return nil, err
 		}
 	}
@@ -87,16 +88,15 @@ func (s *storageClient) Store(metrics []*schema.MetricData) error {
 	rowKeys := make([]string, 0, len(metrics))
 	muts := make([]*bigtable.Mutation, 0, len(metrics))
 	for _, m := range metrics {
+		m.SetId()
 		msg, err := m.MarshalMsg(data)
 		if err != nil {
-			logrus.Errorf("unable to marshal metric: %v", m.Id)
+			log.Errorf("unable to marshal metric: %v", m.Id)
 			return err
 		}
 		mut := bigtable.NewMutation()
 		mut.Set("metrics", "metricdata", bigtable.Now(), msg)
 		muts = append(muts, mut)
-
-		m.SetId()
 		rowKeys = append(rowKeys, m.Id)
 	}
 
@@ -106,12 +106,13 @@ func (s *storageClient) Store(metrics []*schema.MetricData) error {
 	}
 	if len(errs) > 0 {
 		for _, e := range errs {
-			logrus.Error(e)
+			log.Error(e)
 		}
 	}
 
 	return nil
 }
+
 func (s *storageClient) Retrieve(orgID int) ([]*schema.MetricData, error) {
 	tbl := s.client.Open(s.tablename)
 	rr := bigtable.PrefixRange(strconv.Itoa(orgID))
@@ -120,7 +121,7 @@ func (s *storageClient) Retrieve(orgID int) ([]*schema.MetricData, error) {
 		m := &schema.MetricData{}
 		_, err := m.UnmarshalMsg(r["metrics"][0].Value)
 		if err != nil {
-			logrus.Errorf("unable to decode metric from row %v", r.Key())
+			log.Errorf("unable to decode metric from row %v", r.Key())
 			return false
 		}
 		metrics = append(metrics, m)
@@ -132,6 +133,36 @@ func (s *storageClient) Retrieve(orgID int) ([]*schema.MetricData, error) {
 	}
 
 	return metrics, nil
+}
+
+func (s *storageClient) Remove(metrics []*schema.MetricData) error {
+	if len(metrics) < 1 {
+		return fmt.Errorf("empty metrics slice")
+	}
+
+	tbl := s.client.Open(s.tablename)
+	muts := make([]*bigtable.Mutation, len(metrics))
+	rowKeys := make([]string, len(metrics))
+	for i, m := range metrics {
+		m.SetId()
+		mut := bigtable.NewMutation()
+		mut.DeleteRow()
+		muts[i] = mut
+		rowKeys[i] = m.Id
+		log.Debugf("removing metric %v", m)
+	}
+
+	errs, err := tbl.ApplyBulk(context.Background(), rowKeys, muts)
+	if err != nil {
+		return err
+	}
+	if len(errs) > 0 {
+		for _, e := range errs {
+			log.Errorln(e)
+		}
+	}
+
+	return nil
 }
 
 func sliceContains(list []string, target string) bool {

@@ -2,6 +2,7 @@ package persister
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"io/ioutil"
 	"net/http"
@@ -23,6 +24,7 @@ type Persister struct {
 	client   *metrics_client.Client
 	store    storage.Storage
 	interval int
+	orgID    int
 }
 
 type Config struct {
@@ -53,6 +55,10 @@ func NewPersister(cfg *Config) (*Persister, error) {
 
 	metrics, err := store.Retrieve(cfg.orgID)
 
+	if err != nil {
+		return nil, err
+	}
+
 	log.Infof("loaded %v metrics to persist from storage", len(metrics))
 	return &Persister{
 		&sync.Mutex{},
@@ -60,6 +66,7 @@ func NewPersister(cfg *Config) (*Persister, error) {
 		client,
 		store,
 		cfg.interval,
+		cfg.orgID,
 	}, nil
 }
 
@@ -101,6 +108,58 @@ func (p *Persister) PersistHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusBadRequest)
 	w.Write([]byte("no metrics to persists"))
+}
+
+func (p *Persister) RemoveHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		body, err := ioutil.ReadAll(r.Body)
+
+		if err != nil {
+			log.Errorf("unable to read request body. %s", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		metrics := make([]*schema.MetricData, 0)
+		err = json.Unmarshal(body, &metrics)
+
+		log.Infof("removing %v metrics", len(metrics))
+		err = p.store.Remove(metrics)
+		if err != nil {
+			log.Errorf("failed to remove metrics: %s", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		p.Lock()
+		log.Infof("reloading metrics from store")
+		p.metrics, err = p.store.Retrieve(p.orgID)
+		p.Unlock()
+
+		if err != nil {
+			log.Errorf("failed to remove metrics: %s", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Write([]byte("ok"))
+		return
+	}
+
+	w.WriteHeader(http.StatusBadRequest)
+	w.Write([]byte("no metrics to remove"))
+}
+
+func (p *Persister) IndexHandler(w http.ResponseWriter, r *http.Request) {
+	data, err := json.Marshal(p.metrics)
+	if err != nil {
+		log.Errorf("unable to marshal metrics index: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(data)
+	return
 }
 
 func (p *Persister) Persist(metrics []*schema.MetricData) error {
