@@ -169,7 +169,7 @@ func initRoutes(a *api.Api) {
 	a.Router.Any("/prometheus/*", a.Auth(), metrictank.PrometheusProxy)
 	a.Router.Any("/graphite/*", a.Auth(), graphite.GraphiteProxy)
 	a.Router.Post("/metrics", a.Auth(), ingest.Metrics)
-	a.Router.Post("/datadog/api/v1/series", a.Auth(), ingest.DataDogSeries)
+	a.Router.Post("/datadog/api/v1/series", a.DDAuth(), ingest.DataDogSeries)
 	a.Router.Post("/opentsdb/api/put", a.Auth(), ingest.OpenTSDBWrite)
 	a.Router.Any("/prometheus/write", a.Auth(), ingest.PrometheusMTWrite)
 }
