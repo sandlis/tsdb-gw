@@ -89,7 +89,13 @@ func (p *Persister) PersistHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		go p.Persist(metricData.Metrics)
+		err = p.Persist(metricData.Metrics)
+		if err != nil {
+			log.Errorf("failed to persist metricData. %s", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 		w.Write([]byte("ok"))
 		return
 	}
@@ -97,15 +103,17 @@ func (p *Persister) PersistHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("no metrics to persists"))
 }
 
-func (p *Persister) Persist(metrics []*schema.MetricData) {
+func (p *Persister) Persist(metrics []*schema.MetricData) error {
 	log.Infof("persisting %v metrics", len(metrics))
 	p.Lock()
 	err := p.store.Store(metrics)
 	if err != nil {
 		log.Error(err)
+		return err
 	}
 	p.metrics = append(p.metrics, metrics...)
 	p.Unlock()
+	return nil
 }
 
 func (p *Persister) Push(quit chan struct{}) {

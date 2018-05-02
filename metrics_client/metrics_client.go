@@ -37,14 +37,14 @@ type Config struct {
 
 // RegisterFlags adds the flags required to config this to the given FlagSet
 func (cfg *Config) RegisterFlags(f *flag.FlagSet) {
-	flag.StringVar(&cfg.Addr, "gateway-addr", "localhost:80/metrics", "address of the gateway to persist metrics to.")
+	flag.StringVar(&cfg.Addr, "gateway-addr", "localhost:80/metrics", "address and path of the gateway to persist metrics to.")
 	flag.StringVar(&cfg.APIKey, "gateway-key", "not_very_secret_key", "api key to use when pushing metrics to the gateway")
 }
 
 type Client struct {
-	gwURL    *url.URL
-	gwAPIKey string
-	client   *http.Client
+	url    string
+	apiKey string
+	client *http.Client
 }
 
 func New(cfg Config) (*Client, error) {
@@ -54,9 +54,9 @@ func New(cfg Config) (*Client, error) {
 	}
 
 	return &Client{
-		gwURL:    u,
-		gwAPIKey: cfg.APIKey,
-		client:   &http.Client{},
+		url:    u.String(),
+		apiKey: cfg.APIKey,
+		client: &http.Client{},
 	}, nil
 }
 
@@ -92,12 +92,12 @@ func (c *Client) push(metrics []*schema.MetricData) (int, error) {
 	snappyBody := snappy.NewWriter(body)
 	snappyBody.Write(data)
 	snappyBody.Close()
-	req, err := http.NewRequest("POST", c.gwURL.String(), body)
+	req, err := http.NewRequest("POST", c.url, body)
 	if err != nil {
 		log.Errorf("unable to publish metrics: %v", err)
 		return 0, err
 	}
-	req.SetBasicAuth(orgID, c.gwAPIKey)
+	req.SetBasicAuth(orgID, c.apiKey)
 	req.Header.Add("Content-Type", "rt-metric-binary-snappy")
 	resp, err := c.client.Do(req)
 
@@ -119,5 +119,5 @@ func (c *Client) push(metrics []*schema.MetricData) (int, error) {
 	ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
 
-	return resp.StatusCode, nil
+	return resp.StatusCode, fmt.Errorf("failed to push metrics")
 }

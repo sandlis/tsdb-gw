@@ -41,24 +41,28 @@ func NewStorageClient(ctx context.Context, cfg Config) (storage.Storage, error) 
 
 	tables, err := adminClient.Tables(context.Background())
 	if err != nil {
-		logrus.Fatalf("Could not fetch table list: %v", err)
+		logrus.Errorf("Could not fetch table list", err)
+		return nil, err
 	}
 
 	if !sliceContains(tables, cfg.tablename) {
 		logrus.Printf("Creating table %s", cfg.tablename)
 		if err := adminClient.CreateTable(context.Background(), cfg.tablename); err != nil {
-			logrus.Fatalf("Could not create table %s: %v", cfg.tablename, err)
+			logrus.Errorf("Could not create table %s", cfg.tablename)
+			return nil, err
 		}
 	}
 
 	tblInfo, err := adminClient.TableInfo(context.Background(), cfg.tablename)
 	if err != nil {
-		logrus.Fatalf("Could not read info for table %s: %v", cfg.tablename, err)
+		logrus.Errorf("Could not read info for table %s", cfg.tablename)
+		return nil, err
 	}
 
 	if !sliceContains(tblInfo.Families, "metrics") {
 		if err := adminClient.CreateColumnFamily(context.Background(), cfg.tablename, "metrics"); err != nil {
-			logrus.Fatalf("Could not create column family %s: %v", "metrics", err)
+			logrus.Errorf("Could not create column family %v", "metrics")
+			return nil, err
 		}
 	}
 
@@ -75,6 +79,9 @@ func NewStorageClient(ctx context.Context, cfg Config) (storage.Storage, error) 
 }
 
 func (s *storageClient) Store(metrics []*schema.MetricData) error {
+	if len(metrics) < 1 {
+		return nil
+	}
 	table := s.client.Open(s.tablename)
 	var data []byte
 	rowKeys := make([]string, 0, len(metrics))
@@ -93,15 +100,13 @@ func (s *storageClient) Store(metrics []*schema.MetricData) error {
 		rowKeys = append(rowKeys, m.Id)
 	}
 
-	if len(muts) > 0 {
-		errs, err := table.ApplyBulk(context.Background(), rowKeys, muts)
-		if err != nil {
-			return err
-		}
-		if len(errs) > 0 {
-			for _, e := range errs {
-				logrus.Error(e)
-			}
+	errs, err := table.ApplyBulk(context.Background(), rowKeys, muts)
+	if err != nil {
+		return err
+	}
+	if len(errs) > 0 {
+		for _, e := range errs {
+			logrus.Error(e)
 		}
 	}
 

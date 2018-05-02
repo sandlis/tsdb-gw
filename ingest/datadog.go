@@ -3,6 +3,8 @@ package ingest
 import (
 	"compress/zlib"
 	"encoding/json"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"sort"
 	"strings"
@@ -33,27 +35,26 @@ func DataDogSeries(ctx *api.Context) {
 	}
 	defer ctx.Req.Request.Body.Close()
 
-	var body []byte
-	var err error
-	if ctx.Req.Request.Header.Get("Content-Encoding") == "deflate" {
-		zr, err := zlib.NewReader(ctx.Req.Request.Body)
-		if err != nil {
-			log.Errorf("unable to decode json: %v", err)
-			ctx.JSON(500, err)
-			return
-		}
-		body, err = ioutil.ReadAll(zr)
-	} else {
-		body, err = ioutil.ReadAll(ctx.Req.Request.Body)
+	data, err := decodeJSON(ctx.Req.Request.Body, ctx.Req.Request.Header.Get("Content-Encoding") == "deflate")
+	if err != nil {
+		ctx.JSON(400, fmt.Sprintf("unable to decode request, reason: %v", err))
+		return
 	}
 
 	var series DataDogSeriesPayload
-	err = json.Unmarshal(body, &series)
+	err = json.Unmarshal(data, &series)
 	if err != nil {
+		ctx.JSON(400, fmt.Sprintf("unable to unmarshal request, reason: %v", err))
 		return
 	}
 
 	buf := make([]*schema.MetricData, 0)
+	defer func(buf []*schema.MetricData) {
+		for _, m := range buf {
+			metricPool.Put(m)
+		}
+	}(buf)
+
 	for _, ts := range series.Series {
 		tagSet := createTagSet(ts.Host, ts.Device, ts.Tags)
 		for _, point := range ts.Points {
@@ -72,17 +73,10 @@ func DataDogSeries(ctx *api.Context) {
 			buf = append(buf, md)
 		}
 	}
-
 	err = publish.Publish(buf)
 
-	defer func(buf []*schema.MetricData) {
-		for _, m := range buf {
-			metricPool.Put(m)
-		}
-	}(buf)
-
 	if err != nil {
-		log.Errorf("failed to publish datadog metrics. %s", err)
+		log.Errorf("failed to publish datadog series metrics. %s", err)
 		ctx.JSON(500, err)
 		return
 	}
@@ -107,27 +101,25 @@ func DataDogCheck(ctx *api.Context) {
 	}
 	defer ctx.Req.Request.Body.Close()
 
-	var body []byte
-	var err error
-	if ctx.Req.Request.Header.Get("Content-Encoding") == "deflate" {
-		zr, err := zlib.NewReader(ctx.Req.Request.Body)
-		if err != nil {
-			log.Errorf("unable to decode json: %v", err)
-			ctx.JSON(500, err)
-			return
-		}
-		body, err = ioutil.ReadAll(zr)
-	} else {
-		body, err = ioutil.ReadAll(ctx.Req.Request.Body)
+	data, err := decodeJSON(ctx.Req.Request.Body, ctx.Req.Request.Header.Get("Content-Encoding") == "deflate")
+	if err != nil {
+		ctx.JSON(400, fmt.Sprintf("unable to decode request, reason: %v", err))
 	}
 
 	var checks DataDogCheckPayload
-	err = json.Unmarshal(body, &checks)
+
+	err = json.Unmarshal(data, &checks)
 	if err != nil {
-		return
+		ctx.JSON(400, fmt.Sprintf("unable to unmarshal request, reason: %v", err))
 	}
 
 	buf := make([]*schema.MetricData, 0)
+	defer func(buf []*schema.MetricData) {
+		for _, m := range buf {
+			metricPool.Put(m)
+		}
+	}(buf)
+
 	for _, check := range checks {
 		tagSet := createTagSet(check.Host, "", check.Tags)
 		md := metricPool.Get()
@@ -147,17 +139,12 @@ func DataDogCheck(ctx *api.Context) {
 
 	err = publish.Publish(buf)
 
-	defer func(buf []*schema.MetricData) {
-		for _, m := range buf {
-			metricPool.Put(m)
-		}
-	}(buf)
-
 	if err != nil {
 		log.Errorf("failed to publish datadog metrics. %s", err)
 		ctx.JSON(500, err)
 		return
 	}
+
 	ctx.JSON(200, "ok")
 	return
 }
@@ -202,7 +189,7 @@ type DataDogIntakePayload struct {
 	Gohai string `json:"gohai"`
 }
 
-func (i *DataDogIntakePayload) GeneratePersistantMetrics(orgID int) []*schema.MetricData {
+func (i *DataDogIntakePayload) GeneratePersistentMetrics(orgID int) []*schema.MetricData {
 	metrics := []*schema.MetricData{}
 	systemTags := []string{
 		"agentVersion=" + i.AgentVersion,
@@ -231,28 +218,21 @@ func DataDogIntake(ctx *api.Context) {
 	}
 	defer ctx.Req.Request.Body.Close()
 
-	var body []byte
-	var err error
-	if ctx.Req.Request.Header.Get("Content-Encoding") == "deflate" {
-		zr, err := zlib.NewReader(ctx.Req.Request.Body)
-		if err != nil {
-			log.Errorf("unable to decode json: %v", err)
-			ctx.JSON(500, err)
-			return
-		}
-		body, err = ioutil.ReadAll(zr)
-	} else {
-		body, err = ioutil.ReadAll(ctx.Req.Request.Body)
+	data, err := decodeJSON(ctx.Req.Request.Body, ctx.Req.Request.Header.Get("Content-Encoding") == "deflate")
+	if err != nil {
+		ctx.JSON(400, fmt.Sprintf("unable to decode request, reason: %v", err))
+		return
 	}
 
 	var info DataDogIntakePayload
-	err = json.Unmarshal(body, &info)
+	err = json.Unmarshal(data, &info)
 	if err != nil {
+		ctx.JSON(400, fmt.Sprintf("unable to unmarshal request, reason: %v", err))
 		return
 	}
 
 	if info.Gohai != "" {
-		err = persist.Persist(info.GeneratePersistantMetrics(ctx.ID))
+		err = persist.Persist(info.GeneratePersistentMetrics(ctx.ID))
 		if err != nil {
 			log.Errorf("failed to persist datadog info. %s", err)
 			ctx.JSON(500, err)
@@ -262,4 +242,16 @@ func DataDogIntake(ctx *api.Context) {
 
 	ctx.JSON(200, "ok")
 	return
+}
+
+func decodeJSON(body io.ReadCloser, encoded bool) ([]byte, error) {
+	var err error
+	if encoded {
+		body, err = zlib.NewReader(body)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return ioutil.ReadAll(body)
+
 }

@@ -17,7 +17,7 @@ import (
 /*
 Application: persister-gw
 
-persister-gw is stores and persists metrics to a configure publisher backend. It will store metrics
+persister-gw stores and persists metrics to a configure publisher backend. It will store metrics
 */
 
 var (

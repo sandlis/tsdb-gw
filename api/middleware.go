@@ -114,6 +114,55 @@ func (a *Api) Auth() macaron.Handler {
 	}
 }
 
+func (a *Api) DDAuth() macaron.Handler {
+	return func(ctx *Context) {
+		var key string
+		var username string
+
+		header := ctx.Req.Header.Get("Dd-Api-Key")
+		parts := strings.SplitN(header, ":", 2)
+		if len(parts) == 1 {
+			key = parts[0]
+			username = "api_key"
+		} else if len(parts) == 2 && parts[1] == "" {
+			key = parts[1]
+			username = "api_key"
+		} else {
+			key = parts[1]
+			username = parts[0]
+		}
+
+		if key == "" {
+			log.Debugf("no key specified")
+			ctx.JSON(401, "Unauthorized")
+			return
+		}
+
+		user, err := a.authPlugin.Auth(username, key)
+		if err != nil {
+			if err == auth.ErrInvalidCredentials || err == auth.ErrInvalidOrgId || err == auth.ErrInvalidInstanceID {
+				ctx.JSON(401, err.Error())
+				return
+			}
+			log.Errorf("failed to perform authentication: %q", err.Error())
+			ctx.JSON(500, err.Error())
+			return
+		}
+
+		// allow admin users to impersonate other orgs.
+		if user.IsAdmin {
+			header := ctx.Req.Header.Get("X-Tsdb-Org")
+			if header != "" {
+				orgId, err := strconv.ParseInt(header, 10, 64)
+				if err == nil && orgId != 0 {
+					user.ID = int(orgId)
+				}
+			}
+		}
+		ctx.User = user
+	}
+}
+
 type requestStats struct {
 	sync.Mutex
 	responseCounts    map[string]map[int]*stats.Counter32
