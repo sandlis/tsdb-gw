@@ -24,11 +24,10 @@ type Persister struct {
 	client   *metrics_client.Client
 	store    storage.Storage
 	interval int
-	orgID    int
 }
 
 type Config struct {
-	orgID               int
+	prefix              string
 	interval            int
 	MetricsClientConfig metrics_client.Config
 	StorageClientConfig gcp.Config
@@ -36,7 +35,6 @@ type Config struct {
 
 // RegisterFlags adds the flags required to config this to the given FlagSet
 func (cfg *Config) RegisterFlags(f *flag.FlagSet) {
-	f.IntVar(&cfg.orgID, "orgID", 1, "org id for the persister to manage")
 	f.IntVar(&cfg.interval, "persister-interval", 60, "seconds between sending persisted metrics")
 	cfg.MetricsClientConfig.RegisterFlags(f)
 	cfg.StorageClientConfig.RegisterFlags(f)
@@ -66,7 +64,6 @@ func NewPersister(cfg *Config) (*Persister, error) {
 		client,
 		store,
 		cfg.interval,
-		cfg.orgID,
 	}, nil
 }
 
@@ -133,7 +130,7 @@ func (p *Persister) RemoveHandler(w http.ResponseWriter, r *http.Request) {
 
 		p.Lock()
 		log.Infof("reloading metrics from store")
-		p.metrics, err = p.store.Retrieve(p.orgID)
+		p.metrics, err = p.store.Retrieve()
 		p.Unlock()
 
 		if err != nil {

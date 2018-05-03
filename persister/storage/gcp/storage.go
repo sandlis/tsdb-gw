@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"strconv"
 
 	"cloud.google.com/go/bigtable"
 	"github.com/raintank/tsdb-gw/persister/storage"
@@ -14,16 +13,18 @@ import (
 
 // Config for a StorageClient
 type Config struct {
-	project   string
-	instance  string
-	tablename string
+	Project   string
+	Instance  string
+	TableName string
+	Prefix    string
 }
 
 // RegisterFlags adds the flags required to config this to the given FlagSet
 func (cfg *Config) RegisterFlags(f *flag.FlagSet) {
-	f.StringVar(&cfg.project, "bigtable-project", "persister", "Bigtable project ID.")
-	f.StringVar(&cfg.instance, "bigtable-instance", "persister", "Bigtable instance ID.")
-	f.StringVar(&cfg.tablename, "bigtable-tablename", "persister", "Bigtable table name f.")
+	f.StringVar(&cfg.Project, "bigtable-project", "persister", "Bigtable project ID.")
+	f.StringVar(&cfg.Instance, "bigtable-instance", "persister", "Bigtable instance ID.")
+	f.StringVar(&cfg.TableName, "bigtable-tablename", "persister", "Bigtable table name f.")
+	f.StringVar(&cfg.Prefix, "bigtable-prefix", "", "row prefix to use when loading metrics")
 }
 
 // storageClient implements storage.Storage for GCP.
@@ -31,11 +32,12 @@ type storageClient struct {
 	cfg       Config
 	client    *bigtable.Client
 	tablename string
+	prefix    string
 }
 
 // NewStorageClient returns a new StorageClient.
 func NewStorageClient(ctx context.Context, cfg Config) (storage.Storage, error) {
-	adminClient, err := bigtable.NewAdminClient(ctx, cfg.project, cfg.instance)
+	adminClient, err := bigtable.NewAdminClient(ctx, cfg.Project, cfg.Instance)
 	if err != nil {
 		return nil, err
 	}
@@ -46,28 +48,28 @@ func NewStorageClient(ctx context.Context, cfg Config) (storage.Storage, error) 
 		return nil, err
 	}
 
-	if !sliceContains(tables, cfg.tablename) {
-		log.Printf("Creating table %s", cfg.tablename)
-		if err := adminClient.CreateTable(context.Background(), cfg.tablename); err != nil {
-			log.Errorf("Could not create table %s", cfg.tablename)
+	if !sliceContains(tables, cfg.TableName) {
+		log.Printf("Creating table %s", cfg.TableName)
+		if err := adminClient.CreateTable(context.Background(), cfg.TableName); err != nil {
+			log.Errorf("Could not create table %s", cfg.TableName)
 			return nil, err
 		}
 	}
 
-	tblInfo, err := adminClient.TableInfo(context.Background(), cfg.tablename)
+	tblInfo, err := adminClient.TableInfo(context.Background(), cfg.TableName)
 	if err != nil {
-		log.Errorf("Could not read info for table %s", cfg.tablename)
+		log.Errorf("Could not read info for table %s", cfg.TableName)
 		return nil, err
 	}
 
 	if !sliceContains(tblInfo.Families, "metrics") {
-		if err := adminClient.CreateColumnFamily(context.Background(), cfg.tablename, "metrics"); err != nil {
+		if err := adminClient.CreateColumnFamily(context.Background(), cfg.TableName, "metrics"); err != nil {
 			log.Errorf("Could not create column family %v", "metrics")
 			return nil, err
 		}
 	}
 
-	client, err := bigtable.NewClient(ctx, cfg.project, cfg.instance)
+	client, err := bigtable.NewClient(ctx, cfg.Project, cfg.Instance)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +77,8 @@ func NewStorageClient(ctx context.Context, cfg Config) (storage.Storage, error) 
 	return &storageClient{
 		cfg:       cfg,
 		client:    client,
-		tablename: cfg.tablename,
+		tablename: cfg.TableName,
+		prefix:    cfg.Prefix,
 	}, nil
 }
 
@@ -113,9 +116,9 @@ func (s *storageClient) Store(metrics []*schema.MetricData) error {
 	return nil
 }
 
-func (s *storageClient) Retrieve(orgID int) ([]*schema.MetricData, error) {
+func (s *storageClient) Retrieve() ([]*schema.MetricData, error) {
 	tbl := s.client.Open(s.tablename)
-	rr := bigtable.PrefixRange(strconv.Itoa(orgID))
+	rr := bigtable.PrefixRange(s.prefix)
 	var metrics []*schema.MetricData
 	err := tbl.ReadRows(context.Background(), rr, func(r bigtable.Row) bool {
 		m := &schema.MetricData{}
