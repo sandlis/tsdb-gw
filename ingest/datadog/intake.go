@@ -3,6 +3,7 @@ package datadog
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/raintank/tsdb-gw/api"
@@ -26,13 +27,14 @@ func DataDogIntake(ctx *api.Context) {
 
 	var info DataDogIntakePayload
 	err = json.Unmarshal(data, &info)
+
 	if err != nil {
 		ctx.JSON(400, fmt.Sprintf("unable to unmarshal request, reason: %v", err))
 		return
 	}
 
 	if info.Gohai != "" {
-		err = persist.Persist(info.GeneratePersistentMetrics(ctx.ID))
+		err = persist.Persist(info.GeneratePersistentMetrics())
 		if err != nil {
 			log.Errorf("failed to persist datadog info. %s", err)
 			ctx.JSON(500, err)
@@ -45,42 +47,91 @@ func DataDogIntake(ctx *api.Context) {
 }
 
 type DataDogIntakePayload struct {
-	RAW          []byte
-	AgentVersion string `json:"agentVersion"`
-	OS           string `json:"os"`
-	SystemStats  struct {
-		Machine   string `json:"machine"`
-		Processor string `json:"processor"`
+	AgentVersion     string `json:"agentVersion"`
+	UUID             string `json:"uuid"`
+	OS               string `json:"os"`
+	InternalHostname string `json:"internalHostname"`
+	Python           string `json:"python"`
+	SystemStats      struct {
+		CPUCores  int      `json:"cpuCores"`
+		Machine   string   `json:"machine"`
+		Platform  string   `json:"platform"`
+		Processor string   `json:"processor"`
+		PythonV   string   `json:"pythonV"`
+		MacV      []string `json:"macV"`
+		NixV      []string `json:"nixV"`
+		FbsdV     []string `json:"fbsdV"`
+		WinV      []string `json:"winV"`
 	} `json:"systemStats"`
 	Meta struct {
-		SocketHostname string `json:"socket-hostname"`
-		SocketFqdn     string `json:"socket-fqdn"`
-		Hostname       string `json:"hostname"`
+		SocketHostname string   `json:"socket-hostname"`
+		Timezones      []string `json:"timezones"`
+		SocketFqdn     string   `json:"socket-fqdn"`
+		Hostname       string   `json:"hostname"`
+		EC2Hostname    string   `json:"ec2-hostname"`
+		InstanceID     string   `json:"instance-id"`
 	} `json:"meta"`
-	Tags struct {
+	HostTags map[string]interface{} `json:"host-tags"`
+	Tags     struct {
 		System              []string `json:"system,omitempty"`
 		GoogleCloudPlatform []string `json:"google cloud platform,omitempty"`
 	}
 	Gohai string `json:"gohai"`
+	OrgID int    `json:"org-id"`
 }
 
-func (i *DataDogIntakePayload) GeneratePersistentMetrics(orgID int) []*schema.MetricData {
+func (i *DataDogIntakePayload) GeneratePersistentMetrics() []*schema.MetricData {
 	metrics := []*schema.MetricData{}
-	systemTags := []string{
-		"agentVersion=" + i.AgentVersion,
-		"hostname=" + i.Meta.Hostname,
-		"machine=" + i.SystemStats.Machine,
-		"os=" + i.OS,
-		"processor=" + i.SystemStats.Processor,
-		"socket_fqdn=" + i.Meta.SocketFqdn,
-		"socket_hostname=" + i.Meta.SocketHostname,
+	tags := []string{
+		"agentVersion=" + serializeTag(i.AgentVersion),
+		"host=" + serializeTag(i.Meta.Hostname),
+		"hostname=" + serializeTag(i.InternalHostname),
+		"machine=" + serializeTag(i.SystemStats.Machine),
+		"os=" + serializeTag(i.OS),
+		"processor=" + serializeTag(i.SystemStats.Processor),
+		"socket_fqdn=" + serializeTag(i.Meta.SocketFqdn),
+		"socket_hostname=" + serializeTag(i.Meta.SocketHostname),
+		"instanceID=" + serializeTag(i.Meta.InstanceID),
 	}
+
+	for _, t := range i.Tags.System {
+		tSplit := strings.SplitN(t, ":", 2)
+		if len(tSplit) == 0 {
+			continue
+		}
+		if len(tSplit) == 1 {
+			tags = append(tags, tSplit[0])
+			continue
+		}
+		if tSplit[1] == "" {
+			tags = append(tags, tSplit[0])
+			continue
+		}
+		tags = append(tags, tSplit[0]+"="+tSplit[1])
+	}
+
+	for _, t := range i.Tags.GoogleCloudPlatform {
+		tSplit := strings.SplitN(t, ":", 2)
+		if len(tSplit) == 0 {
+			continue
+		}
+		if len(tSplit) == 1 {
+			tags = append(tags, tSplit[0])
+			continue
+		}
+		if tSplit[1] == "" {
+			tags = append(tags, tSplit[0])
+			continue
+		}
+		tags = append(tags, tSplit[0]+"="+tSplit[1])
+	}
+	sort.Strings(tags)
 
 	metrics = append(metrics, &schema.MetricData{
 		Name:  "system_info",
-		Tags:  systemTags,
+		Tags:  tags,
 		Value: 1,
-		OrgId: orgID,
+		OrgId: i.OrgID,
 	})
 
 	gohaiJSON := strings.Replace(i.Gohai, `\"`, `"`, -1)
@@ -100,7 +151,7 @@ func (i *DataDogIntakePayload) GeneratePersistentMetrics(orgID int) []*schema.Me
 				"GOOS=" + serializeTag(g.Platform.GOOS),
 				"GoV=" + serializeTag(g.Platform.GoV),
 				"HardwarePlatform=" + serializeTag(g.Platform.HardwarePlatform),
-				"hostname=" + serializeTag(g.Platform.Hostname),
+				"hostname=" + serializeTag(i.InternalHostname),
 				"kernel_name=" + serializeTag(g.Platform.KernelName),
 				"kernel_release=" + serializeTag(g.Platform.KernelRelease),
 				"kernel_version=" + serializeTag(g.Platform.KernelVersion),
@@ -110,16 +161,18 @@ func (i *DataDogIntakePayload) GeneratePersistentMetrics(orgID int) []*schema.Me
 				"pythonV=" + serializeTag(g.Platform.PythonV),
 			},
 			Value: 1,
+			OrgId: i.OrgID,
 		},
 		&schema.MetricData{
 			Name: "system_network_info",
 			Tags: []string{
-				"hostname=" + g.Platform.Hostname,
+				"hostname=" + i.InternalHostname,
 				"ipaddress=" + g.Network.Ipaddress,
 				"ipaddressv6=" + g.Network.Ipaddressv6,
 				"macaddress=" + g.Network.Macaddress,
 			},
 			Value: 1,
+			OrgId: i.OrgID,
 		},
 	)
 
@@ -127,11 +180,12 @@ func (i *DataDogIntakePayload) GeneratePersistentMetrics(orgID int) []*schema.Me
 		metrics = append(metrics, &schema.MetricData{
 			Name: "system_filesystem_info",
 			Tags: []string{
-				"hostname=" + serializeTag(g.Platform.Hostname),
-				"device=" + serializeTag(fs.Device),
+				"hostname=" + serializeTag(i.InternalHostname),
+				"name=" + serializeTag(fs.Name),
 				"mountpoint=" + serializeTag(fs.MountedOn),
 			},
 			Value: 1,
+			OrgId: i.OrgID,
 		})
 	}
 
@@ -152,7 +206,7 @@ type Gohai struct {
 	} `json:"cpu"`
 	Filesystem []struct {
 		MountedOn string `json:"mounted_on"`
-		Device    string `json:"device"`
+		Name      string `json:"name"`
 	}
 	Network struct {
 		Ipaddress   string `json:"ipaddress"`
