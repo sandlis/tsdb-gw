@@ -42,7 +42,7 @@ func NewStorageClient(ctx context.Context, cfg Config) (storage.Storage, error) 
 
 	tables, err := adminClient.Tables(context.Background())
 	if err != nil {
-		log.Errorf("Could not fetch table list", err)
+		log.Errorf("Could not fetch table list: %v", err)
 		return nil, err
 	}
 
