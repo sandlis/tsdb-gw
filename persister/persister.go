@@ -51,7 +51,7 @@ func NewPersister(cfg *Config) (*Persister, error) {
 		return nil, err
 	}
 
-	metrics, err := store.Retrieve(cfg.orgID)
+	metrics, err := store.Retrieve()
 
 	if err != nil {
 		return nil, err
