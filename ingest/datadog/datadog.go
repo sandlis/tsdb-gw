@@ -1,16 +1,11 @@
-package ingest
+package datadog
 
 import (
-	"compress/zlib"
 	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"sort"
-	"strings"
 
 	"github.com/raintank/tsdb-gw/api"
-	"github.com/raintank/tsdb-gw/persister/persist"
+	"github.com/raintank/tsdb-gw/ingest"
 	"github.com/raintank/tsdb-gw/publish"
 	log "github.com/sirupsen/logrus"
 	schema "gopkg.in/raintank/schema.v1"
@@ -51,14 +46,14 @@ func DataDogSeries(ctx *api.Context) {
 	buf := make([]*schema.MetricData, 0)
 	defer func(buf []*schema.MetricData) {
 		for _, m := range buf {
-			metricPool.Put(m)
+			ingest.MetricPool.Put(m)
 		}
 	}(buf)
 
 	for _, ts := range series.Series {
 		tagSet := createTagSet(ts.Host, ts.Device, ts.Tags)
 		for _, point := range ts.Points {
-			md := metricPool.Get()
+			md := ingest.MetricPool.Get()
 			*md = schema.MetricData{
 				Name:     ts.Name,
 				Interval: 0,
@@ -116,13 +111,13 @@ func DataDogCheck(ctx *api.Context) {
 	buf := make([]*schema.MetricData, 0)
 	defer func(buf []*schema.MetricData) {
 		for _, m := range buf {
-			metricPool.Put(m)
+			ingest.MetricPool.Put(m)
 		}
 	}(buf)
 
 	for _, check := range checks {
 		tagSet := createTagSet(check.Host, "", check.Tags)
-		md := metricPool.Get()
+		md := ingest.MetricPool.Get()
 		*md = schema.MetricData{
 			Name:     check.Check,
 			Interval: 0,
@@ -147,111 +142,4 @@ func DataDogCheck(ctx *api.Context) {
 
 	ctx.JSON(200, "ok")
 	return
-}
-
-func createTagSet(host string, device string, ctags []string) []string {
-	tags := []string{}
-	if device != "" {
-		tags = append(tags, "device="+device)
-	}
-	tags = append(tags, "host="+host)
-	for _, t := range ctags {
-		tSplit := strings.SplitN(t, ":", 2)
-		if len(tSplit) == 0 {
-			continue
-		}
-		if len(tSplit) == 1 {
-			tags = append(tags, tSplit[0])
-			continue
-		}
-		if tSplit[1] == "" {
-			tags = append(tags, tSplit[0])
-			continue
-		}
-		tags = append(tags, tSplit[0]+"="+tSplit[1])
-	}
-	sort.Strings(tags)
-	return tags
-}
-
-type DataDogIntakePayload struct {
-	AgentVersion string `json:"agentVersion"`
-	OS           string `json:"os"`
-	SystemStats  struct {
-		Machine   string `json:"machine"`
-		Processor string `json:"processor"`
-	} `json:"systemStats"`
-	Meta struct {
-		SocketHostname string `json:"socket-hostname"`
-		SocketFqdn     string `json:"socket-fqdn"`
-		Hostname       string `json:"hostname"`
-	} `json:"meta"`
-	Gohai string `json:"gohai"`
-}
-
-func (i *DataDogIntakePayload) GeneratePersistentMetrics(orgID int) []*schema.MetricData {
-	metrics := []*schema.MetricData{}
-	systemTags := []string{
-		"agentVersion=" + i.AgentVersion,
-		"hostname=" + i.Meta.Hostname,
-		"machine=" + i.SystemStats.Machine,
-		"os=" + i.OS,
-		"processor=" + i.SystemStats.Processor,
-		"socket_fqdn=" + i.Meta.SocketFqdn,
-		"socket_hostname=" + i.Meta.SocketHostname,
-	}
-
-	metrics = append(metrics, &schema.MetricData{
-		Name:  "system_info",
-		Tags:  systemTags,
-		Value: 1,
-		OrgId: orgID,
-	})
-
-	return metrics
-}
-
-func DataDogIntake(ctx *api.Context) {
-	if ctx.Req.Request.Body == nil {
-		ctx.JSON(400, "no data included in request.")
-		return
-	}
-	defer ctx.Req.Request.Body.Close()
-
-	data, err := decodeJSON(ctx.Req.Request.Body, ctx.Req.Request.Header.Get("Content-Encoding") == "deflate")
-	if err != nil {
-		ctx.JSON(400, fmt.Sprintf("unable to decode request, reason: %v", err))
-		return
-	}
-
-	var info DataDogIntakePayload
-	err = json.Unmarshal(data, &info)
-	if err != nil {
-		ctx.JSON(400, fmt.Sprintf("unable to unmarshal request, reason: %v", err))
-		return
-	}
-
-	if info.Gohai != "" {
-		err = persist.Persist(info.GeneratePersistentMetrics(ctx.ID))
-		if err != nil {
-			log.Errorf("failed to persist datadog info. %s", err)
-			ctx.JSON(500, err)
-			return
-		}
-	}
-
-	ctx.JSON(200, "ok")
-	return
-}
-
-func decodeJSON(body io.ReadCloser, encoded bool) ([]byte, error) {
-	var err error
-	if encoded {
-		body, err = zlib.NewReader(body)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return ioutil.ReadAll(body)
-
 }

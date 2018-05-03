@@ -51,7 +51,7 @@ func PrometheusMTWrite(ctx *api.Context) {
 			}
 			if name != "" {
 				for _, sample := range ts.Samples {
-					md := metricPool.Get()
+					md := MetricPool.Get()
 					*md = schema.MetricData{
 						Name:     name,
 						Interval: 0,
@@ -74,7 +74,7 @@ func PrometheusMTWrite(ctx *api.Context) {
 
 		err = publish.Publish(buf)
 		for _, m := range buf {
-			metricPool.Put(m)
+			MetricPool.Put(m)
 		}
 		if err != nil {
 			log.Errorf("failed to publish prom write metrics. %s", err)

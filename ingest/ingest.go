@@ -4,6 +4,5 @@ import (
 	"github.com/raintank/tsdb-gw/util"
 )
 
-var (
-	metricPool = util.NewMetricDataPool()
-)
+// MetricPool is a shared buffer for metrics ingested over http
+var MetricPool = util.NewMetricDataPool()

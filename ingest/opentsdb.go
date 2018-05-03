@@ -45,7 +45,7 @@ func OpenTSDBWrite(ctx *api.Context) {
 
 		var buf []*schema.MetricData
 		for _, ts := range req {
-			md := metricPool.Get()
+			md := MetricPool.Get()
 			*md = schema.MetricData{
 				Name:     ts.Metric,
 				Interval: 0,
@@ -63,7 +63,7 @@ func OpenTSDBWrite(ctx *api.Context) {
 		err = publish.Publish(buf)
 		for _, m := range buf {
 			m.Tags = m.Tags[:0]
-			metricPool.Put(m)
+			MetricPool.Put(m)
 		}
 		if err != nil {
 			log.Errorf("failed to publish opentsdb write metrics. %s", err)

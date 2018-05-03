@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/raintank/tsdb-gw/ingest/datadog"
 	"github.com/raintank/tsdb-gw/persister/persist"
 
 	"github.com/grafana/globalconf"
@@ -142,9 +143,9 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 func initRoutes(a *api.Api) {
 	a.Router.Any("/api/prom/push", a.PromStats("cortex-write"), a.Auth(), cortexPublish.Write)
 	a.Router.Any("/api/prom/*", a.PromStats("cortex-read"), a.Auth(), cortex.Proxy)
-	a.Router.Post("/datadog/api/v1/series", a.DDAuth(), ingest.DataDogSeries)
-	a.Router.Post("/datadog/api/v1/check_run", a.DDAuth(), ingest.DataDogCheck)
-	a.Router.Post("/datadog/intake", a.DDAuth(), ingest.DataDogIntake)
+	a.Router.Post("/datadog/api/v1/series", a.DDAuth(), datadog.DataDogSeries)
+	a.Router.Post("/datadog/api/v1/check_run", a.DDAuth(), datadog.DataDogCheck)
+	a.Router.Post("/datadog/intake", a.DDAuth(), datadog.DataDogIntake)
 	a.Router.Post("/opentsdb/api/put", a.Auth(), ingest.OpenTSDBWrite)
 	a.Router.Post("/metrics", a.Auth(), ingest.Metrics)
 }
