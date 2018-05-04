@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/raintank/tsdb-gw/api"
+	"github.com/raintank/tsdb-gw/api/models"
 	"github.com/raintank/tsdb-gw/ingest"
 	"github.com/raintank/tsdb-gw/publish"
 	log "github.com/sirupsen/logrus"
@@ -23,7 +23,7 @@ type DataDogSeriesPayload struct {
 	} `json:"series"`
 }
 
-func DataDogSeries(ctx *api.Context) {
+func DataDogSeries(ctx *models.Context) {
 	if ctx.Req.Request.Body == nil {
 		ctx.JSON(400, "no data included in request.")
 		return
@@ -89,7 +89,7 @@ type DataDogCheckPayload []struct {
 	Tags      []string `json:"tags"`
 }
 
-func DataDogCheck(ctx *api.Context) {
+func DataDogCheck(ctx *models.Context) {
 	if ctx.Req.Request.Body == nil {
 		ctx.JSON(400, "no data included in request.")
 		return

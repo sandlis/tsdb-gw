@@ -8,7 +8,7 @@ import (
 
 	"github.com/golang/snappy"
 	"github.com/grafana/metrictank/stats"
-	"github.com/raintank/tsdb-gw/api"
+	"github.com/raintank/tsdb-gw/api/models"
 	"github.com/raintank/tsdb-gw/publish"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/raintank/schema.v1"
@@ -20,7 +20,7 @@ var (
 	metricsRejected = stats.NewCounter32("metrics.http.rejected")
 )
 
-func Metrics(ctx *api.Context) {
+func Metrics(ctx *models.Context) {
 	contentType := ctx.Req.Header.Get("Content-Type")
 	switch contentType {
 	case "rt-metric-binary":
@@ -34,7 +34,7 @@ func Metrics(ctx *api.Context) {
 	}
 }
 
-func metricsJson(ctx *api.Context) {
+func metricsJson(ctx *models.Context) {
 	defer ctx.Req.Request.Body.Close()
 	if ctx.Req.Request.Body != nil {
 		body, err := ioutil.ReadAll(ctx.Req.Request.Body)
@@ -88,7 +88,7 @@ func metricsJson(ctx *api.Context) {
 	ctx.JSON(400, "no data included in request.")
 }
 
-func metricsBinary(ctx *api.Context, compressed bool) {
+func metricsBinary(ctx *models.Context, compressed bool) {
 	var body io.ReadCloser
 	if compressed {
 		body = ioutil.NopCloser(snappy.NewReader(ctx.Req.Request.Body))

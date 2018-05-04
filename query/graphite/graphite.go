@@ -10,7 +10,7 @@ import (
 	"strconv"
 
 	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/raintank/tsdb-gw/api"
+	"github.com/raintank/tsdb-gw/api/models"
 	"github.com/raintank/tsdb-gw/util"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/macaron.v1"
@@ -108,6 +108,6 @@ func Proxy(orgId int, c *macaron.Context) {
 	gProxy.ServeHTTP(c.Resp, c.Req.Request)
 }
 
-func GraphiteProxy(c *api.Context) {
+func GraphiteProxy(c *models.Context) {
 	Proxy(c.ID, c.Context)
 }

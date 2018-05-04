@@ -1,22 +1,48 @@
 package persist
 
 import (
-	"github.com/raintank/tsdb-gw/metrics_client"
+	"bytes"
+	"fmt"
+	"net/http"
+	"net/url"
+
 	"github.com/sirupsen/logrus"
-	schema "gopkg.in/raintank/schema.v1"
 )
 
 // The persist package contains client to push metrics to a persister service
 var (
-	client  *metrics_client.Client
+	client  *Client
 	enabled = false
 )
 
-func Init(addr, apiKey string) {
-	cli, err := metrics_client.New(metrics_client.Config{
-		Addr:   addr,
-		APIKey: apiKey,
-	})
+type Config struct {
+	Addr   string
+	APIKey string
+}
+
+type Client struct {
+	url    string
+	client *http.Client
+}
+
+func NewClient(addr string) (*Client, error) {
+	u, err := url.Parse(addr)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse gw.addr: '%v'", addr)
+	}
+
+	return &Client{
+		url:    u.String(),
+		client: &http.Client{},
+	}, nil
+}
+
+func (c *Client) PushIntake(payload []byte) error {
+	c.client.Post(c.url, "application/json", bytes.NewBuffer(payload))
+	return nil
+}
+func Init(addr string) {
+	cli, err := NewClient(addr)
 
 	if err != nil {
 		logrus.Fatalf("unable to initialize peristor: %v", err)
@@ -26,11 +52,9 @@ func Init(addr, apiKey string) {
 	enabled = true
 }
 
-func Persist(metrics []*schema.MetricData) error {
+func Persist(data []byte) error {
 	if enabled {
-		return client.Push(metrics)
+		return client.PushIntake(data)
 	}
-
-	logrus.Infof("persist not enabled, dropping %v metrics", len(metrics))
 	return nil
 }

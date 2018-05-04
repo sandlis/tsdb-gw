@@ -1,9 +1,9 @@
 package storage
 
-import schema "gopkg.in/raintank/schema.v1"
+import "github.com/raintank/tsdb-gw/ingest/datadog"
 
 type Storage interface {
-	Store([]*schema.MetricData) error
-	Retrieve() ([]*schema.MetricData, error)
-	Remove([]*schema.MetricData) error
+	Store(data datadog.DataDogIntakePayload) error
+	Retrieve() ([]datadog.DataDogIntakePayload, error)
+	Remove(orgID int, hostname string) error
 }

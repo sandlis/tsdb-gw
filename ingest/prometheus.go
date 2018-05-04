@@ -7,13 +7,13 @@ import (
 	"github.com/golang/snappy"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/prompb"
-	"github.com/raintank/tsdb-gw/api"
+	"github.com/raintank/tsdb-gw/api/models"
 	"github.com/raintank/tsdb-gw/publish"
 	log "github.com/sirupsen/logrus"
 	schema "gopkg.in/raintank/schema.v1"
 )
 
-func PrometheusMTWrite(ctx *api.Context) {
+func PrometheusMTWrite(ctx *models.Context) {
 	if ctx.Req.Request.Body != nil {
 		defer ctx.Req.Request.Body.Close()
 		compressed, err := ioutil.ReadAll(ctx.Req.Request.Body)

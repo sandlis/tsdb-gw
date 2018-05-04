@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/raintank/tsdb-gw/api"
+	"github.com/raintank/tsdb-gw/api/models"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -30,7 +30,7 @@ func Init() error {
 	return nil
 }
 
-func Proxy(c *api.Context) {
+func Proxy(c *models.Context) {
 	c.Req.Request.Header.Set("X-Scope-OrgID", strconv.Itoa(c.User.ID))
 	proxy.ServeHTTP(c.Resp, c.Req.Request)
 }

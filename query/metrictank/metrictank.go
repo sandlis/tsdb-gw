@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/raintank/tsdb-gw/api"
+	"github.com/raintank/tsdb-gw/api/models"
 	"github.com/raintank/tsdb-gw/util"
 )
 
@@ -34,8 +34,8 @@ func Proxy(orgId int, path string) *httputil.ReverseProxy {
 	return &httputil.ReverseProxy{Director: director}
 }
 
-func MetrictankProxy(path string) func(c *api.Context) {
-	return func(c *api.Context) {
+func MetrictankProxy(path string) func(c *models.Context) {
+	return func(c *models.Context) {
 		proxy := Proxy(c.ID, path)
 		proxy.ServeHTTP(c.Resp, c.Req.Request)
 	}

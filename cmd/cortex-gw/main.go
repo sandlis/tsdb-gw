@@ -38,7 +38,6 @@ var (
 	metricsAddr    = flag.String("metrics-addr", ":8001", "http service address for the /metrics endpoint")
 
 	persisterAddr    = flag.String("persister-addr", "http://localhost:9001/persist", "url of persister service")
-	persisterAPIKey  = flag.String("persister-key", "", "api key for persister service")
 	persisterEnabled = flag.Bool("persister-enabled", true, "enable the persister service")
 )
 
@@ -74,7 +73,7 @@ func main() {
 	defer traceCloser.Close()
 
 	if *persisterEnabled {
-		persist.Init(*persisterAddr, *persisterAPIKey)
+		persist.Init(*persisterAddr)
 	}
 
 	var inputs []Stoppable

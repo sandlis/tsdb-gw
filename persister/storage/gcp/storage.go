@@ -2,13 +2,14 @@ package gcp
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
-	"fmt"
+	"strconv"
 
 	"cloud.google.com/go/bigtable"
+	"github.com/raintank/tsdb-gw/ingest/datadog"
 	"github.com/raintank/tsdb-gw/persister/storage"
 	log "github.com/sirupsen/logrus"
-	schema "gopkg.in/raintank/schema.v1"
 )
 
 // Config for a StorageClient
@@ -29,10 +30,11 @@ func (cfg *Config) RegisterFlags(f *flag.FlagSet) {
 
 // storageClient implements storage.Storage for GCP.
 type storageClient struct {
-	cfg       Config
-	client    *bigtable.Client
-	tablename string
-	prefix    string
+	cfg         Config
+	client      *bigtable.Client
+	adminClient *bigtable.AdminClient
+	tablename   string
+	prefix      string
 }
 
 // NewStorageClient returns a new StorageClient.
@@ -62,9 +64,9 @@ func NewStorageClient(ctx context.Context, cfg Config) (storage.Storage, error) 
 		return nil, err
 	}
 
-	if !sliceContains(tblInfo.Families, "metrics") {
-		if err := adminClient.CreateColumnFamily(context.Background(), cfg.TableName, "metrics"); err != nil {
-			log.Errorf("Could not create column family %v", "metrics")
+	if !sliceContains(tblInfo.Families, "ddIntake") {
+		if err := adminClient.CreateColumnFamily(context.Background(), cfg.TableName, "ddIntake"); err != nil {
+			log.Errorf("Could not create column family %v", "ddIntake")
 			return nil, err
 		}
 	}
@@ -75,94 +77,64 @@ func NewStorageClient(ctx context.Context, cfg Config) (storage.Storage, error) 
 	}
 
 	return &storageClient{
-		cfg:       cfg,
-		client:    client,
-		tablename: cfg.TableName,
-		prefix:    cfg.Prefix,
+		cfg:         cfg,
+		client:      client,
+		adminClient: adminClient,
+		tablename:   cfg.TableName,
+		prefix:      cfg.Prefix,
 	}, nil
 }
 
-func (s *storageClient) Store(metrics []*schema.MetricData) error {
-	if len(metrics) < 1 {
-		return nil
-	}
+func (s *storageClient) Store(data datadog.DataDogIntakePayload) error {
 	table := s.client.Open(s.tablename)
-	var data []byte
-	rowKeys := make([]string, 0, len(metrics))
-	muts := make([]*bigtable.Mutation, 0, len(metrics))
-	for _, m := range metrics {
-		m.SetId()
-		msg, err := m.MarshalMsg(data)
-		if err != nil {
-			log.Errorf("unable to marshal metric: %v", m.Id)
-			return err
-		}
-		mut := bigtable.NewMutation()
-		mut.Set("metrics", "metricdata", bigtable.Now(), msg)
-		muts = append(muts, mut)
-		rowKeys = append(rowKeys, m.Id)
-	}
-
-	errs, err := table.ApplyBulk(context.Background(), rowKeys, muts)
+	mut := bigtable.NewMutation()
+	buf, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
-	if len(errs) > 0 {
-		for _, e := range errs {
-			log.Error(e)
-		}
+
+	mut.Set("ddIntake", "metricdata", bigtable.Now(), buf)
+	rowKey := strconv.Itoa(data.OrgID) + ":" + data.InternalHostname
+
+	err = table.Apply(context.Background(), rowKey, mut)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (s *storageClient) Retrieve() ([]*schema.MetricData, error) {
+func (s *storageClient) Retrieve() ([]datadog.DataDogIntakePayload, error) {
 	tbl := s.client.Open(s.tablename)
 	rr := bigtable.PrefixRange(s.prefix)
-	var metrics []*schema.MetricData
+	var payloads []datadog.DataDogIntakePayload
 	err := tbl.ReadRows(context.Background(), rr, func(r bigtable.Row) bool {
-		m := &schema.MetricData{}
-		_, err := m.UnmarshalMsg(r["metrics"][0].Value)
+		log.Debugf("loading from row %v", r.Key())
+		data, ok := r["ddIntake"]
+		if !ok {
+			return true
+		}
+		d := datadog.DataDogIntakePayload{}
+		err := json.Unmarshal(data[0].Value, &d)
 		if err != nil {
-			log.Errorf("unable to decode metric from row %v", r.Key())
+			log.Errorf("unable to decode metric from row %v; Reason: %v", r.Key(), err)
 			return false
 		}
-		metrics = append(metrics, m)
+		payloads = append(payloads, d)
 		return true
-	}, bigtable.RowFilter(bigtable.FamilyFilter("metrics")))
+	}, bigtable.RowFilter(bigtable.FamilyFilter("ddIntake")))
 
 	if err != nil {
 		return nil, err
 	}
 
-	return metrics, nil
+	return payloads, nil
 }
 
-func (s *storageClient) Remove(metrics []*schema.MetricData) error {
-	if len(metrics) < 1 {
-		return fmt.Errorf("empty metrics slice")
-	}
-
-	tbl := s.client.Open(s.tablename)
-	muts := make([]*bigtable.Mutation, len(metrics))
-	rowKeys := make([]string, len(metrics))
-	for i, m := range metrics {
-		m.SetId()
-		mut := bigtable.NewMutation()
-		mut.DeleteRow()
-		muts[i] = mut
-		rowKeys[i] = m.Id
-		log.Debugf("removing metric %v", m)
-	}
-
-	errs, err := tbl.ApplyBulk(context.Background(), rowKeys, muts)
+func (s *storageClient) Remove(orgID int, host string) error {
+	err := s.adminClient.DropRowRange(context.Background(), s.tablename, strconv.Itoa(orgID)+":"+host)
 	if err != nil {
 		return err
-	}
-	if len(errs) > 0 {
-		for _, e := range errs {
-			log.Errorln(e)
-		}
 	}
 
 	return nil

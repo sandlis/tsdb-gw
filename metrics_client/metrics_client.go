@@ -121,3 +121,33 @@ func (c *Client) push(metrics []*schema.MetricData) (int, error) {
 
 	return resp.StatusCode, fmt.Errorf("failed to push metrics")
 }
+
+func (c *Client) PushIntake(payload []byte) (int, error) {
+	req, err := http.NewRequest("POST", c.url, bytes.NewBuffer(payload))
+	if err != nil {
+		log.Errorf("unable to publish metrics: %v", err)
+		return 0, err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := c.client.Do(req)
+
+	if err == nil && resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+		return resp.StatusCode, nil
+	}
+
+	if err != nil {
+		log.Warningf("failed to submit data: %s", err)
+		return 0, err
+	}
+
+	buf := make([]byte, 300)
+	n, _ := resp.Body.Read(buf)
+	log.Warningf("failed to persist data: http %d - %s", resp.StatusCode, buf[:n])
+
+	ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+
+	return resp.StatusCode, fmt.Errorf("failed to push metrics")
+}

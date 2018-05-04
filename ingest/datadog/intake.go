@@ -6,13 +6,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/raintank/tsdb-gw/api"
+	"github.com/raintank/tsdb-gw/api/models"
 	"github.com/raintank/tsdb-gw/persister/persist"
 	log "github.com/sirupsen/logrus"
 	schema "gopkg.in/raintank/schema.v1"
 )
 
-func DataDogIntake(ctx *api.Context) {
+func DataDogIntake(ctx *models.Context) {
 	if ctx.Req.Request.Body == nil {
 		ctx.JSON(400, "no data included in request.")
 		return
@@ -26,6 +26,7 @@ func DataDogIntake(ctx *api.Context) {
 	}
 
 	var info DataDogIntakePayload
+	info.OrgID = ctx.ID
 	err = json.Unmarshal(data, &info)
 
 	if err != nil {
@@ -34,7 +35,13 @@ func DataDogIntake(ctx *api.Context) {
 	}
 
 	if info.Gohai != "" {
-		err = persist.Persist(info.GeneratePersistentMetrics())
+		payload, err := json.Marshal(info)
+		if err != nil {
+			log.Errorf("failed to persist datadog info. %s", err)
+			ctx.JSON(500, err)
+			return
+		}
+		err = persist.Persist(payload)
 		if err != nil {
 			log.Errorf("failed to persist datadog info. %s", err)
 			ctx.JSON(500, err)
