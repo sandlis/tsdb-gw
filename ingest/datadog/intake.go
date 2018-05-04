@@ -77,6 +77,7 @@ type DataDogIntakePayload struct {
 		Hostname       string   `json:"hostname"`
 		EC2Hostname    string   `json:"ec2-hostname"`
 		InstanceID     string   `json:"instance-id"`
+		HostAlias      []string `json:"host_aliases"`
 	} `json:"meta"`
 	HostTags map[string]interface{} `json:"host-tags"`
 	Tags     struct {
