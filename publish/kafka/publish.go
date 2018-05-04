@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"errors"
 	"flag"
 	"time"
 
@@ -49,7 +50,8 @@ var (
 )
 
 type mtPublisher struct {
-	schemas *conf.Schemas
+	schemas      *conf.Schemas
+	autoInterval bool
 }
 
 type Partitioner interface {
@@ -84,16 +86,24 @@ func getCompression(codec string) sarama.CompressionCodec {
 	}
 }
 
-func New(broker string) *mtPublisher {
+func New(broker string, autoInterval bool) *mtPublisher {
 	if !enabled {
 		return nil
 	}
 
-	schemas, err := getSchemas(schemasConf)
-	if err != nil {
-		log.Fatalf("failed to load schemas config. %s", err)
+	mp := mtPublisher{
+		autoInterval: autoInterval,
 	}
 
+	if autoInterval {
+		schemas, err := getSchemas(schemasConf)
+		if err != nil {
+			log.Fatalf("failed to load schemas config. %s", err)
+		}
+		mp.schemas = schemas
+	}
+
+	var err error
 	partitioner, err = p.NewKafka(partitionScheme)
 	if err != nil {
 		log.Fatalf("failed to initialize partitioner: %s", err)
@@ -125,9 +135,7 @@ func New(broker string) *mtPublisher {
 		keyCache = keycache.NewKeyCache(v2StaleThresh, v2PruneInterval)
 	}
 
-	return &mtPublisher{
-		schemas: schemas,
-	}
+	return &mp
 }
 
 func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
@@ -150,9 +158,14 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 
 	for i, metric := range metrics {
 		if metric.Interval == 0 {
-			_, s := m.schemas.Match(metric.Name, 0)
-			metric.Interval = s.Retentions[0].SecondsPerPoint
-			metric.SetId()
+			if m.autoInterval {
+				_, s := m.schemas.Match(metric.Name, 0)
+				metric.Interval = s.Retentions[0].SecondsPerPoint
+				metric.SetId()
+			} else {
+				log.Error("interval is 0 but can't deduce interval automatically. this should never happen")
+				return errors.New("need to deduce interval but cannot")
+			}
 		}
 
 		var data []byte

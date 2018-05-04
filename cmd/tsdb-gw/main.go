@@ -99,7 +99,7 @@ func main() {
 	}
 	defer traceCloser.Close()
 
-	publisher := kafka.New(*broker)
+	publisher := kafka.New(*broker, true)
 	if publisher == nil {
 		publish.Init(nil)
 	} else {

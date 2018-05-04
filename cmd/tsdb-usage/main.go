@@ -45,7 +45,7 @@ func main() {
 	glog.Info("tsdb-usage starting up")
 
 	// initialize our publisher that sends metrics to Kafka
-	publish.Init(kafka.New(*broker))
+	publish.Init(kafka.New(*broker, false))
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
