@@ -1,14 +1,21 @@
 #!/bin/bash
 
 set -x
+set -e
+
 # Find the directory we exist within
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 cd ${DIR}/..
 
-export GITVERSION=`git describe --always`
+VERSION=`git describe --always`
 
-docker build -f scripts/Dockerfile -t raintank/tsdb-gw:$GITVERSION .
-docker tag raintank/tsdb-gw:$GITVERSION raintank/tsdb-gw:latest
+rm -rf scripts/build
+mkdir scripts/build
+cp build/* scripts/build/
 
-docker build -f cmd/cortex-gw/Dockerfile -t raintank/cortex-gw:$GITVERSION .
-docker tag raintank/cortex-gw:$GITVERSION raintank/cortex-gw:latest
+docker build -f scripts/Dockerfile -t raintank/tsdb-gw:$VERSION .
+docker tag raintank/tsdb-gw:$VERSION raintank/tsdb-gw:latest
+
+docker build -f cmd/cortex-gw/Dockerfile -t raintank/cortex-gw:$VERSION .
+docker tag raintank/cortex-gw:$VERSION raintank/cortex-gw:latest
+

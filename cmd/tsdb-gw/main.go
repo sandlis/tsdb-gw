@@ -35,20 +35,21 @@ var (
 
 	broker = flag.String("kafka-tcp-addr", "localhost:9092", "kafka tcp address for metrics")
 
+	graphiteURL   = flag.String("graphite-url", "http://localhost:8080", "graphite-api address")
+	metrictankURL = flag.String("metrictank-url", "http://localhost:6060", "metrictank address")
+
+	// usage tracking
+	tsdbStatsEnabled = flag.Bool("tsdb-stats-enabled", false, "enable collecting usage stats")
+	tsdbStatsAddr    = flag.String("tsdb-stats-addr", "localhost:2004", "tsdb-usage server address")
+
+	// stats and tracing
 	statsEnabled    = flag.Bool("stats-enabled", false, "enable sending graphite messages for instrumentation")
 	statsPrefix     = flag.String("stats-prefix", "tsdb-gw.stats.default.$hostname", "stats prefix (will add trailing dot automatically if needed)")
 	statsAddr       = flag.String("stats-addr", "localhost:2003", "graphite address")
 	statsInterval   = flag.Int("stats-interval", 10, "interval in seconds to send statistics")
 	statsBufferSize = flag.Int("stats-buffer-size", 20000, "how many messages (holding all measurements from one interval) to buffer up in case graphite endpoint is unavailable.")
-
-	graphiteURL   = flag.String("graphite-url", "http://localhost:8080", "graphite-api address")
-	metrictankURL = flag.String("metrictank-url", "http://localhost:6060", "metrictank address")
-
-	tsdbStatsEnabled = flag.Bool("tsdb-stats-enabled", false, "enable collecting usage stats")
-	tsdbStatsAddr    = flag.String("tsdb-stats-addr", "localhost:2004", "tsdb-usage server address")
-
-	tracingEnabled = flag.Bool("tracing-enabled", false, "enable/disable distributed opentracing via jaeger")
-	tracingAddr    = flag.String("tracing-addr", "localhost:6831", "address of the jaeger agent to send data to")
+	tracingEnabled  = flag.Bool("tracing-enabled", false, "enable/disable distributed opentracing via jaeger")
+	tracingAddr     = flag.String("tracing-addr", "localhost:6831", "address of the jaeger agent to send data to")
 )
 
 func main() {

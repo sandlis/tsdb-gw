@@ -41,13 +41,13 @@ var (
 )
 
 func init() {
-	flag.StringVar(&addr, "carbon-addr", "0.0.0.0:2003", "listen address for carbon input")
 	flag.BoolVar(&Enabled, "carbon-enabled", false, "enable carbon input")
+	flag.StringVar(&addr, "carbon-addr", "0.0.0.0:2003", "listen address for carbon input")
+	flag.StringVar(&authPlugin, "carbon-auth-plugin", "file", "auth plugin to use. (grafana|file)")
 	flag.DurationVar(&flushInterval, "carbon-flush-interval", time.Second, "maximum time between flushs to kafka")
 	flag.IntVar(&concurrency, "carbon-concurrency", 1, "number of goroutines for handling metrics")
 	flag.IntVar(&bufferSize, "carbon-buffer-size", 100000, "number of metrics to hold in an input buffer. Once this buffer fills metrics will be dropped")
 	flag.BoolVar(&nonBlockingBuffer, "carbon-non-blocking-buffer", false, "dont block trying to write to the input buffer, just drop metrics.")
-	flag.StringVar(&authPlugin, "carbon-auth-plugin", "file", "auth plugin to use. (grafana|file)")
 }
 
 type Carbon struct {
