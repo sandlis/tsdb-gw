@@ -7,74 +7,87 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
 	"github.com/raintank/tsdb-gw/ingest/datadog"
 	"github.com/raintank/tsdb-gw/metrics_client"
 	"github.com/raintank/tsdb-gw/persister/storage"
-	"github.com/raintank/tsdb-gw/persister/storage/gcp"
 	log "github.com/sirupsen/logrus"
 	schema "gopkg.in/raintank/schema.v1"
 )
 
+// Persister ingests payloads that are serialized into metrics and repeatedly
+// sent to a metrics endpoint in the schema.MetricData format
 type Persister struct {
 	*sync.Mutex
-	metrics  []*schema.MetricData
-	client   *metrics_client.Client
-	store    storage.Storage
-	interval int
+	metrics       map[string][]*schema.MetricData
+	client        *metrics_client.Client
+	store         *storage.Client
+	interval      int
+	maxBufferSize int
 }
 
+// Config contains the configuration require to
+// create a Persister
 type Config struct {
 	prefix              string
 	interval            int
+	maxBufferSize       int
 	MetricsClientConfig metrics_client.Config
-	StorageClientConfig gcp.Config
+	StorageClientConfig storage.Config
 }
 
 // RegisterFlags adds the flags required to config this to the given FlagSet
 func (cfg *Config) RegisterFlags(f *flag.FlagSet) {
 	f.IntVar(&cfg.interval, "persister-interval", 60, "seconds between sending persisted metrics")
+	f.IntVar(&cfg.maxBufferSize, "persister-buffer-size", 1000, "max size of metrics payload send to metrics gateway")
 	cfg.MetricsClientConfig.RegisterFlags(f)
 	cfg.StorageClientConfig.RegisterFlags(f)
 }
 
-func NewPersister(cfg *Config) (*Persister, error) {
+// New constructs a new persister
+func New(cfg *Config) (*Persister, error) {
 	client, err := metrics_client.New(cfg.MetricsClientConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	store, err := gcp.NewStorageClient(context.Background(), cfg.StorageClientConfig)
+	store, err := storage.New(context.Background(), cfg.StorageClientConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	payloads, err := store.Retrieve()
-	if err != nil {
-		return nil, err
-	}
-
-	metrics := []*schema.MetricData{}
-	for _, p := range payloads {
-		metrics = append(metrics, p.GeneratePersistentMetrics()...)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	log.Infof("loaded %v metrics to persist from storage", len(metrics))
 	return &Persister{
 		&sync.Mutex{},
-		metrics,
+		map[string][]*schema.MetricData{},
 		client,
 		store,
 		cfg.interval,
+		cfg.maxBufferSize,
 	}, nil
 }
 
+func (p *Persister) load() error {
+	payloads, err := p.store.Retrieve()
+	log.Infof("loaded %v payloads to persist from storage", len(payloads))
+
+	if err != nil {
+		return err
+	}
+
+	for k, v := range payloads {
+		err := p.Persist(k, v.GeneratePersistentMetrics())
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// PersistHandler handles requests with payloads meant to be persisted
 func (p *Persister) PersistHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -85,8 +98,19 @@ func (p *Persister) PersistHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		var payload datadog.PersistPayload
+		err = json.Unmarshal(data, &payload)
+		rowKey := strconv.Itoa(payload.OrgID) + ":" + payload.Hostname
+
+		err = p.store.Store(rowKey, payload)
+		if err != nil {
+			log.Errorf("failed to persist metricData. %s", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 		var info datadog.DataDogIntakePayload
-		err = json.Unmarshal(data, &info)
+		err = json.Unmarshal(payload.Raw, &info)
 
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -94,19 +118,13 @@ func (p *Persister) PersistHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = p.Persist(info.GeneratePersistentMetrics())
+		err = p.Persist(rowKey, info.GeneratePersistentMetrics())
 		if err != nil {
 			log.Errorf("failed to persist metricData. %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		err = p.store.Store(info)
-		if err != nil {
-			log.Errorf("failed to persist metricData. %s", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
 		w.Write([]byte("ok"))
 		return
 	}
@@ -114,7 +132,12 @@ func (p *Persister) PersistHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("no metrics to persists"))
 }
 
-func (p *Persister) RemoveHandler(w http.ResponseWriter, r *http.Request) {
+// RemoveRowsRequest contains the information required to remove
+// metrics from the persister
+type RemoveRowsRequest []string
+
+// RemoveRowsHandler handles requests to remove payloads from the persister
+func (p *Persister) RemoveRowsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Body != nil {
 		body, err := ioutil.ReadAll(r.Body)
 
@@ -124,10 +147,10 @@ func (p *Persister) RemoveHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		removeRequest := RemoveRequest{}
-		err = json.Unmarshal(body, &removeRequest)
+		rowKeys := RemoveRowsRequest{}
+		err = json.Unmarshal(body, &rowKeys)
 
-		err = p.store.Remove(removeRequest.OrgID, removeRequest.Hostname)
+		err = p.store.Remove(rowKeys)
 		if err != nil {
 			log.Errorf("failed to remove metrics: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -135,12 +158,9 @@ func (p *Persister) RemoveHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		p.Lock()
-		log.Infof("reloading metrics from store")
-		payloads, err := p.store.Retrieve()
-
-		metrics := []*schema.MetricData{}
-		for _, payload := range payloads {
-			metrics = append(metrics, payload.GeneratePersistentMetrics()...)
+		log.Infof("removing metrics from persister metrics map")
+		for _, r := range rowKeys {
+			delete(p.metrics, r)
 		}
 		p.Unlock()
 
@@ -158,44 +178,43 @@ func (p *Persister) RemoveHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("no metrics to remove"))
 }
 
+// IndexHandler serves up the metrics currently being persisted
 func (p *Persister) IndexHandler(w http.ResponseWriter, r *http.Request) {
+	p.Lock()
 	data, err := json.Marshal(p.metrics)
+	p.Unlock()
 	if err != nil {
 		log.Errorf("unable to marshal metrics index: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 	w.Write(data)
 	return
 }
 
-func (p *Persister) Persist(metrics []*schema.MetricData) error {
+// Persist add metrics to memory map for persisting
+func (p *Persister) Persist(rowKey string, metrics []*schema.MetricData) error {
 	log.Infof("persisting %v metrics", len(metrics))
 	p.Lock()
-	p.metrics = append(p.metrics, metrics...)
+	p.metrics[rowKey] = metrics
 	p.Unlock()
 	return nil
 }
 
+// Push schedules sending metrics to the gateway
 func (p *Persister) Push(quit chan struct{}) {
+	err := p.load()
+	if err != nil {
+		return
+	}
 	ticker := time.NewTicker(time.Duration(p.interval) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
-			now := time.Now().Unix()
-			p.Lock()
-			for _, metric := range p.metrics {
-				metric.Time = now
-				metric.Interval = p.interval
+			err := p.Send()
+			if err != nil {
+				log.Errorf("unable to send metrics; %v", err)
 			}
-			if len(p.metrics) > 0 {
-				err := p.client.Push(p.metrics)
-				if err != nil {
-					log.Errorf("unable to publish: %v", err)
-				}
-			}
-			p.Unlock()
 		case <-quit:
 			ticker.Stop()
 			return
@@ -203,7 +222,29 @@ func (p *Persister) Push(quit chan struct{}) {
 	}
 }
 
-type RemoveRequest struct {
-	OrgID    int    `json:"orgID"`
-	Hostname string `json:"hostname"`
+// Send packages and sends metrics to the gateway
+func (p *Persister) Send() error {
+	now := time.Now().Unix()
+	p.Lock()
+	metrics := []*schema.MetricData{}
+	for rowKey, metricRow := range p.metrics {
+		if len(metricRow) < 1 {
+			log.Warningf("empty metric row %v", rowKey)
+			continue
+		}
+		for _, metric := range metricRow {
+			metric.Time = now
+			metric.Interval = p.interval
+			metrics = append(metrics, metric)
+			if len(metrics) >= p.maxBufferSize {
+				err := p.client.Push(metrics)
+				if err != nil {
+					return err
+				}
+				metrics = []*schema.MetricData{}
+			}
+		}
+	}
+	p.Unlock()
+	return p.client.Push(metrics)
 }

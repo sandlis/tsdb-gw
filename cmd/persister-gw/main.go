@@ -14,11 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-/*
-Application: persister-gw
-
-persister-gw stores and persists metrics to a configure publisher backend. It will store metrics
-*/
+//Application: persister-gw
 
 var (
 	addr = flag.String("addr", "0.0.0.0:9001", "http service address")
@@ -34,7 +30,7 @@ func main() {
 	flag.Parse()
 	util.InitLogger()
 
-	p, err := persister.NewPersister(cfg)
+	p, err := persister.New(cfg)
 	if err != nil {
 		log.Fatalf("failed to start: %v", err)
 	}
@@ -42,7 +38,7 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", indexHandler)
 	r.HandleFunc("/persist", p.PersistHandler)
-	r.HandleFunc("/remove", p.RemoveHandler)
+	r.HandleFunc("/remove", p.RemoveRowsHandler)
 	r.HandleFunc("/index", p.IndexHandler)
 	r.Handle("/metrics", promhttp.Handler())
 

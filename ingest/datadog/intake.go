@@ -26,7 +26,6 @@ func DataDogIntake(ctx *models.Context) {
 	}
 
 	var info DataDogIntakePayload
-	info.OrgID = ctx.ID
 	err = json.Unmarshal(data, &info)
 
 	if err != nil {
@@ -35,7 +34,7 @@ func DataDogIntake(ctx *models.Context) {
 	}
 
 	if info.Gohai != "" {
-		payload, err := json.Marshal(info)
+		payload, err := json.Marshal(PersistPayload{OrgID: ctx.ID, Hostname: info.InternalHostname, Raw: data})
 		if err != nil {
 			log.Errorf("failed to persist datadog info. %s", err)
 			ctx.JSON(500, err)
@@ -51,6 +50,12 @@ func DataDogIntake(ctx *models.Context) {
 
 	ctx.JSON(200, "ok")
 	return
+}
+
+type PersistPayload struct {
+	OrgID    int    `json:"org-id"` // used in rowKey
+	Hostname string `json:"string"` // used in rowKey
+	Raw      []byte `json:"raw"`
 }
 
 type DataDogIntakePayload struct {
@@ -88,118 +93,6 @@ type DataDogIntakePayload struct {
 	OrgID int    `json:"org-id"`
 }
 
-func (i *DataDogIntakePayload) GeneratePersistentMetrics() []*schema.MetricData {
-	metrics := []*schema.MetricData{}
-	tags := []string{
-		"agentVersion=" + serializeTag(i.AgentVersion),
-		"host=" + serializeTag(i.Meta.Hostname),
-		"hostname=" + serializeTag(i.InternalHostname),
-		"machine=" + serializeTag(i.SystemStats.Machine),
-		"os=" + serializeTag(i.OS),
-		"processor=" + serializeTag(i.SystemStats.Processor),
-		"socket_fqdn=" + serializeTag(i.Meta.SocketFqdn),
-		"socket_hostname=" + serializeTag(i.Meta.SocketHostname),
-		"instanceID=" + serializeTag(i.Meta.InstanceID),
-	}
-
-	for _, t := range i.Tags.System {
-		tSplit := strings.SplitN(t, ":", 2)
-		if len(tSplit) == 0 {
-			continue
-		}
-		if len(tSplit) == 1 {
-			tags = append(tags, tSplit[0])
-			continue
-		}
-		if tSplit[1] == "" {
-			tags = append(tags, tSplit[0])
-			continue
-		}
-		tags = append(tags, tSplit[0]+"="+tSplit[1])
-	}
-
-	for _, t := range i.Tags.GoogleCloudPlatform {
-		tSplit := strings.SplitN(t, ":", 2)
-		if len(tSplit) == 0 {
-			continue
-		}
-		if len(tSplit) == 1 {
-			tags = append(tags, tSplit[0])
-			continue
-		}
-		if tSplit[1] == "" {
-			tags = append(tags, tSplit[0])
-			continue
-		}
-		tags = append(tags, tSplit[0]+"="+tSplit[1])
-	}
-	sort.Strings(tags)
-
-	metrics = append(metrics, &schema.MetricData{
-		Name:  "system_info",
-		Tags:  tags,
-		Value: 1,
-		OrgId: i.OrgID,
-	})
-
-	gohaiJSON := strings.Replace(i.Gohai, `\"`, `"`, -1)
-	g := Gohai{}
-
-	err := json.Unmarshal([]byte(gohaiJSON), &g)
-	if err != nil {
-		log.Errorf("unable to decode Gohai payload: %v", err)
-		return metrics
-	}
-
-	metrics = append(metrics,
-		&schema.MetricData{
-			Name: "system_platform_info",
-			Tags: []string{
-				"GOOARCH=" + serializeTag(g.Platform.GOOARCH),
-				"GOOS=" + serializeTag(g.Platform.GOOS),
-				"GoV=" + serializeTag(g.Platform.GoV),
-				"HardwarePlatform=" + serializeTag(g.Platform.HardwarePlatform),
-				"hostname=" + serializeTag(i.InternalHostname),
-				"kernel_name=" + serializeTag(g.Platform.KernelName),
-				"kernel_release=" + serializeTag(g.Platform.KernelRelease),
-				"kernel_version=" + serializeTag(g.Platform.KernelVersion),
-				"machine=" + serializeTag(g.Platform.Machine),
-				"os=" + serializeTag(g.Platform.Os),
-				"processor=" + serializeTag(g.Platform.Processor),
-				"pythonV=" + serializeTag(g.Platform.PythonV),
-			},
-			Value: 1,
-			OrgId: i.OrgID,
-		},
-		&schema.MetricData{
-			Name: "system_network_info",
-			Tags: []string{
-				"hostname=" + i.InternalHostname,
-				"ipaddress=" + g.Network.Ipaddress,
-				"ipaddressv6=" + g.Network.Ipaddressv6,
-				"macaddress=" + g.Network.Macaddress,
-			},
-			Value: 1,
-			OrgId: i.OrgID,
-		},
-	)
-
-	for _, fs := range g.Filesystem {
-		metrics = append(metrics, &schema.MetricData{
-			Name: "system_filesystem_info",
-			Tags: []string{
-				"hostname=" + serializeTag(i.InternalHostname),
-				"name=" + serializeTag(fs.Name),
-				"mountpoint=" + serializeTag(fs.MountedOn),
-			},
-			Value: 1,
-			OrgId: i.OrgID,
-		})
-	}
-
-	return metrics
-}
-
 type Gohai struct {
 	CPU struct {
 		CacheSize            string `json:"cache_size"`
@@ -235,4 +128,182 @@ type Gohai struct {
 		Processor        string `json:"processor"`
 		PythonV          string `json:"pythonV"`
 	} `json:"platform"`
+}
+
+func (i *DataDogIntakePayload) GeneratePersistentMetrics() []*schema.MetricData {
+	metrics := []*schema.MetricData{}
+
+	metrics = append(metrics, &schema.MetricData{
+		Name:  "system_info",
+		Tags:  i.generateInfoTags(),
+		Value: 1,
+		OrgId: i.OrgID,
+	})
+
+	gohaiJSON := strings.Replace(i.Gohai, `\"`, `"`, -1)
+	g := Gohai{}
+
+	err := json.Unmarshal([]byte(gohaiJSON), &g)
+	if err != nil {
+		log.Errorf("unable to decode Gohai payload: %v", err)
+		return metrics
+	}
+
+	metrics = append(metrics,
+		&schema.MetricData{
+			Name:  "system_platform_info",
+			Tags:  g.generatePlatformTags(i.InternalHostname),
+			Value: 1,
+			OrgId: i.OrgID,
+		},
+		&schema.MetricData{
+			Name: "system_network_info",
+			Tags: []string{
+				"hostname=" + i.InternalHostname,
+				"ipaddress=" + g.Network.Ipaddress,
+				"ipaddressv6=" + g.Network.Ipaddressv6,
+				"macaddress=" + g.Network.Macaddress,
+			},
+			Value: 1,
+			OrgId: i.OrgID,
+		},
+	)
+
+	for _, fs := range g.Filesystem {
+		tagset := []string{
+			"hostname=" + i.InternalHostname,
+			"name=" + fs.Name,
+		}
+
+		if fs.MountedOn != "" {
+			tagset = append(tagset, "mountpoint="+fs.MountedOn)
+		}
+		metrics = append(metrics, &schema.MetricData{
+			Name:  "system_filesystem_info",
+			Tags:  tagset,
+			Value: 1,
+			OrgId: i.OrgID,
+		})
+	}
+
+	return metrics
+}
+
+func (i *DataDogIntakePayload) generateInfoTags() []string {
+	tags := []string{}
+
+	if i.AgentVersion != "" {
+		tags = append(tags, "agentVersion="+i.AgentVersion)
+	}
+	if i.Meta.Hostname != "" {
+		tags = append(tags, "host="+i.Meta.Hostname)
+	}
+	if i.InternalHostname != "" {
+		tags = append(tags, "hostname="+i.InternalHostname)
+	}
+	if i.SystemStats.Machine != "" {
+		tags = append(tags, "machine="+i.SystemStats.Machine)
+	}
+	if i.OS != "" {
+		tags = append(tags, "os="+i.OS)
+	}
+	if i.SystemStats.Processor != "" {
+		tags = append(tags, "processor="+i.SystemStats.Processor)
+	}
+	if i.Meta.SocketFqdn != "" {
+		tags = append(tags, "socket_fqdn="+i.Meta.SocketFqdn)
+	}
+	if i.Meta.SocketHostname != "" {
+		tags = append(tags, "socket_hostname="+i.Meta.SocketHostname)
+	}
+	if i.Meta.InstanceID != "" {
+		tags = append(tags, "instanceID="+i.Meta.InstanceID)
+	}
+
+	for _, t := range i.Tags.System {
+		tSplit := strings.SplitN(t, ":", 2)
+		if len(tSplit) == 0 {
+			continue
+		}
+		if len(tSplit) == 1 {
+			tags = append(tags, tSplit[0])
+			continue
+		}
+		if tSplit[1] == "" {
+			tags = append(tags, tSplit[0])
+			continue
+		}
+		tags = append(tags, tSplit[0]+"="+tSplit[1])
+	}
+
+	for _, t := range i.Tags.GoogleCloudPlatform {
+		tSplit := strings.SplitN(t, ":", 2)
+		if len(tSplit) == 0 {
+			continue
+		}
+		if len(tSplit) == 1 {
+			tags = append(tags, tSplit[0])
+			continue
+		}
+		if tSplit[1] == "" {
+			tags = append(tags, tSplit[0])
+			continue
+		}
+		tags = append(tags, tSplit[0]+"="+tSplit[1])
+	}
+	sort.Strings(tags)
+	return tags
+}
+
+func (g *Gohai) generatePlatformTags(hostname string) []string {
+	tags := []string{
+		"hostname=" + hostname,
+	}
+
+	if g.Platform.GOOARCH != "" {
+		tags = append(tags, "GOOARCH="+g.Platform.GOOARCH)
+	}
+
+	if g.Platform.GOOS != "" {
+		tags = append(tags, "GOOS="+g.Platform.GOOS)
+	}
+
+	if g.Platform.GoV != "" {
+		tags = append(tags, "GoV="+g.Platform.GoV)
+	}
+
+	if g.Platform.HardwarePlatform != "" {
+		tags = append(tags, "HardwarePlatform="+g.Platform.HardwarePlatform)
+	}
+
+	if g.Platform.KernelName != "" {
+		tags = append(tags, "kernel_name="+g.Platform.KernelName)
+	}
+
+	if g.Platform.KernelRelease != "" {
+		tags = append(tags, "kernel_release="+g.Platform.KernelRelease)
+	}
+
+	if g.Platform.KernelVersion != "" {
+		tags = append(tags, "kernel_version="+g.Platform.KernelVersion)
+	}
+
+	if g.Platform.Machine != "" {
+		tags = append(tags, "machine="+g.Platform.Machine)
+	}
+
+	if g.Platform.Os != "" {
+		tags = append(tags, "os="+g.Platform.Os)
+	}
+
+	if g.Platform.Processor != "" {
+		tags = append(tags, "processor="+g.Platform.Processor)
+	}
+
+	if g.Platform.PythonV != "" {
+		tags = append(tags, "pythonV="+g.Platform.PythonV)
+	}
+
+	sort.Strings(tags)
+	return tags
 }

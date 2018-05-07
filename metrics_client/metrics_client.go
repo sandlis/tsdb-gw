@@ -63,6 +63,7 @@ func New(cfg Config) (*Client, error) {
 func (c *Client) Push(metrics []*schema.MetricData) error {
 	now := time.Now()
 
+	log.Debugf("sending %v metrics to %v", len(metrics), c.url)
 	statusCode, err := c.push(metrics)
 	if err != nil {
 		log.Errorf("unable to send %v metrics, err: %v", len(metrics), err)
