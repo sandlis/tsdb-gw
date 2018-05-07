@@ -111,6 +111,7 @@ func (p *Persister) PersistHandler(w http.ResponseWriter, r *http.Request) {
 
 		var info datadog.DataDogIntakePayload
 		err = json.Unmarshal(payload.Raw, &info)
+		info.OrgID = payload.OrgID
 
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
