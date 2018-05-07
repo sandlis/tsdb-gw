@@ -135,7 +135,9 @@ func (p *Persister) PersistHandler(w http.ResponseWriter, r *http.Request) {
 
 // RemoveRowsRequest contains the information required to remove
 // metrics from the persister
-type RemoveRowsRequest []string
+type RemoveRowsRequest struct {
+	RowKeys []string `json:"rowkeys"`
+}
 
 // RemoveRowsHandler handles requests to remove payloads from the persister
 func (p *Persister) RemoveRowsHandler(w http.ResponseWriter, r *http.Request) {
@@ -148,10 +150,10 @@ func (p *Persister) RemoveRowsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		rowKeys := RemoveRowsRequest{}
-		err = json.Unmarshal(body, &rowKeys)
+		removeRequest := RemoveRowsRequest{}
+		err = json.Unmarshal(body, &removeRequest)
 
-		err = p.store.Remove(rowKeys)
+		err = p.store.Remove(removeRequest.RowKeys)
 		if err != nil {
 			log.Errorf("failed to remove metrics: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -160,7 +162,8 @@ func (p *Persister) RemoveRowsHandler(w http.ResponseWriter, r *http.Request) {
 
 		p.Lock()
 		log.Infof("removing metrics from persister metrics map")
-		for _, r := range rowKeys {
+		for _, r := range removeRequest.RowKeys {
+			log.Debugf("removing %v", r)
 			delete(p.metrics, r)
 		}
 		p.Unlock()
@@ -247,5 +250,10 @@ func (p *Persister) Send() error {
 		}
 	}
 	p.Unlock()
-	return p.client.Push(metrics)
+
+	if len(metrics) > 0 {
+		return p.client.Push(metrics)
+	}
+
+	return nil
 }
