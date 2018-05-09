@@ -34,10 +34,12 @@ func (a *GrafanaComInstanceAuth) Auth(username, password string) (*User, error) 
 		return nil, err
 	}
 
-	err = u.CheckInstance(username)
-	if err != nil {
-		log.Debugf("invalid credentials, %v", err)
-		return nil, ErrInvalidCredentials
+	if password != AdminKey {
+		err = u.CheckInstance(username)
+		if err != nil {
+			log.Debugf("invalid credentials, %v", err)
+			return nil, ErrInvalidCredentials
+		}
 	}
 
 	return &User{

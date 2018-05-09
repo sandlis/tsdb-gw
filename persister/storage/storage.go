@@ -6,7 +6,7 @@ import (
 	"flag"
 
 	"cloud.google.com/go/bigtable"
-	"github.com/raintank/tsdb-gw/ingest/datadog"
+	"github.com/raintank/tsdb-gw/ingest/datadog/payloads"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -82,7 +82,7 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 }
 
 // Store persists a payload to bigtable
-func (s *Client) Store(rowKey string, data datadog.PersistPayload) error {
+func (s *Client) Store(rowKey string, data payloads.PersistPayload) error {
 	table := s.client.Open(s.tablename)
 	mut := bigtable.NewMutation()
 	buf, err := json.Marshal(data)
@@ -101,24 +101,24 @@ func (s *Client) Store(rowKey string, data datadog.PersistPayload) error {
 }
 
 // Retrieve unmarshals and returns metrics payloads from bigtable
-func (s *Client) Retrieve() (map[string]datadog.DataDogIntakePayload, error) {
+func (s *Client) Retrieve() (map[string]payloads.DataDogIntakePayload, error) {
 	tbl := s.client.Open(s.tablename)
 	rr := bigtable.PrefixRange(s.prefix)
-	intakes := map[string]datadog.DataDogIntakePayload{}
+	intakes := map[string]payloads.DataDogIntakePayload{}
 	err := tbl.ReadRows(context.Background(), rr, func(r bigtable.Row) bool {
 		log.Debugf("loading from row %v", r.Key())
 		data, ok := r["ddIntake"]
 		if !ok {
 			return true
 		}
-		payload := datadog.PersistPayload{}
+		payload := payloads.PersistPayload{}
 		err := json.Unmarshal(data[0].Value, &payload)
 		if err != nil {
 			log.Errorf("unable to decode metric from row %v; Reason: %v", r.Key(), err)
 			return false
 		}
 
-		intake := datadog.DataDogIntakePayload{}
+		intake := payloads.DataDogIntakePayload{}
 		err = json.Unmarshal(payload.Raw, &intake)
 		if err != nil {
 			log.Errorf("unable to decode metric from row %v; Reason: %v", r.Key(), err)

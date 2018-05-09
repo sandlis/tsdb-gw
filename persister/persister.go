@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/raintank/tsdb-gw/ingest/datadog"
+	"github.com/raintank/tsdb-gw/ingest/datadog/payloads"
 	"github.com/raintank/tsdb-gw/metrics_client"
 	"github.com/raintank/tsdb-gw/persister/storage"
 	log "github.com/sirupsen/logrus"
@@ -98,7 +98,7 @@ func (p *Persister) PersistHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		var payload datadog.PersistPayload
+		var payload payloads.PersistPayload
 		err = json.Unmarshal(data, &payload)
 		rowKey := strconv.Itoa(payload.OrgID) + ":" + payload.Hostname
 
@@ -109,7 +109,7 @@ func (p *Persister) PersistHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		var info datadog.DataDogIntakePayload
+		var info payloads.DataDogIntakePayload
 		err = json.Unmarshal(payload.Raw, &info)
 		info.OrgID = payload.OrgID
 
