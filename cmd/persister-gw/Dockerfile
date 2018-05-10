@@ -1,5 +1,6 @@
 FROM alpine
 
+RUN apk --no-cache --update add ca-certificates
 RUN mkdir -p /etc/gw
 
 COPY build/persister-gw /usr/bin/persister-gw

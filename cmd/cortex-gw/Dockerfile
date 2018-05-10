@@ -1,6 +1,7 @@
 FROM alpine
 MAINTAINER Anthony Woods awoods@raintank.io
 
+RUN apk --no-cache --update add ca-certificates
 RUN mkdir -p /etc/gw
 
 COPY scripts/config/cortex-gw.ini /etc/gw/cortex-gw.ini
