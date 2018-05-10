@@ -25,3 +25,9 @@ cd ../tsdb-usage
 go build -ldflags "-X main.GitHash=$VERSION" -o $BUILD_DIR/tsdb-usage
 cd ../cortex-gw
 go build -ldflags "-X main.GitHash=$VERSION" -o $BUILD_DIR/cortex-gw
+cd ../persister-gw
+go build -ldflags "-X main.GitHash=$VERSION" -o $BUILD_DIR/persister-gw
+
+# delete temporary build dir of librdkafka, since it is linked statically we
+# don't need it anymore
+echo rm -rf $TMP_DIR

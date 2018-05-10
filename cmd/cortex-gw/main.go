@@ -11,11 +11,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/raintank/tsdb-gw/ingest/datadog"
+	"github.com/raintank/tsdb-gw/persister/persist"
+
 	"github.com/grafana/globalconf"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/ingest"
-	"github.com/raintank/tsdb-gw/ingest/carbon"
 	"github.com/raintank/tsdb-gw/publish"
 	cortexPublish "github.com/raintank/tsdb-gw/publish/cortex"
 	"github.com/raintank/tsdb-gw/query/cortex"
@@ -34,6 +36,9 @@ var (
 	tracingEnabled = flag.Bool("tracing-enabled", false, "enable/disable distributed opentracing via jaeger")
 	tracingAddr    = flag.String("tracing-addr", "localhost:6831", "address of the jaeger agent to send data to")
 	metricsAddr    = flag.String("metrics-addr", ":8001", "http service address for the /metrics endpoint")
+
+	persisterAddr    = flag.String("persister-addr", "http://localhost:9001/persist", "url of persister service")
+	persisterEnabled = flag.Bool("persister-enabled", true, "enable the persister service")
 )
 
 func main() {
@@ -67,12 +72,15 @@ func main() {
 	}
 	defer traceCloser.Close()
 
+	if *persisterEnabled {
+		persist.Init(*persisterAddr)
+	}
+
 	var inputs []Stoppable
 
 	cortexPublish.Init()
 	if *forward3rdParty {
 		publish.Init(cortexPublish.NewCortexPublisher())
-		inputs = append(inputs, carbon.InitCarbon())
 	} else {
 		publish.Init(nil)
 	}
@@ -134,8 +142,11 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 func initRoutes(a *api.Api) {
 	a.Router.Any("/api/prom/push", a.PromStats("cortex-write"), a.Auth(), cortexPublish.Write)
 	a.Router.Any("/api/prom/*", a.PromStats("cortex-read"), a.Auth(), cortex.Proxy)
-	a.Router.Post("/datadog/api/v1/series", a.Auth(), ingest.DataDogWrite)
+	a.Router.Post("/datadog/api/v1/series", a.DDAuth(), datadog.DataDogSeries)
+	a.Router.Post("/datadog/api/v1/check_run", a.DDAuth(), datadog.DataDogCheck)
+	a.Router.Post("/datadog/intake", a.DDAuth(), datadog.DataDogIntake)
 	a.Router.Post("/opentsdb/api/put", a.Auth(), ingest.OpenTSDBWrite)
+	a.Router.Post("/metrics", a.Auth(), ingest.Metrics)
 }
 
 type metricsServer struct {

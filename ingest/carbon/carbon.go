@@ -222,9 +222,9 @@ func (c *Carbon) flush() {
 			}
 
 			parts := bytes.SplitN(b, []byte("."), 2)
-			user, err := c.authPlugin.Auth("", string(parts[0]))
+			user, err := c.authPlugin.Auth("api_key", string(parts[0]))
 			if err != nil {
-				log.Debugf("invalid auth key. %s", b)
+				log.Debugf("invalid auth key. %s, reason: %v", parts[0], err)
 				metricsDroppedAuthFail.Inc()
 				continue
 			}

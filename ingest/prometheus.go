@@ -7,13 +7,13 @@ import (
 	"github.com/golang/snappy"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/prompb"
-	"github.com/raintank/tsdb-gw/api"
+	"github.com/raintank/tsdb-gw/api/models"
 	"github.com/raintank/tsdb-gw/publish"
 	log "github.com/sirupsen/logrus"
 	schema "gopkg.in/raintank/schema.v1"
 )
 
-func PrometheusMTWrite(ctx *api.Context) {
+func PrometheusMTWrite(ctx *models.Context) {
 	if ctx.Req.Request.Body != nil {
 		defer ctx.Req.Request.Body.Close()
 		compressed, err := ioutil.ReadAll(ctx.Req.Request.Body)
@@ -51,7 +51,7 @@ func PrometheusMTWrite(ctx *api.Context) {
 			}
 			if name != "" {
 				for _, sample := range ts.Samples {
-					md := metricPool.Get()
+					md := MetricPool.Get()
 					*md = schema.MetricData{
 						Name:     name,
 						Interval: 0,
@@ -74,7 +74,7 @@ func PrometheusMTWrite(ctx *api.Context) {
 
 		err = publish.Publish(buf)
 		for _, m := range buf {
-			metricPool.Put(m)
+			MetricPool.Put(m)
 		}
 		if err != nil {
 			log.Errorf("failed to publish prom write metrics. %s", err)

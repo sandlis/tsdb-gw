@@ -15,6 +15,7 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 	otLog "github.com/opentracing/opentracing-go/log"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/raintank/tsdb-gw/api/models"
 	"github.com/raintank/tsdb-gw/auth"
 	"github.com/raintank/tsdb-gw/usage"
 	log "github.com/sirupsen/logrus"
@@ -34,11 +35,6 @@ func init() {
 	prometheus.MustRegister(requestDuration)
 }
 
-type Context struct {
-	*macaron.Context
-	*auth.User
-}
-
 type TracingResponseWriter struct {
 	macaron.ResponseWriter
 	errBody []byte // the body in case it is an error
@@ -54,7 +50,7 @@ func (rw *TracingResponseWriter) Write(b []byte) (int, error) {
 
 func GetContextHandler() macaron.Handler {
 	return func(c *macaron.Context) {
-		ctx := &Context{
+		ctx := &models.Context{
 			Context: c,
 			User:    &auth.User{},
 		}
@@ -63,7 +59,7 @@ func GetContextHandler() macaron.Handler {
 }
 
 func RequireAdmin() macaron.Handler {
-	return func(ctx *Context) {
+	return func(ctx *models.Context) {
 		if !ctx.IsAdmin {
 			ctx.JSON(403, "Permision denied")
 		}
@@ -71,7 +67,7 @@ func RequireAdmin() macaron.Handler {
 }
 
 func (a *Api) Auth() macaron.Handler {
-	return func(ctx *Context) {
+	return func(ctx *models.Context) {
 		username, key, ok := ctx.Req.BasicAuth()
 		if !ok {
 			// no basicAuth, but we also need to check for a Bearer Token
@@ -114,6 +110,55 @@ func (a *Api) Auth() macaron.Handler {
 	}
 }
 
+func (a *Api) DDAuth() macaron.Handler {
+	return func(ctx *models.Context) {
+		var key string
+		var username string
+
+		header := ctx.Req.Header.Get("Dd-Api-Key")
+		parts := strings.SplitN(header, ":", 2)
+		if len(parts) == 1 {
+			key = parts[0]
+			username = "api_key"
+		} else if len(parts) == 2 && parts[1] == "" {
+			key = parts[1]
+			username = "api_key"
+		} else {
+			key = parts[1]
+			username = parts[0]
+		}
+
+		if key == "" {
+			log.Debugf("no key specified")
+			ctx.JSON(401, "Unauthorized")
+			return
+		}
+
+		user, err := a.authPlugin.Auth(username, key)
+		if err != nil {
+			if err == auth.ErrInvalidCredentials || err == auth.ErrInvalidOrgId || err == auth.ErrInvalidInstanceID {
+				ctx.JSON(401, err.Error())
+				return
+			}
+			log.Errorf("failed to perform authentication: %q", err.Error())
+			ctx.JSON(500, err.Error())
+			return
+		}
+
+		// allow admin users to impersonate other orgs.
+		if user.IsAdmin {
+			header := ctx.Req.Header.Get("X-Tsdb-Org")
+			if header != "" {
+				orgId, err := strconv.ParseInt(header, 10, 64)
+				if err == nil && orgId != 0 {
+					user.ID = int(orgId)
+				}
+			}
+		}
+		ctx.User = user
+	}
+}
+
 type requestStats struct {
 	sync.Mutex
 	responseCounts    map[string]map[int]*stats.Counter32
@@ -121,7 +166,7 @@ type requestStats struct {
 	sizeMeters        map[string]*stats.Meter32
 }
 
-func (r *requestStats) PathStatusCount(ctx *Context, path string, status int) {
+func (r *requestStats) PathStatusCount(ctx *models.Context, path string, status int) {
 	metricKey := fmt.Sprintf("api.request.%s.status.%d", path, status)
 	r.Lock()
 	p, ok := r.responseCounts[path]
@@ -139,7 +184,7 @@ func (r *requestStats) PathStatusCount(ctx *Context, path string, status int) {
 	usage.LogRequest(ctx.ID, metricKey)
 }
 
-func (r *requestStats) PathLatency(ctx *Context, path string, dur time.Duration) {
+func (r *requestStats) PathLatency(ctx *models.Context, path string, dur time.Duration) {
 	r.Lock()
 	p, ok := r.latencyHistograms[path]
 	if !ok {
@@ -150,7 +195,7 @@ func (r *requestStats) PathLatency(ctx *Context, path string, dur time.Duration)
 	p.Value(dur)
 }
 
-func (r *requestStats) PathSize(ctx *Context, path string, size int) {
+func (r *requestStats) PathSize(ctx *models.Context, path string, size int) {
 	r.Lock()
 	p, ok := r.sizeMeters[path]
 	if !ok {
@@ -169,7 +214,7 @@ func RequestStats() macaron.Handler {
 		sizeMeters:        make(map[string]*stats.Meter32),
 	}
 
-	return func(ctx *Context) {
+	return func(ctx *models.Context) {
 		start := time.Now()
 		rw := ctx.Resp.(macaron.ResponseWriter)
 		// call next handler. This will return after all handlers
@@ -187,7 +232,7 @@ func RequestStats() macaron.Handler {
 }
 
 func (a *Api) PromStats(handler string) macaron.Handler {
-	return func(ctx *Context) {
+	return func(ctx *models.Context) {
 		start := time.Now()
 		rw := ctx.Resp.(macaron.ResponseWriter)
 		// call next handler. This will return after all handlers

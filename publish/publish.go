@@ -1,6 +1,7 @@
 package publish
 
 import (
+	"github.com/raintank/tsdb-gw/metrics_client"
 	log "github.com/sirupsen/logrus"
 	schema "gopkg.in/raintank/schema.v1"
 )
@@ -12,6 +13,9 @@ type Publisher interface {
 
 var (
 	publisher Publisher
+
+	// Persister allows pushing metrics to the Persistor Service
+	Persistor *metrics_client.Client
 )
 
 func Init(p Publisher) {
@@ -37,4 +41,8 @@ func (*nullPublisher) Publish(metrics []*schema.MetricData) error {
 
 func (*nullPublisher) Type() string {
 	return "nullPublisher"
+}
+
+func Persist(metrics []*schema.MetricData) error {
+	return publisher.Publish(metrics)
 }
