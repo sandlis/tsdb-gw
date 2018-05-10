@@ -10,6 +10,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	bigtableFamily     = "intakePayload"
+	bigtableColumnName = "data"
+)
+
 // Config for a StorageClient
 type Config struct {
 	Project   string
@@ -61,9 +66,9 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		return nil, err
 	}
 
-	if !sliceContains(tblInfo.Families, "ddIntake") {
-		if err := adminClient.CreateColumnFamily(context.Background(), cfg.TableName, "ddIntake"); err != nil {
-			log.Errorf("Could not create column family %v", "ddIntake")
+	if !sliceContains(tblInfo.Families, bigtableFamily) {
+		if err := adminClient.CreateColumnFamily(context.Background(), cfg.TableName, bigtableFamily); err != nil {
+			log.Errorf("Could not create column family %v", bigtableFamily)
 			return nil, err
 		}
 	}
@@ -90,7 +95,7 @@ func (s *Client) Store(rowKey string, data payloads.PersistPayload) error {
 		return err
 	}
 
-	mut.Set("ddIntake", "metricdata", bigtable.Now(), buf)
+	mut.Set(bigtableFamily, bigtableColumnName, bigtable.Now(), buf)
 
 	err = table.Apply(context.Background(), rowKey, mut)
 	if err != nil {
@@ -107,7 +112,7 @@ func (s *Client) Retrieve() (map[string]payloads.DataDogIntakePayload, error) {
 	intakes := map[string]payloads.DataDogIntakePayload{}
 	err := tbl.ReadRows(context.Background(), rr, func(r bigtable.Row) bool {
 		log.Debugf("loading from row %v", r.Key())
-		data, ok := r["ddIntake"]
+		data, ok := r[bigtableFamily]
 		if !ok {
 			return true
 		}
@@ -127,7 +132,7 @@ func (s *Client) Retrieve() (map[string]payloads.DataDogIntakePayload, error) {
 		intake.OrgID = payload.OrgID
 		intakes[r.Key()] = intake
 		return true
-	}, bigtable.RowFilter(bigtable.FamilyFilter("ddIntake")))
+	}, bigtable.RowFilter(bigtable.FamilyFilter(bigtableFamily)))
 
 	if err != nil {
 		return nil, err
