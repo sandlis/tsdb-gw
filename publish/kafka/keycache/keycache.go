@@ -9,36 +9,28 @@ import (
 
 // KeyCache tracks for all orgs, which keys have been seen, and when was the last time
 type KeyCache struct {
-	staleThresh   Duration // number of 10-minutely periods
-	pruneInterval time.Duration
+	clearIdx      int // which shard should be cleared next?
+	clearInterval time.Duration
 
 	sync.RWMutex
 	caches map[uint32]*Cache
 }
 
 // NewKeyCache creates a new KeyCache
-func NewKeyCache(staleThresh, pruneInterval time.Duration) *KeyCache {
-	if staleThresh.Hours() > 42 {
-		panic("stale time may not exceed 42 hours due to resolution of internal bookkeeping")
-	}
-	if pruneInterval.Hours() > 42 {
-		panic("prune interval may not exceed 42 hours due to resolution of internal bookkeeping")
-	}
-	if pruneInterval.Minutes() < 10 {
-		panic("prune interval less than 10 minutes is useless due to resolution of internal bookkeeping")
-	}
+// each clearInterval, all shards will be wiped
+// (one at a time, spread out over the interval)
+func NewKeyCache(clearInterval time.Duration) *KeyCache {
 	k := &KeyCache{
-		pruneInterval: pruneInterval,
-		staleThresh:   Duration(int(staleThresh.Seconds()) / 600),
+		clearInterval: clearInterval / 256,
 		caches:        make(map[uint32]*Cache),
 	}
-	go k.prune()
+	go k.clear()
 	return k
 }
 
 // Touch marks the key as seen and returns whether it was seen before
 // callers should assure that t >= ref and t-ref <= 42 hours
-func (k *KeyCache) Touch(key schema.MKey, t time.Time) bool {
+func (k *KeyCache) Touch(key schema.MKey) bool {
 	k.RLock()
 	cache, ok := k.caches[key.Org]
 	k.RUnlock()
@@ -48,12 +40,12 @@ func (k *KeyCache) Touch(key schema.MKey, t time.Time) bool {
 		// check again in case another routine has just added it
 		cache, ok = k.caches[key.Org]
 		if !ok {
-			cache = NewCache(NewRef(t))
+			cache = NewCache()
 			k.caches[key.Org] = cache
 		}
 		k.Unlock()
 	}
-	return cache.Touch(key.Key, t)
+	return cache.Touch(key.Key)
 }
 
 // Len returns the size across all orgs
@@ -71,10 +63,10 @@ func (k *KeyCache) Len() int {
 	return sum
 }
 
-// prune makes sure each org's cache is pruned
-func (k *KeyCache) prune() {
-	tick := time.NewTicker(k.pruneInterval)
-	for now := range tick.C {
+// clear makes sure each org's cache is periodically cleared
+func (k *KeyCache) clear() {
+	tick := time.NewTicker(k.clearInterval)
+	for range tick.C {
 
 		type target struct {
 			org   uint32
@@ -92,12 +84,16 @@ func (k *KeyCache) prune() {
 		k.RUnlock()
 
 		for _, t := range targets {
-			size := t.cache.Prune(now, k.staleThresh)
+			size := t.cache.Clear(k.clearIdx)
 			if size == 0 {
 				k.Lock()
 				delete(k.caches, t.org)
 				k.Unlock()
 			}
+		}
+		k.clearIdx += 1
+		if k.clearIdx == 256 {
+			k.clearIdx = 0
 		}
 	}
 }
