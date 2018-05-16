@@ -41,8 +41,7 @@ var (
 	maxMessages     int
 	v2              bool
 	v2Org           bool
-	v2StaleThresh   time.Duration
-	v2PruneInterval time.Duration
+	v2ClearInterval time.Duration
 	flushFreq       time.Duration
 
 	bufferPool   = util.NewBufferPool()
@@ -68,8 +67,7 @@ func init() {
 	flag.StringVar(&schemasConf, "schemas-file", "/etc/gw/storage-schemas.conf", "path to carbon storage-schemas.conf file")
 	flag.BoolVar(&v2, "v2", true, "enable optimized MetricPoint payload")
 	flag.BoolVar(&v2Org, "v2-org", true, "encode org-id in messages")
-	flag.DurationVar(&v2StaleThresh, "v2-stale-thresh", 6*time.Hour, "expire keys (and resend MetricData if seen again) if not seen for this much time")
-	flag.DurationVar(&v2PruneInterval, "v2-prune-interval", time.Hour, "check interval for expiring keys")
+	flag.DurationVar(&v2ClearInterval, "v2-clear-interval", time.Hour, "interval after which we always resend a full MetricData")
 }
 
 func getCompression(codec string) sarama.CompressionCodec {
@@ -132,7 +130,7 @@ func New(broker string, autoInterval bool) *mtPublisher {
 	}
 
 	if v2 {
-		keyCache = keycache.NewKeyCache(v2StaleThresh, v2PruneInterval)
+		keyCache = keycache.NewKeyCache(v2ClearInterval)
 	}
 
 	return &mp
@@ -175,7 +173,7 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 			if err != nil {
 				return err
 			}
-			ok := keyCache.Touch(mkey, pre)
+			ok := keyCache.Touch(mkey)
 			// we've seen this key recently. we can use the optimized format
 			if ok {
 				data = bufferPool33.Get()
