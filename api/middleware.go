@@ -161,7 +161,7 @@ func (a *Api) DDAuth() macaron.Handler {
 
 type requestStats struct {
 	sync.Mutex
-	responseCounts    map[string]map[int]*stats.Counter32
+	responseCounts    map[string]map[int]*stats.CounterRate32
 	latencyHistograms map[string]*stats.LatencyHistogram15s32
 	sizeMeters        map[string]*stats.Meter32
 }
@@ -171,12 +171,12 @@ func (r *requestStats) PathStatusCount(ctx *models.Context, path string, status 
 	r.Lock()
 	p, ok := r.responseCounts[path]
 	if !ok {
-		p = make(map[int]*stats.Counter32)
+		p = make(map[int]*stats.CounterRate32)
 		r.responseCounts[path] = p
 	}
 	c, ok := p[status]
 	if !ok {
-		c = stats.NewCounter32(metricKey)
+		c = stats.NewCounterRate32(metricKey)
 		p[status] = c
 	}
 	r.Unlock()
@@ -209,7 +209,7 @@ func (r *requestStats) PathSize(ctx *models.Context, path string, size int) {
 // RequestStats returns a middleware that tracks request metrics.
 func RequestStats() macaron.Handler {
 	stats := requestStats{
-		responseCounts:    make(map[string]map[int]*stats.Counter32),
+		responseCounts:    make(map[string]map[int]*stats.CounterRate32),
 		latencyHistograms: make(map[string]*stats.LatencyHistogram15s32),
 		sizeMeters:        make(map[string]*stats.Meter32),
 	}

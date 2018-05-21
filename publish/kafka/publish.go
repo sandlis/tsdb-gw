@@ -26,13 +26,13 @@ var (
 	partitioner *p.Kafka
 	schemasConf string
 
-	publishedMD     = stats.NewCounter32("output.kafka.published.metricdata")
-	publishedMP     = stats.NewCounter32("output.kafka.published.metricpoint")
-	publishedMPNO   = stats.NewCounter32("output.kafka.published.metricpoint_no_org")
+	publishedMD     = stats.NewCounterRate32("output.kafka.published.metricdata")
+	publishedMP     = stats.NewCounterRate32("output.kafka.published.metricpoint")
+	publishedMPNO   = stats.NewCounterRate32("output.kafka.published.metricpoint_no_org")
 	messagesSize    = stats.NewMeter32("metrics.message_size", false)
 	publishDuration = stats.NewLatencyHistogram15s32("metrics.publish")
-	sendErrProducer = stats.NewCounter32("metrics.send_error.producer")
-	sendErrOther    = stats.NewCounter32("metrics.send_error.other")
+	sendErrProducer = stats.NewCounterRate32("metrics.send_error.producer")
+	sendErrOther    = stats.NewCounterRate32("metrics.send_error.other")
 
 	topic           string
 	codec           string

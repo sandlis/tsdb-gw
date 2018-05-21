@@ -20,12 +20,12 @@ import (
 )
 
 var (
-	metricsReceived          = stats.NewCounter32("metrics.carbon.received")
-	metricsValid             = stats.NewCounter32("metrics.carbon.valid")
-	metricsRejected          = stats.NewCounter32("metrics.carbon.rejected")
-	metricsFailed            = stats.NewCounter32("metrics.carbon.failed")
-	metricsDroppedBufferFull = stats.NewCounter32("metrics.carbon.dropped_buffer_full")
-	metricsDroppedAuthFail   = stats.NewCounter32("metrics.carbon.dropped_auth_fail")
+	metricsReceived          = stats.NewCounterRate32("metrics.carbon.received")
+	metricsValid             = stats.NewCounterRate32("metrics.carbon.valid")
+	metricsRejected          = stats.NewCounterRate32("metrics.carbon.rejected")
+	metricsFailed            = stats.NewCounterRate32("metrics.carbon.failed")
+	metricsDroppedBufferFull = stats.NewCounterRate32("metrics.carbon.dropped_buffer_full")
+	metricsDroppedAuthFail   = stats.NewCounterRate32("metrics.carbon.dropped_auth_fail")
 
 	carbonConnections = stats.NewGauge32("carbon.connections")
 
