@@ -49,6 +49,7 @@ var (
 	statsAddr       = flag.String("stats-addr", "localhost:2003", "graphite address")
 	statsInterval   = flag.Int("stats-interval", 10, "interval in seconds to send statistics")
 	statsBufferSize = flag.Int("stats-buffer-size", 20000, "how many messages (holding all measurements from one interval) to buffer up in case graphite endpoint is unavailable.")
+	statsTimeout    = flag.Duration("stats-timeout", time.Second*10, "timeout after which a write is considered not successful")
 	tracingEnabled  = flag.Bool("tracing-enabled", false, "enable/disable distributed opentracing via jaeger")
 	tracingAddr     = flag.String("tracing-addr", "localhost:6831", "address of the jaeger agent to send data to")
 )
@@ -82,7 +83,7 @@ func main() {
 		stats.NewMemoryReporter()
 		hostname, _ := os.Hostname()
 		prefix := strings.Replace(*statsPrefix, "$hostname", strings.Replace(hostname, ".", "_", -1), -1)
-		stats.NewGraphite(prefix, *statsAddr, *statsInterval, *statsBufferSize)
+		stats.NewGraphite(prefix, *statsAddr, *statsInterval, *statsBufferSize, *statsTimeout)
 	} else {
 		stats.NewDevnull()
 	}
