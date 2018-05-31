@@ -351,10 +351,10 @@
 			"revisionTime": "2017-08-31T15:46:53Z"
 		},
 		{
-			"checksumSHA1": "CN8+3osIDyJeSOGhRPgeubTw0Bs=",
+			"checksumSHA1": "VB1yhHR9Udh5uHzCCXm+PrMBr/U=",
 			"path": "github.com/grafana/metrictank/stats",
-			"revision": "442188119462913f5a43c93a90453b17397d9202",
-			"revisionTime": "2018-02-16T14:53:10Z"
+			"revision": "b8a746442edf15cc332db55570dee16589edee2e",
+			"revisionTime": "2018-05-28T11:40:37Z"
 		},
 		{
 			"checksumSHA1": "z8tyaX1kWYzQELcDNg/sPZtMnbs=",
