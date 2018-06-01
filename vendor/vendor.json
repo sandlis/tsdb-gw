@@ -141,6 +141,12 @@
 			"revisionTime": "2016-11-20T06:25:52Z"
 		},
 		{
+			"checksumSHA1": "J0tcl2i76AQvMio9MWNQaucepYA=",
+			"path": "github.com/go-macaron/binding",
+			"revision": "ac54ee249c27dca7e76fad851a4a04b73bd1b183",
+			"revisionTime": "2017-06-11T06:58:19Z"
+		},
+		{
 			"checksumSHA1": "y0olVbiMQ6/UOa/eh52XYnies90=",
 			"path": "github.com/go-macaron/inject",
 			"revision": "d8a0b8677191f4380287cfebd08e462217bac7ad",
@@ -315,16 +321,16 @@
 			"revisionTime": "2017-05-23T21:16:22Z"
 		},
 		{
-			"checksumSHA1": "JjEvruL5CkxDFwQFCp6nk7ik864=",
-			"path": "github.com/grafana/metrictank/cluster/partitioner",
-			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
-			"revisionTime": "2017-06-01T08:43:28Z"
-		},
-		{
 			"checksumSHA1": "KKmDpHQD1VK6ryXdZFBud8asZ/E=",
 			"path": "github.com/grafana/metrictank/cluster/partitioner",
 			"revision": "442188119462913f5a43c93a90453b17397d9202",
 			"revisionTime": "2018-02-16T14:53:10Z"
+		},
+		{
+			"checksumSHA1": "JjEvruL5CkxDFwQFCp6nk7ik864=",
+			"path": "github.com/grafana/metrictank/cluster/partitioner",
+			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
+			"revisionTime": "2017-06-01T08:43:28Z"
 		},
 		{
 			"checksumSHA1": "SPHLt6V8DpIwSnSUu8GEd1DxxJ4=",
@@ -351,16 +357,16 @@
 			"revisionTime": "2017-08-31T15:46:53Z"
 		},
 		{
-			"checksumSHA1": "VB1yhHR9Udh5uHzCCXm+PrMBr/U=",
-			"path": "github.com/grafana/metrictank/stats",
-			"revision": "b8a746442edf15cc332db55570dee16589edee2e",
-			"revisionTime": "2018-05-28T11:40:37Z"
-		},
-		{
 			"checksumSHA1": "z8tyaX1kWYzQELcDNg/sPZtMnbs=",
 			"path": "github.com/grafana/metrictank/stats",
 			"revision": "d52849ed5f52be75e3c8b3c69cc943ed94b36a68",
 			"revisionTime": "2017-06-01T08:43:28Z"
+		},
+		{
+			"checksumSHA1": "VB1yhHR9Udh5uHzCCXm+PrMBr/U=",
+			"path": "github.com/grafana/metrictank/stats",
+			"revision": "b8a746442edf15cc332db55570dee16589edee2e",
+			"revisionTime": "2018-05-28T11:40:37Z"
 		},
 		{
 			"checksumSHA1": "KWKsNYbKmCJ3v6Bi+AijBpPHMhQ=",
@@ -1113,10 +1119,10 @@
 			"revisionTime": "2017-05-18T08:52:39Z"
 		},
 		{
-			"checksumSHA1": "1HJvJZheB5NNl3i1R9zZJpiJ1G0=",
+			"checksumSHA1": "pckQxg3OkU4fPL5TBeNDtCYFJKc=",
 			"path": "gopkg.in/macaron.v1",
-			"revision": "a325110f8b392bce3e5cdeb8c44bf98078ada3be",
-			"revisionTime": "2017-02-13T09:12:08Z"
+			"revision": "c1be95e6d21e769e44e1ec33cec9da5837861c10",
+			"revisionTime": "2018-03-06T06:20:08Z"
 		},
 		{
 			"checksumSHA1": "yU85KoEMIvZ/2CO03pYYODO/YLE=",

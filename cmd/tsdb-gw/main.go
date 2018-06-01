@@ -11,8 +11,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-macaron/binding"
 	"github.com/grafana/globalconf"
+	"github.com/grafana/metrictank/api/middleware"
 	"github.com/grafana/metrictank/stats"
+	"github.com/raintank/dur"
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/ingest"
 	"github.com/raintank/tsdb-gw/ingest/carbon"
@@ -53,6 +56,9 @@ var (
 	statsTimeout    = flag.Duration("stats-timeout", time.Second*10, "timeout after which a write is considered not successful")
 	tracingEnabled  = flag.Bool("tracing-enabled", false, "enable/disable distributed opentracing via jaeger")
 	tracingAddr     = flag.String("tracing-addr", "localhost:6831", "address of the jaeger agent to send data to")
+
+	// limitations
+	timerangeLimit = flag.String("timerange-limit", "", "define maximum timerange to serve queries for")
 )
 
 func main() {
@@ -109,7 +115,11 @@ func main() {
 		publish.Init(publisher)
 	}
 
-	if err := graphite.Init(*graphiteURL); err != nil {
+	var limit uint32
+	if len(*timerangeLimit) > 0 {
+		limit = dur.MustParseNDuration("timerange-limit", *timerangeLimit)
+	}
+	if err := graphite.Init(*graphiteURL, limit); err != nil {
 		log.Fatalf(err.Error())
 	}
 	if err := metrictank.Init(*metrictankURL); err != nil {
@@ -169,7 +179,11 @@ func initRoutes(a *api.Api, enforceRoles bool) {
 	a.Router.Get("/metrics/index.json", a.GenerateHandlers("read", enforceRoles, false, metrictank.MetrictankProxy("/metrics/index.json"))...)
 	a.Router.Get("/graphite/metrics/index.json", a.GenerateHandlers("read", enforceRoles, false, metrictank.MetrictankProxy("/metrics/index.json"))...)
 	a.Router.Any("/prometheus/*", a.GenerateHandlers("read", enforceRoles, false, metrictank.PrometheusProxy)...)
-	a.Router.Any("/graphite/*", a.GenerateHandlers("read", enforceRoles, false, graphite.GraphiteProxy)...)
+	if len(*timerangeLimit) > 0 {
+		a.Router.Any("/graphite/*", a.GenerateHandlers("read", enforceRoles, false, middleware.CaptureBody, binding.Bind(graphite.FromTo{}), graphite.GraphiteProxy)...)
+	} else {
+		a.Router.Any("/graphite/*", a.GenerateHandlers("read", enforceRoles, false, graphite.GraphiteProxy)...)
+	}
 	a.Router.Post("/metrics", a.GenerateHandlers("write", enforceRoles, false, ingest.Metrics)...)
 	a.Router.Post("/datadog/api/v1/series", a.GenerateHandlers("write", enforceRoles, true, datadog.DataDogSeries)...)
 	a.Router.Post("/opentsdb/api/put", a.GenerateHandlers("write", enforceRoles, false, ingest.OpenTSDBWrite)...)
