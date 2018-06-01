@@ -7,8 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type GrafanaComInstanceAuth struct {
-}
+type GrafanaComInstanceAuth struct{}
 
 func NewGrafanaComInstanceAuth() *GrafanaComInstanceAuth {
 	return &GrafanaComInstanceAuth{}
@@ -45,5 +44,6 @@ func (a *GrafanaComInstanceAuth) Auth(username, password string) (*User, error) 
 	return &User{
 		ID:      int(instanceID),
 		IsAdmin: u.IsAdmin,
+		Role:    u.Role,
 	}, nil
 }

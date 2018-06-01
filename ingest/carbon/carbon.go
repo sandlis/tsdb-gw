@@ -51,22 +51,24 @@ func init() {
 }
 
 type Carbon struct {
-	udp        net.Conn
-	tcp        net.Listener
-	listenWg   sync.WaitGroup
-	schemas    *conf.Schemas
-	buf        chan []byte
-	flushWg    sync.WaitGroup
-	authPlugin auth.AuthPlugin
+	udp              net.Conn
+	tcp              net.Listener
+	listenWg         sync.WaitGroup
+	schemas          *conf.Schemas
+	buf              chan []byte
+	flushWg          sync.WaitGroup
+	authPlugin       auth.AuthPlugin
+	requirePublisher bool
 }
 
-func InitCarbon() *Carbon {
+func InitCarbon(requirePublisher bool) *Carbon {
 	c := new(Carbon)
 	if !Enabled {
 		return c
 	}
 
 	c.authPlugin = auth.GetAuthPlugin(authPlugin)
+	c.requirePublisher = requirePublisher
 
 	log.Infof("Carbon input listening on %s", addr)
 	c.buf = make(chan []byte, bufferSize)
@@ -225,6 +227,11 @@ func (c *Carbon) flush() {
 			user, err := c.authPlugin.Auth("api_key", string(parts[0]))
 			if err != nil {
 				log.Debugf("invalid auth key. %s, reason: %v", parts[0], err)
+				metricsDroppedAuthFail.Inc()
+				continue
+			}
+			if c.requirePublisher && !user.Role.IsPublisher() {
+				log.Debugf("invalid auth key. %s, reason: user does not have permissions to publish", parts[0])
 				metricsDroppedAuthFail.Inc()
 				continue
 			}

@@ -31,8 +31,9 @@ var (
 	GitHash     = "(none)"
 	showVersion = flag.Bool("version", false, "print version string")
 
-	authPlugin = flag.String("api-auth-plugin", "grafana", "auth plugin to use. (grafana|file)")
-	confFile   = flag.String("config", "/etc/gw/tsdb-gw.ini", "configuration file path")
+	authPlugin       = flag.String("api-auth-plugin", "grafana", "auth plugin to use. (grafana|file)")
+	requirePublisher = flag.Bool("require-publisher", false, "publish endpoints attempt to verify whether provided auth has access to publish metrics")
+	confFile         = flag.String("config", "/etc/gw/tsdb-gw.ini", "configuration file path")
 
 	broker = flag.String("kafka-tcp-addr", "localhost:9092", "kafka tcp address for metrics")
 
@@ -120,11 +121,11 @@ func main() {
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
 	api := api.New(*authPlugin, app)
-	initRoutes(api)
+	initRoutes(api, *requirePublisher)
 
 	log.Infof("Starting %v ...", app)
 	done := make(chan struct{})
-	inputs = append(inputs, api.Start(), carbon.InitCarbon())
+	inputs = append(inputs, api.Start(), carbon.InitCarbon(*requirePublisher))
 	go handleShutdown(done, interrupt, inputs)
 	log.Infof("%v Started", app)
 	<-done
@@ -163,15 +164,27 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 	close(done)
 }
 
-func initRoutes(a *api.Api) {
+func initRoutes(a *api.Api, requirePublisher bool) {
 	a.Router.Use(api.RequestStats())
-	a.Router.Post("/metrics/delete", a.Auth(), metrictank.MetrictankProxy("/metrics/delete"))
 	a.Router.Get("/metrics/index.json", a.Auth(), metrictank.MetrictankProxy("/metrics/index.json"))
 	a.Router.Get("/graphite/metrics/index.json", a.Auth(), metrictank.MetrictankProxy("/metrics/index.json"))
 	a.Router.Any("/prometheus/*", a.Auth(), metrictank.PrometheusProxy)
 	a.Router.Any("/graphite/*", a.Auth(), graphite.GraphiteProxy)
-	a.Router.Post("/metrics", a.Auth(), ingest.Metrics)
-	a.Router.Post("/datadog/api/v1/series", a.DDAuth(), datadog.DataDogSeries)
-	a.Router.Post("/opentsdb/api/put", a.Auth(), ingest.OpenTSDBWrite)
-	a.Router.Any("/prometheus/write", a.Auth(), ingest.PrometheusMTWrite)
+
+	// If a publisher is enforced add the require publisher middleware which will end up being standard on
+	// publishing endpoints.
+	if requirePublisher {
+		log.Infof("enforcing publisher role on publish endpoints")
+		a.Router.Post("/metrics", a.Auth(), a.RequirePublisher(), ingest.Metrics)
+		a.Router.Post("/datadog/api/v1/series", a.DDAuth(), a.RequirePublisher(), datadog.DataDogSeries)
+		a.Router.Post("/opentsdb/api/put", a.Auth(), a.RequirePublisher(), ingest.OpenTSDBWrite)
+		a.Router.Any("/prometheus/write", a.Auth(), a.RequirePublisher(), ingest.PrometheusMTWrite)
+		a.Router.Post("/metrics/delete", a.Auth(), a.RequirePublisher(), metrictank.MetrictankProxy("/metrics/delete"))
+	} else {
+		a.Router.Post("/metrics", a.Auth(), ingest.Metrics)
+		a.Router.Post("/datadog/api/v1/series", a.DDAuth(), datadog.DataDogSeries)
+		a.Router.Post("/opentsdb/api/put", a.Auth(), ingest.OpenTSDBWrite)
+		a.Router.Any("/prometheus/write", a.Auth(), ingest.PrometheusMTWrite)
+		a.Router.Post("/metrics/delete", a.Auth(), metrictank.MetrictankProxy("/metrics/delete"))
+	}
 }
