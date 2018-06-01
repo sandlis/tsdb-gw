@@ -30,6 +30,10 @@ func (r RoleType) IsPublisher() bool {
 	return r == ROLE_PUBLISHER || r == ROLE_ADMIN || r == ROLE_EDITOR
 }
 
+func (r RoleType) IsViewer() bool {
+	return r == ROLE_VIEWER || r == ROLE_ADMIN || r == ROLE_EDITOR
+}
+
 type SignedInUser struct {
 	Id        int64     `json:"id"`
 	OrgName   string    `json:"orgName"`

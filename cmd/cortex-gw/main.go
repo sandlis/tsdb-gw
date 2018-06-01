@@ -26,13 +26,13 @@ import (
 )
 
 var (
-	app              = "cortex-gw"
-	GitHash          = "(none)"
-	showVersion      = flag.Bool("version", false, "print version string")
-	confFile         = flag.String("config", "/etc/gw/cortex-gw.ini", "configuration file path")
-	authPlugin       = flag.String("api-auth-plugin", "grafana-instance", "auth plugin to use. (grafana-instance|file)")
-	requirePublisher = flag.Bool("require-publisher", false, "publish endpoints attempt to verify whether provided auth has access to publish metrics")
-	forward3rdParty  = flag.Bool("forward-3rdparty", false, "enable writing to cortex with non standard agents")
+	app             = "cortex-gw"
+	GitHash         = "(none)"
+	showVersion     = flag.Bool("version", false, "print version string")
+	confFile        = flag.String("config", "/etc/gw/cortex-gw.ini", "configuration file path")
+	authPlugin      = flag.String("api-auth-plugin", "grafana-instance", "auth plugin to use. (grafana-instance|file)")
+	enforceRoles    = flag.Bool("enforce-roles", false, "enable role verification during authentication")
+	forward3rdParty = flag.Bool("forward-3rdparty", false, "enable writing to cortex with non standard agents")
 
 	tracingEnabled = flag.Bool("tracing-enabled", false, "enable/disable distributed opentracing via jaeger")
 	tracingAddr    = flag.String("tracing-addr", "localhost:6831", "address of the jaeger agent to send data to")
@@ -90,7 +90,7 @@ func main() {
 		log.Fatal("could not initialize cortex proxy: %s", err.Error())
 	}
 	api := api.New(*authPlugin, app)
-	initRoutes(api, *requirePublisher)
+	initRoutes(api, *enforceRoles)
 
 	ms := newMetricsServer(*metricsAddr)
 
@@ -140,26 +140,14 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 }
 
 // InitRoutes initializes the routes.
-func initRoutes(a *api.Api, requirePublisher bool) {
-	a.Router.Any("/api/prom/*", a.PromStats("cortex-read"), a.Auth(), cortex.Proxy)
-
-	// If a publisher is enforced add the require publisher middleware which will end up being standard on
-	// publishing endpoints.
-	if requirePublisher {
-		a.Router.Any("/api/prom/push", a.PromStats("cortex-write"), a.Auth(), a.RequirePublisher(), cortexPublish.Write)
-		a.Router.Post("/datadog/api/v1/series", a.DDAuth(), a.RequirePublisher(), datadog.DataDogSeries)
-		a.Router.Post("/datadog/api/v1/check_run", a.DDAuth(), a.RequirePublisher(), datadog.DataDogCheck)
-		a.Router.Post("/datadog/intake", a.DDAuth(), a.RequirePublisher(), datadog.DataDogIntake)
-		a.Router.Post("/opentsdb/api/put", a.Auth(), a.RequirePublisher(), ingest.OpenTSDBWrite)
-		a.Router.Post("/metrics", a.Auth(), a.RequirePublisher(), ingest.Metrics)
-	} else {
-		a.Router.Any("/api/prom/push", a.PromStats("cortex-write"), a.Auth(), cortexPublish.Write)
-		a.Router.Post("/datadog/api/v1/series", a.DDAuth(), datadog.DataDogSeries)
-		a.Router.Post("/datadog/api/v1/check_run", a.DDAuth(), datadog.DataDogCheck)
-		a.Router.Post("/datadog/intake", a.DDAuth(), datadog.DataDogIntake)
-		a.Router.Post("/opentsdb/api/put", a.Auth(), ingest.OpenTSDBWrite)
-		a.Router.Post("/metrics", a.Auth(), ingest.Metrics)
-	}
+func initRoutes(a *api.Api, enforceRoles bool) {
+	a.Router.Any("/api/prom/*", a.PromStats("cortex-read"), a.GenerateHandlers("read", enforceRoles, false, cortex.Proxy))
+	a.Router.Any("/api/prom/push", a.PromStats("cortex-write"), a.GenerateHandlers("write", enforceRoles, false, cortexPublish.Write))
+	a.Router.Post("/datadog/api/v1/series", a.GenerateHandlers("write", enforceRoles, true, datadog.DataDogSeries))
+	a.Router.Post("/datadog/api/v1/check_run", a.GenerateHandlers("write", enforceRoles, true, datadog.DataDogCheck))
+	a.Router.Post("/datadog/intake", a.GenerateHandlers("write", enforceRoles, true, datadog.DataDogIntake))
+	a.Router.Post("/opentsdb/api/put", a.GenerateHandlers("write", enforceRoles, false, ingest.OpenTSDBWrite))
+	a.Router.Post("/metrics", a.GenerateHandlers("write", enforceRoles, false, ingest.Metrics))
 }
 
 type metricsServer struct {
