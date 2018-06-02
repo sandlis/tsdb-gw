@@ -69,7 +69,7 @@ func RequireAdmin() macaron.Handler {
 func RequirePublisher() macaron.Handler {
 	return func(ctx *models.Context) {
 		if !ctx.Role.IsPublisher() {
-			log.Errorf("user %v with role %v attempting to publish at %v", ctx.ID, ctx.Role, ctx.Req.RequestURI)
+			log.Infof("user %v with role %v attempting to publish at %v", ctx.ID, ctx.Role, ctx.Req.RequestURI)
 			ctx.JSON(401, "Unauthorized to publish")
 			return
 		}
@@ -79,8 +79,8 @@ func RequirePublisher() macaron.Handler {
 func RequireViewer() macaron.Handler {
 	return func(ctx *models.Context) {
 		if !ctx.Role.IsViewer() {
-			log.Errorf("user %v with role %v attempting to view at %v", ctx.ID, ctx.Role, ctx.Req.RequestURI)
-			ctx.JSON(401, "Unauthorized to publish")
+			log.Infof("user %v with role %v attempting to view at %v", ctx.ID, ctx.Role, ctx.Req.RequestURI)
+			ctx.JSON(403, "Unauthorized to view")
 			return
 		}
 	}
