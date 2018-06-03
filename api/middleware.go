@@ -86,7 +86,7 @@ func RequireViewer() macaron.Handler {
 	}
 }
 
-func (a *Api) GenerateHandlers(kind string, enforceRoles bool, datadog bool, handler macaron.Handler) []macaron.Handler {
+func (a *Api) GenerateHandlers(kind string, enforceRoles bool, datadog bool, handlers []macaron.Handler) []macaron.Handler {
 	combinedHandlers := []macaron.Handler{}
 	if kind == "write" {
 		if datadog {
@@ -103,7 +103,7 @@ func (a *Api) GenerateHandlers(kind string, enforceRoles bool, datadog bool, han
 			combinedHandlers = append(combinedHandlers, RequirePublisher())
 		}
 	}
-	return append(combinedHandlers, handler)
+	return append(combinedHandlers, handlers...)
 }
 
 func (a *Api) Auth() macaron.Handler {

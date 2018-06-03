@@ -24,6 +24,7 @@ import (
 	"github.com/raintank/tsdb-gw/usage"
 	"github.com/raintank/tsdb-gw/util"
 	log "github.com/sirupsen/logrus"
+	macaron "gopkg.in/macaron.v1"
 )
 
 var (
@@ -166,13 +167,13 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 
 func initRoutes(a *api.Api, enforceRoles bool) {
 	a.Router.Use(api.RequestStats())
-	a.Router.Get("/metrics/index.json", a.GenerateHandlers("read", enforceRoles, false, metrictank.MetrictankProxy("/metrics/index.json"))...)
-	a.Router.Get("/graphite/metrics/index.json", a.GenerateHandlers("read", enforceRoles, false, metrictank.MetrictankProxy("/metrics/index.json"))...)
-	a.Router.Any("/prometheus/*", a.GenerateHandlers("read", enforceRoles, false, metrictank.PrometheusProxy)...)
-	a.Router.Any("/graphite/*", a.GenerateHandlers("read", enforceRoles, false, graphite.GraphiteProxy)...)
-	a.Router.Post("/metrics", a.GenerateHandlers("write", enforceRoles, false, ingest.Metrics)...)
-	a.Router.Post("/datadog/api/v1/series", a.GenerateHandlers("write", enforceRoles, true, datadog.DataDogSeries)...)
-	a.Router.Post("/opentsdb/api/put", a.GenerateHandlers("write", enforceRoles, false, ingest.OpenTSDBWrite)...)
-	a.Router.Any("/prometheus/write", a.GenerateHandlers("write", enforceRoles, false, ingest.PrometheusMTWrite)...)
-	a.Router.Post("/metrics/delete", a.GenerateHandlers("write", enforceRoles, false, metrictank.MetrictankProxy("/metrics/delete"))...)
+	a.Router.Get("/metrics/index.json", a.GenerateHandlers("read", enforceRoles, false, []macaron.Handler{metrictank.MetrictankProxy("/metrics/index.json")})...)
+	a.Router.Get("/graphite/metrics/index.json", a.GenerateHandlers("read", enforceRoles, false, []macaron.Handler{metrictank.MetrictankProxy("/metrics/index.json")})...)
+	a.Router.Any("/prometheus/*", a.GenerateHandlers("read", enforceRoles, false, []macaron.Handler{metrictank.PrometheusProxy})...)
+	a.Router.Any("/graphite/*", a.GenerateHandlers("read", enforceRoles, false, []macaron.Handler{graphite.GraphiteProxy})...)
+	a.Router.Post("/metrics", a.GenerateHandlers("write", enforceRoles, false, []macaron.Handler{ingest.Metrics})...)
+	a.Router.Post("/datadog/api/v1/series", a.GenerateHandlers("write", enforceRoles, true, []macaron.Handler{datadog.DataDogSeries})...)
+	a.Router.Post("/opentsdb/api/put", a.GenerateHandlers("write", enforceRoles, false, []macaron.Handler{ingest.OpenTSDBWrite})...)
+	a.Router.Any("/prometheus/write", a.GenerateHandlers("write", enforceRoles, false, []macaron.Handler{ingest.PrometheusMTWrite})...)
+	a.Router.Post("/metrics/delete", a.GenerateHandlers("write", enforceRoles, false, []macaron.Handler{metrictank.MetrictankProxy("/metrics/delete")})...)
 }
