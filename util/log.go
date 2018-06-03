@@ -3,6 +3,7 @@ package util
 import (
 	"flag"
 	"fmt"
+	"log"
 	"runtime"
 	"strings"
 
@@ -30,6 +31,7 @@ func InitLogger() {
 	}
 	logrus.AddHook(&locationHook{})
 	logrus.Infof("log level set to %v", logrus.GetLevel())
+	log.SetOutput(logrus.StandardLogger().Writer())
 }
 
 type locationHook struct{}

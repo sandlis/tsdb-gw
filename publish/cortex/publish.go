@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -78,6 +79,14 @@ func Init() {
 		Director: func(req *http.Request) {
 			req.URL.Scheme = cortexURL.Scheme
 			req.URL.Host = cortexURL.Host
+		},
+		Transport: &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 90 * time.Second,
+			}).Dial,
+			MaxIdleConns:    200,
+			IdleConnTimeout: 90 * time.Second,
 		},
 		BufferPool: bpool.NewBytePool(*writeBPoolSize, *writeBPoolWidth),
 	}
