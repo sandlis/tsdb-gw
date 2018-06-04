@@ -81,12 +81,15 @@ func Init() {
 			req.URL.Host = cortexURL.Host
 		},
 		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
 			Dial: (&net.Dialer{
 				Timeout:   30 * time.Second,
-				KeepAlive: 90 * time.Second,
+				KeepAlive: 30 * time.Second,
 			}).Dial,
-			MaxIdleConns:    200,
-			IdleConnTimeout: 90 * time.Second,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
 		},
 		BufferPool: bpool.NewBytePool(*writeBPoolSize, *writeBPoolWidth),
 	}
