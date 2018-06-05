@@ -86,7 +86,7 @@ func RequireViewer() macaron.Handler {
 	}
 }
 
-func (a *Api) GenerateHandlers(kind string, enforceRoles bool, datadog bool, handlers []macaron.Handler) []macaron.Handler {
+func (a *Api) GenerateHandlers(kind string, enforceRoles bool, datadog bool, handlers ...macaron.Handler) []macaron.Handler {
 	combinedHandlers := []macaron.Handler{}
 	if kind == "write" {
 		if datadog {
