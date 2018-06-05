@@ -4,8 +4,7 @@ import (
 	"github.com/raintank/tsdb-gw/auth/gcom"
 )
 
-type GrafanaComAuth struct {
-}
+type GrafanaComAuth struct{}
 
 func NewGrafanaComAuth() *GrafanaComAuth {
 	return &GrafanaComAuth{}
@@ -29,5 +28,6 @@ func (a *GrafanaComAuth) Auth(username, password string) (*User, error) {
 	return &User{
 		ID:      int(u.OrgId),
 		IsAdmin: u.IsAdmin,
+		Role:    u.Role,
 	}, nil
 }

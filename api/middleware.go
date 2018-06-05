@@ -66,6 +66,46 @@ func RequireAdmin() macaron.Handler {
 	}
 }
 
+func RequirePublisher() macaron.Handler {
+	return func(ctx *models.Context) {
+		if !ctx.Role.IsPublisher() {
+			log.Infof("user %v with role %v attempting to publish at %v", ctx.ID, ctx.Role, ctx.Req.RequestURI)
+			ctx.JSON(401, "Unauthorized to publish")
+			return
+		}
+	}
+}
+
+func RequireViewer() macaron.Handler {
+	return func(ctx *models.Context) {
+		if !ctx.Role.IsViewer() {
+			log.Infof("user %v with role %v attempting to view at %v", ctx.ID, ctx.Role, ctx.Req.RequestURI)
+			ctx.JSON(403, "Unauthorized to view")
+			return
+		}
+	}
+}
+
+func (a *Api) GenerateHandlers(kind string, enforceRoles bool, datadog bool, handlers ...macaron.Handler) []macaron.Handler {
+	combinedHandlers := []macaron.Handler{}
+	if kind == "write" {
+		if datadog {
+			combinedHandlers = append(combinedHandlers, a.DDAuth())
+		} else {
+			combinedHandlers = append(combinedHandlers, a.Auth())
+		}
+		if enforceRoles {
+			combinedHandlers = append(combinedHandlers, RequirePublisher())
+		}
+	} else {
+		combinedHandlers = append(combinedHandlers, a.Auth())
+		if enforceRoles {
+			combinedHandlers = append(combinedHandlers, RequirePublisher())
+		}
+	}
+	return append(combinedHandlers, handlers...)
+}
+
 func (a *Api) Auth() macaron.Handler {
 	return func(ctx *models.Context) {
 		username, key, ok := ctx.Req.BasicAuth()

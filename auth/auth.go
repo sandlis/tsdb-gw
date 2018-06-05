@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 
+	"github.com/raintank/tsdb-gw/auth/gcom"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -11,11 +12,13 @@ var (
 	ErrInvalidCredentials = errors.New("invalid authentication credentials")
 	ErrInvalidOrgId       = errors.New("invalid orgId")
 	ErrInvalidInstanceID  = errors.New("invalid instanceID")
+	ErrInvalidRole        = errors.New("invalid authentication credentials, role unable to publish")
 
 	AdminKey  string
 	AdminUser = &User{
 		ID:      1,
 		IsAdmin: true,
+		Role:    gcom.ROLE_ADMIN,
 	}
 )
 
@@ -26,6 +29,7 @@ func init() {
 type User struct {
 	ID      int
 	IsAdmin bool
+	Role    gcom.RoleType
 }
 
 // AuthPlugin is used to validate access

@@ -31,6 +31,7 @@ var (
 	showVersion     = flag.Bool("version", false, "print version string")
 	confFile        = flag.String("config", "/etc/gw/cortex-gw.ini", "configuration file path")
 	authPlugin      = flag.String("api-auth-plugin", "grafana-instance", "auth plugin to use. (grafana-instance|file)")
+	enforceRoles    = flag.Bool("enforce-roles", false, "enable role verification during authentication")
 	forward3rdParty = flag.Bool("forward-3rdparty", false, "enable writing to cortex with non standard agents")
 
 	tracingEnabled = flag.Bool("tracing-enabled", false, "enable/disable distributed opentracing via jaeger")
@@ -68,7 +69,7 @@ func main() {
 
 	_, traceCloser, err := util.GetTracer(app, *tracingEnabled, *tracingAddr)
 	if err != nil {
-		log.Fatal("Could not initialize jaeger tracer: %s", err.Error())
+		log.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
 	}
 	defer traceCloser.Close()
 
@@ -86,10 +87,10 @@ func main() {
 	}
 
 	if err := cortex.Init(); err != nil {
-		log.Fatal("could not initialize cortex proxy: %s", err.Error())
+		log.Fatalf("could not initialize cortex proxy: %s", err.Error())
 	}
 	api := api.New(*authPlugin, app)
-	initRoutes(api)
+	initRoutes(api, *enforceRoles)
 
 	ms := newMetricsServer(*metricsAddr)
 
@@ -139,14 +140,14 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 }
 
 // InitRoutes initializes the routes.
-func initRoutes(a *api.Api) {
-	a.Router.Any("/api/prom/push", a.PromStats("cortex-write"), a.Auth(), cortexPublish.Write)
-	a.Router.Any("/api/prom/*", a.PromStats("cortex-read"), a.Auth(), cortex.Proxy)
-	a.Router.Post("/datadog/api/v1/series", a.DDAuth(), datadog.DataDogSeries)
-	a.Router.Post("/datadog/api/v1/check_run", a.DDAuth(), datadog.DataDogCheck)
-	a.Router.Post("/datadog/intake", a.DDAuth(), datadog.DataDogIntake)
-	a.Router.Post("/opentsdb/api/put", a.Auth(), ingest.OpenTSDBWrite)
-	a.Router.Post("/metrics", a.Auth(), ingest.Metrics)
+func initRoutes(a *api.Api, enforceRoles bool) {
+	a.Router.Any("/api/prom/*", a.GenerateHandlers("read", enforceRoles, false, a.PromStats("cortex-read"), cortex.Proxy)...)
+	a.Router.Any("/api/prom/push", a.GenerateHandlers("write", enforceRoles, false, a.PromStats("cortex-write"), cortexPublish.Write)...)
+	a.Router.Post("/datadog/api/v1/series", a.GenerateHandlers("write", enforceRoles, true, datadog.DataDogSeries)...)
+	a.Router.Post("/datadog/api/v1/check_run", a.GenerateHandlers("write", enforceRoles, true, datadog.DataDogCheck)...)
+	a.Router.Post("/datadog/intake", a.GenerateHandlers("write", enforceRoles, true, datadog.DataDogIntake)...)
+	a.Router.Post("/opentsdb/api/put", a.GenerateHandlers("write", enforceRoles, false, ingest.OpenTSDBWrite)...)
+	a.Router.Post("/metrics", a.GenerateHandlers("write", enforceRoles, false, ingest.Metrics)...)
 }
 
 type metricsServer struct {

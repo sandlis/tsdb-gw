@@ -4,6 +4,8 @@ import (
 	"flag"
 	"path"
 
+	"github.com/raintank/tsdb-gw/auth/gcom"
+
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/ini.v1"
 )
@@ -78,6 +80,7 @@ func NewFileAuth() *FileAuth {
 		a.keys[section.Name()] = &User{
 			ID:      orgID,
 			IsAdmin: isAdmin,
+			Role:    gcom.ROLE_ADMIN,
 		}
 
 		if !section.Haskey("instances") {

@@ -16,14 +16,22 @@ var (
 type RoleType string
 
 const (
-	ROLE_VIEWER           RoleType = "Viewer"
-	ROLE_EDITOR           RoleType = "Editor"
-	ROLE_READ_ONLY_EDITOR RoleType = "Read Only Editor"
-	ROLE_ADMIN            RoleType = "Admin"
+	ROLE_VIEWER            RoleType = "Viewer"
+	ROLE_EDITOR            RoleType = "Editor"
+	ROLE_METRICS_PUBLISHER RoleType = "MetricsPublisher"
+	ROLE_ADMIN             RoleType = "Admin"
 )
 
 func (r RoleType) IsValid() bool {
-	return r == ROLE_VIEWER || r == ROLE_ADMIN || r == ROLE_EDITOR || r == ROLE_READ_ONLY_EDITOR
+	return r == ROLE_VIEWER || r == ROLE_ADMIN || r == ROLE_EDITOR || r == ROLE_METRICS_PUBLISHER
+}
+
+func (r RoleType) IsPublisher() bool {
+	return r == ROLE_METRICS_PUBLISHER || r == ROLE_ADMIN || r == ROLE_EDITOR
+}
+
+func (r RoleType) IsViewer() bool {
+	return r == ROLE_VIEWER || r == ROLE_ADMIN || r == ROLE_EDITOR
 }
 
 type SignedInUser struct {
