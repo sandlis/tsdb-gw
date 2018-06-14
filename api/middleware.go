@@ -1,8 +1,10 @@
 package api
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"path"
 	"strconv"
@@ -331,4 +333,14 @@ func Tracer(componentName string) macaron.Handler {
 		}
 		span.Finish()
 	}
+}
+
+func CaptureBody(c *models.Context) {
+	body, err := ioutil.ReadAll(c.Req.Request.Body)
+	if err != nil {
+		log.Error(3, "HTTP internal error: failed to read request body for proxying: %s", err)
+		c.PlainText(500, []byte("internal error: failed to read request body for proxying"))
+	}
+	c.Req.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+	c.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 }

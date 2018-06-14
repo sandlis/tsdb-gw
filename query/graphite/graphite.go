@@ -111,5 +111,9 @@ func Proxy(orgId int, c *macaron.Context) {
 }
 
 func GraphiteProxy(c *models.Context) {
+	if c.Body != nil {
+		c.Req.Request.Body = c.Body
+	}
+
 	Proxy(c.ID, c.Context)
 }

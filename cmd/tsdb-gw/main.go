@@ -13,7 +13,6 @@ import (
 
 	"github.com/go-macaron/binding"
 	"github.com/grafana/globalconf"
-	"github.com/grafana/metrictank/api/middleware"
 	"github.com/grafana/metrictank/stats"
 	"github.com/raintank/dur"
 	"github.com/raintank/tsdb-gw/api"
@@ -180,7 +179,7 @@ func initRoutes(a *api.Api, enforceRoles bool) {
 	a.Router.Get("/graphite/metrics/index.json", a.GenerateHandlers("read", enforceRoles, false, metrictank.MetrictankProxy("/metrics/index.json"))...)
 	a.Router.Any("/prometheus/*", a.GenerateHandlers("read", enforceRoles, false, metrictank.PrometheusProxy)...)
 	if len(*timerangeLimit) > 0 {
-		a.Router.Any("/graphite/*", a.GenerateHandlers("read", enforceRoles, false, middleware.CaptureBody, binding.Bind(graphite.FromTo{}), graphite.GraphiteProxy)...)
+		a.Router.Any("/graphite/*", a.GenerateHandlers("read", enforceRoles, false, api.CaptureBody, binding.Bind(graphite.FromTo{}), graphite.GraphiteProxy)...)
 	} else {
 		a.Router.Any("/graphite/*", a.GenerateHandlers("read", enforceRoles, false, graphite.GraphiteProxy)...)
 	}

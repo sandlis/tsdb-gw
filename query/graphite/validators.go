@@ -19,7 +19,7 @@ type FromTo struct {
 
 func (ft FromTo) Validate(ctx *macaron.Context, errs binding.Errors) binding.Errors {
 	// we only care about queries to /graphite/render which specify a timerange
-	if strings.HasPrefix(ctx.Req.URL.Path, "/graphite/render") {
+	if !strings.HasPrefix(ctx.Req.URL.Path, "/graphite/render") {
 		return errs
 	}
 
