@@ -17,10 +17,11 @@ import (
 )
 
 var (
-	GraphiteUrl  *url.URL
-	WorldpingUrl *url.URL
-	wpProxy      httputil.ReverseProxy
-	gProxy       httputil.ReverseProxy
+	GraphiteUrl    *url.URL
+	WorldpingUrl   *url.URL
+	wpProxy        httputil.ReverseProxy
+	gProxy         httputil.ReverseProxy
+	timerangeLimit uint32
 
 	worldpingHack bool
 )
@@ -83,7 +84,8 @@ func (t *proxyRetryTransport) RoundTrip(outreq *http.Request) (*http.Response, e
 	return res, err
 }
 
-func Init(graphiteUrl string) error {
+func Init(graphiteUrl string, limit uint32) error {
+	timerangeLimit = limit
 	var err error
 	GraphiteUrl, err = url.Parse(graphiteUrl)
 	if err != nil {
@@ -109,5 +111,9 @@ func Proxy(orgId int, c *macaron.Context) {
 }
 
 func GraphiteProxy(c *models.Context) {
+	if c.Body != nil {
+		c.Req.Request.Body = c.Body
+	}
+
 	Proxy(c.ID, c.Context)
 }
