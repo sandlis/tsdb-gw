@@ -185,7 +185,7 @@ func initRoutes(a *api.Api, enforceRoles bool) {
 	}
 	a.Router.Post("/metrics", a.GenerateHandlers("write", enforceRoles, false, ingest.Metrics)...)
 	a.Router.Post("/datadog/api/v1/series", a.GenerateHandlers("write", enforceRoles, true, datadog.DataDogSeries)...)
-	a.Router.Post("/opentsdb/api/put", a.GenerateHandlers("write", enforceRoles, false, ingest.OpenTSDBWrite)...)
+	a.Router.Post("/api/put", a.GenerateHandlers("write", enforceRoles, false, ingest.OpenTSDBWrite)...)
 	a.Router.Any("/prometheus/write", a.GenerateHandlers("write", enforceRoles, false, ingest.PrometheusMTWrite)...)
 	a.Router.Post("/metrics/delete", a.GenerateHandlers("write", enforceRoles, false, metrictank.MetrictankProxy("/metrics/delete"))...)
 }
