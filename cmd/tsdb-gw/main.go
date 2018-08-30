@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
@@ -15,7 +14,6 @@ import (
 	"github.com/go-macaron/binding"
 	"github.com/grafana/globalconf"
 	"github.com/grafana/metrictank/stats"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/raintank/dur"
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/ingest"
@@ -136,7 +134,7 @@ func main() {
 	api := api.New(*authPlugin, app)
 	initRoutes(api, *enforceRoles)
 
-	ms := newMetricsServer(*metricsAddr)
+	ms := util.NewMetricsServer(*metricsAddr)
 
 	log.Infof("Starting %v ...", app)
 	done := make(chan struct{})
@@ -194,30 +192,4 @@ func initRoutes(a *api.Api, enforceRoles bool) {
 	a.Router.Post("/opentsdb/api/put", a.GenerateHandlers("write", enforceRoles, false, ingest.OpenTSDBWrite)...)
 	a.Router.Any("/prometheus/write", a.GenerateHandlers("write", enforceRoles, false, ingest.PrometheusMTWrite)...)
 	a.Router.Post("/metrics/delete", a.GenerateHandlers("write", enforceRoles, false, metrictank.MetrictankProxy("/metrics/delete"))...)
-}
-
-type metricsServer struct {
-	srv *http.Server
-}
-
-func newMetricsServer(addr string) *metricsServer {
-	mux := http.NewServeMux()
-	mux.Handle("/metrics", promhttp.Handler())
-
-	srv := &http.Server{
-		Addr:    addr,
-		Handler: mux,
-	}
-
-	go func() {
-		if err := srv.ListenAndServe(); err != nil {
-			log.Fatalf("Failed to start metrics server: %v", err)
-		}
-	}()
-
-	return &metricsServer{srv}
-}
-
-func (m *metricsServer) Stop() {
-	m.srv.Close()
 }

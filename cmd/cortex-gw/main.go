@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
@@ -15,7 +14,6 @@ import (
 	"github.com/raintank/tsdb-gw/persister/persist"
 
 	"github.com/grafana/globalconf"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/raintank/tsdb-gw/api"
 	"github.com/raintank/tsdb-gw/ingest"
 	"github.com/raintank/tsdb-gw/publish"
@@ -92,7 +90,7 @@ func main() {
 	api := api.New(*authPlugin, app)
 	initRoutes(api, *enforceRoles)
 
-	ms := newMetricsServer(*metricsAddr)
+	ms := util.NewMetricsServer(*metricsAddr)
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
@@ -148,30 +146,4 @@ func initRoutes(a *api.Api, enforceRoles bool) {
 	a.Router.Post("/datadog/intake", a.GenerateHandlers("write", enforceRoles, true, datadog.DataDogIntake)...)
 	a.Router.Post("/opentsdb/api/put", a.GenerateHandlers("write", enforceRoles, false, ingest.OpenTSDBWrite)...)
 	a.Router.Post("/metrics", a.GenerateHandlers("write", enforceRoles, false, ingest.Metrics)...)
-}
-
-type metricsServer struct {
-	srv *http.Server
-}
-
-func newMetricsServer(addr string) *metricsServer {
-	mux := http.NewServeMux()
-	mux.Handle("/metrics", promhttp.Handler())
-
-	srv := &http.Server{
-		Addr:    addr,
-		Handler: mux,
-	}
-
-	go func() {
-		if err := srv.ListenAndServe(); err != nil {
-			log.Fatalf("Failed to start metrics server: %v", err)
-		}
-	}()
-
-	return &metricsServer{srv}
-}
-
-func (m *metricsServer) Stop() {
-	m.srv.Close()
 }
