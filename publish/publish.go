@@ -12,7 +12,7 @@ var (
 	ingestedMetrics = promauto.NewCounter(prometheus.CounterOpts{
 		Namespace: "gateway",
 		Name:      "samples_ingested_total",
-		Help:      "Number of samples datapoints ingested",
+		Help:      "Number of samples ingested",
 	})
 )
 
@@ -38,7 +38,7 @@ func Init(p Publisher) {
 }
 
 func Publish(metrics []*schema.MetricData) error {
-	if len(metrics) < 1 {
+	if len(metrics) == 0 {
 		return nil
 	}
 	ingestedMetrics.Add(float64(len(metrics)))
