@@ -1,9 +1,19 @@
 package publish
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/raintank/tsdb-gw/metrics_client"
 	log "github.com/sirupsen/logrus"
 	schema "gopkg.in/raintank/schema.v1"
+)
+
+var (
+	ingestedMetrics = promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: "gateway",
+		Name:      "samples_ingested_total",
+		Help:      "Number of samples ingested",
+	})
 )
 
 type Publisher interface {
@@ -28,6 +38,10 @@ func Init(p Publisher) {
 }
 
 func Publish(metrics []*schema.MetricData) error {
+	if len(metrics) == 0 {
+		return nil
+	}
+	ingestedMetrics.Add(float64(len(metrics)))
 	return publisher.Publish(metrics)
 }
 

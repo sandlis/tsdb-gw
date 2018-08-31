@@ -58,6 +58,8 @@ var (
 
 	// limitations
 	timerangeLimit = flag.String("timerange-limit", "", "define maximum timerange to serve queries for")
+
+	metricsAddr = flag.String("metrics-addr", ":8001", "http service address for the /metrics endpoint")
 )
 
 func main() {
@@ -132,9 +134,11 @@ func main() {
 	api := api.New(*authPlugin, app)
 	initRoutes(api, *enforceRoles)
 
+	ms := util.NewMetricsServer(*metricsAddr)
+
 	log.Infof("Starting %v ...", app)
 	done := make(chan struct{})
-	inputs = append(inputs, api.Start(), carbon.InitCarbon(*enforceRoles))
+	inputs = append(inputs, api.Start(), carbon.InitCarbon(*enforceRoles), ms)
 	go handleShutdown(done, interrupt, inputs)
 	log.Infof("%v Started", app)
 	<-done
