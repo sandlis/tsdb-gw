@@ -33,7 +33,7 @@ var (
 	GitHash     = "(none)"
 	showVersion = flag.Bool("version", false, "print version string")
 
-	authPlugin   = flag.String("api-auth-plugin", "grafana", "auth plugin to use. (grafana|file)")
+	authPlugin   = flag.String("api-auth-plugin", "grafana", "auth plugin to use. (grafana|grafana-instance|file)")
 	enforceRoles = flag.Bool("enforce-roles", false, "enable role verification during authentication")
 	confFile     = flag.String("config", "/etc/gw/tsdb-gw.ini", "configuration file path")
 
