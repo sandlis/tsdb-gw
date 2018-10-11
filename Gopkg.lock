@@ -66,14 +66,6 @@
   revision = "3a0bb77429bd3a61596f5e8a3172445844342120"
 
 [[projects]]
-  branch = "master"
-  digest = "1:295828d2783075f3d1442ae2fccccfad2016ca711fc7afea0cd46f8e5f695fb6"
-  name = "github.com/codeskyblue/go-uuid"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "952abbca900b023c1a80bc522ff4795db50d9d6c"
-
-[[projects]]
   digest = "1:a2c1d0e43bd3baaa071d1b9ed72c27d78169b2b269f71c105ac4ba34b1be4a39"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -406,6 +398,16 @@
   revision = "6ce9ec78e3a2ee918588104869369e5527aefe88"
 
 [[projects]]
+  digest = "1:d456de3a61bdb023a90d62584b5697f8a905cd82f002cbd683caa5aae1164d26"
+  name = "github.com/raintank/schema"
+  packages = [
+    ".",
+    "msg",
+  ]
+  pruneopts = "NUT"
+  revision = "0140483a390ec5e52dd79c5d37c699d9cfe6c9f8"
+
+[[projects]]
   digest = "1:1158ac9d990e9c34d577bc2bac6f0a07e104a3d28594fa9095f5447d1e4615d1"
   name = "github.com/raintank/worldping-api"
   packages = ["pkg/log"]
@@ -687,12 +689,9 @@
   version = "v1.3.1"
 
 [[projects]]
-  digest = "1:c07a5fda89d318902a5218459b17afd0034f5ba29fb2a6e376c1316de71e5a95"
+  digest = "1:307177a1a3587c1306ded93fd24fe47576cca4e51fcf7834bc4102a888c6d8fd"
   name = "gopkg.in/raintank/schema.v1"
-  packages = [
-    ".",
-    "msg",
-  ]
+  packages = ["."]
   pruneopts = "NUT"
   revision = "a323316458b5df84827551e9b6b5f61cb2de423b"
   version = "v1.4"
@@ -725,6 +724,8 @@
     "github.com/prometheus/common/model",
     "github.com/prometheus/prometheus/prompb",
     "github.com/raintank/dur",
+    "github.com/raintank/schema",
+    "github.com/raintank/schema/msg",
     "github.com/sirupsen/logrus",
     "github.com/smartystreets/goconvey/convey",
     "github.com/uber/jaeger-client-go",
@@ -733,8 +734,6 @@
     "golang.org/x/net/context/ctxhttp",
     "gopkg.in/ini.v1",
     "gopkg.in/macaron.v1",
-    "gopkg.in/raintank/schema.v1",
-    "gopkg.in/raintank/schema.v1/msg",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

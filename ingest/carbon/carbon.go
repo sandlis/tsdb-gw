@@ -16,7 +16,7 @@ import (
 	"github.com/raintank/tsdb-gw/publish"
 	"github.com/raintank/tsdb-gw/util"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/raintank/schema.v1"
+	"github.com/raintank/schema"
 )
 
 var (

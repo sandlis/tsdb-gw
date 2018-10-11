@@ -15,7 +15,7 @@ import (
 	"github.com/raintank/tsdb-gw/metrics_client"
 	"github.com/raintank/tsdb-gw/persister/storage"
 	log "github.com/sirupsen/logrus"
-	schema "gopkg.in/raintank/schema.v1"
+	schema "github.com/raintank/schema"
 )
 
 // Persister ingests payloads that are serialized into metrics and repeatedly

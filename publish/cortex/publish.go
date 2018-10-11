@@ -22,7 +22,7 @@ import (
 	"github.com/prometheus/prometheus/prompb"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context/ctxhttp"
-	schema "gopkg.in/raintank/schema.v1"
+	schema "github.com/raintank/schema"
 )
 
 var (

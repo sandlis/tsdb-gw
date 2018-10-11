@@ -5,7 +5,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/raintank/tsdb-gw/metrics_client"
 	log "github.com/sirupsen/logrus"
-	schema "gopkg.in/raintank/schema.v1"
+	schema "github.com/raintank/schema"
 )
 
 var (

@@ -9,7 +9,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/raintank/tsdb-gw/publish"
 	"github.com/raintank/tsdb-gw/usage"
-	"gopkg.in/raintank/schema.v1"
+	"github.com/raintank/schema"
 )
 
 var shardCount = 4

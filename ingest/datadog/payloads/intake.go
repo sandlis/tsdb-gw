@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	schema "gopkg.in/raintank/schema.v1"
+	schema "github.com/raintank/schema"
 )
 
 type PersistPayload struct {
