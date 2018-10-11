@@ -43,7 +43,7 @@ ignored = [
 
 [[constraint]]
   name = "github.com/grafana/metrictank"
-  version = "0.9.0"
+  revision = "b8a746442edf15cc332db55570dee16589edee2e"
 
 [[constraint]]
   name = "github.com/opentracing/opentracing-go"

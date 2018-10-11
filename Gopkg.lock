@@ -230,7 +230,7 @@
   revision = "1dcfee16dd532cf6206e704d3ae6ca31ff4c6df7"
 
 [[projects]]
-  digest = "1:0d61c9be9c557410bfbdbc9159faba9f254ebee6421023595bbd525b010e2294"
+  digest = "1:f810a1516f30c0f049a93c153430bc72b2197a434fa9731c30953150dcd72da6"
   name = "github.com/grafana/metrictank"
   packages = [
     "cluster/partitioner",
@@ -240,8 +240,7 @@
     "util",
   ]
   pruneopts = "NUT"
-  revision = "e797a9f8a6a7bda2287dd799ae8af8668457ae62"
-  version = "0.9.0"
+  revision = "b8a746442edf15cc332db55570dee16589edee2e"
 
 [[projects]]
   digest = "1:ad2b3db2f4438be7986ae0e4d065c8e18ffa8a7233297bd40e90f7881506b662"
@@ -728,12 +727,14 @@
     "github.com/raintank/schema/msg",
     "github.com/sirupsen/logrus",
     "github.com/smartystreets/goconvey/convey",
+    "github.com/tinylib/msgp/msgp",
     "github.com/uber/jaeger-client-go",
     "github.com/uber/jaeger-client-go/config",
     "github.com/uber/jaeger-client-go/log",
     "golang.org/x/net/context/ctxhttp",
     "gopkg.in/ini.v1",
     "gopkg.in/macaron.v1",
+    "gopkg.in/raintank/schema.v1",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
