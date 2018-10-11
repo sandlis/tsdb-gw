@@ -75,6 +75,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:349887f98324a7458a41e90d4a0f5ebfa48530be2bb8804e1d83d7270fddf637"
+  name = "github.com/dgryski/go-bits"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "bd8a69a71dc203aa976f9d918b428db9ac605f57"
+
+[[projects]]
+  branch = "master"
   digest = "1:07e80adc1161a63d37f382328ebabbf4f50e027cfaadf718515c3f39a65eb18f"
   name = "github.com/dgryski/go-linlog"
   packages = ["."]
@@ -82,15 +90,14 @@
   revision = "edcf2dfd90ff209a4434491d7f38e203b3163de2"
 
 [[projects]]
-  branch = "master"
-  digest = "1:99f1b1a6d08214aa4a455e3ed3b20c0385e5d5eaa6f246f8230ee3679bd3fd98"
+  digest = "1:00d4c9e5197f9ffb3f067e363298a25b4ff59eead77a24c839505d185caef176"
   name = "github.com/dgryski/go-tsz"
   packages = [
     ".",
     "testdata",
   ]
   pruneopts = "NUT"
-  revision = "03b7d791f4fe79270d114e1ea6929332dbf028b7"
+  revision = "5f4c484a9e838989c201ff437b3cab59cfdc46c8"
 
 [[projects]]
   digest = "1:08143362be979b087c2c1bae5dde986e988d3d5d4dc661727cbe436411b3f33a"
@@ -230,7 +237,8 @@
   revision = "1dcfee16dd532cf6206e704d3ae6ca31ff4c6df7"
 
 [[projects]]
-  digest = "1:f810a1516f30c0f049a93c153430bc72b2197a434fa9731c30953150dcd72da6"
+  branch = "master"
+  digest = "1:d589a3ace14d7a68edf7ac801b0d5e40e5feb2150323b76c06ef3023d584b61d"
   name = "github.com/grafana/metrictank"
   packages = [
     "cluster/partitioner",
@@ -240,7 +248,7 @@
     "util",
   ]
   pruneopts = "NUT"
-  revision = "b8a746442edf15cc332db55570dee16589edee2e"
+  revision = "0cb838af8b8baa6def4f2b8d9b1206738f3cf6ca"
 
 [[projects]]
   digest = "1:ad2b3db2f4438be7986ae0e4d065c8e18ffa8a7233297bd40e90f7881506b662"
@@ -267,6 +275,14 @@
   pruneopts = "NUT"
   revision = "77f18212c9c7edc9bd6a33d383a7b545ce62f064"
   version = "v4.2.1"
+
+[[projects]]
+  digest = "1:4059c14e87a2de3a434430340521b5feece186c1469eff0834c29a63870de3ed"
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "5c8c8bd35d3832f5d134ae1e1e375b69a4d25242"
+  version = "v1.0.1"
 
 [[projects]]
   digest = "1:5985ef4caf91ece5d54817c11ea25f182697534f8ae6521eadcd628c142ac4b6"
@@ -372,14 +388,16 @@
   revision = "2e54d0b93cba2fd133edc32211dcc32c06ef72ca"
 
 [[projects]]
-  digest = "1:666a4c4cb94abb2022ffa52d41906556dcfe63029338266c813e0a75fe7533b0"
+  digest = "1:b4dde177cd2fe6939cd64265ab7e24f9751080ab10b9d62257e97d767ff47af9"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
+    "internal/util",
+    "nfs",
     "xfs",
   ]
   pruneopts = "NUT"
-  revision = "a6e9df898b1336106c743392c48ee0b71f5c4efa"
+  revision = "75f2d6163c7a100bed6e971044ea3de30ee3a678"
 
 [[projects]]
   digest = "1:8b4115830ee06b0b44b97e75d0c97cdccc5ba666bfcdb3df890eff866aca9335"
@@ -405,13 +423,7 @@
   ]
   pruneopts = "NUT"
   revision = "0140483a390ec5e52dd79c5d37c699d9cfe6c9f8"
-
-[[projects]]
-  digest = "1:1158ac9d990e9c34d577bc2bac6f0a07e104a3d28594fa9095f5447d1e4615d1"
-  name = "github.com/raintank/worldping-api"
-  packages = ["pkg/log"]
-  pruneopts = "NUT"
-  revision = "7902b21a7c4f303430c83b2c155c57d6d7dca62d"
+  version = "v2.1"
 
 [[projects]]
   digest = "1:0d095d4b1220902aec6896e23808fbcdfa5192dab96d5a31a443a8c47eabc326"
@@ -421,12 +433,12 @@
   revision = "1f30fe9094a513ce4c700b9a54458bbb0c96996c"
 
 [[projects]]
-  digest = "1:6201742366c1518fc5f0df9ccdb4d193fc8a2aef2cc57bf164c9bca23bd5f869"
+  digest = "1:ecf78eacf406c42f07f66d6b79fda24d2b92dc711bfd0760d0c931678f9621fe"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "d682213848ed68c0a260ca37d6dd5ace8423f5ba"
-  version = "v1.0.4"
+  revision = "ad15b42461921f1fb3529b058c6786c6a45d5162"
+  version = "v1.1.1"
 
 [[projects]]
   digest = "1:1f0b284a6858827de4c27c66b49b2b25df3e16b031c2b57b7892273131e7dd2b"
@@ -484,6 +496,7 @@
   ]
   pruneopts = "NUT"
   revision = "1a782e2da844727691fef1757c72eb190c2909f0"
+  source = "https://github.com/jaegertracing/jaeger-client-go.git"
   version = "v2.15.0"
 
 [[projects]]
@@ -687,14 +700,6 @@
   revision = "c1be95e6d21e769e44e1ec33cec9da5837861c10"
   version = "v1.3.1"
 
-[[projects]]
-  digest = "1:307177a1a3587c1306ded93fd24fe47576cca4e51fcf7834bc4102a888c6d8fd"
-  name = "gopkg.in/raintank/schema.v1"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "a323316458b5df84827551e9b6b5f61cb2de423b"
-  version = "v1.4"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -727,14 +732,12 @@
     "github.com/raintank/schema/msg",
     "github.com/sirupsen/logrus",
     "github.com/smartystreets/goconvey/convey",
-    "github.com/tinylib/msgp/msgp",
     "github.com/uber/jaeger-client-go",
     "github.com/uber/jaeger-client-go/config",
     "github.com/uber/jaeger-client-go/log",
     "golang.org/x/net/context/ctxhttp",
     "gopkg.in/ini.v1",
     "gopkg.in/macaron.v1",
-    "gopkg.in/raintank/schema.v1",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

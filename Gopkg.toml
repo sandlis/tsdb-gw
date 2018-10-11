@@ -43,11 +43,11 @@ ignored = [
 
 [[constraint]]
   name = "github.com/grafana/metrictank"
-  revision = "b8a746442edf15cc332db55570dee16589edee2e"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/opentracing/opentracing-go"
-  version = "1.0.2"
+  version = "^1"
 
 [[constraint]]
   branch = "master"
@@ -72,6 +72,7 @@ ignored = [
 [[constraint]]
   name = "github.com/uber/jaeger-client-go"
   version = "2.15.0"
+  source = "https://github.com/jaegertracing/jaeger-client-go.git"
 
 [[constraint]]
   name = "gopkg.in/ini.v1"
@@ -83,7 +84,7 @@ ignored = [
 
 [[constraint]]
   name = "github.com/raintank/schema"
-  revision = "0140483a390ec5e52dd79c5d37c699d9cfe6c9f8"
+  version = "^2"
 
 [prune]
 go-tests = true
