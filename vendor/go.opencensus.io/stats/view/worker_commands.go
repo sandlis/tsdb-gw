@@ -73,15 +73,15 @@ func (cmd *registerViewReq) handleCommand(w *worker) {
 	}
 }
 
-// unregisterFromViewReq is the command to unsubscribe to a view. Has no
+// unsubscribeFromViewReq is the command to unsubscribe to a view. Has no
 // impact on the data collection for client that are pulling data from the
 // library.
-type unregisterFromViewReq struct {
+type unsubscribeFromViewReq struct {
 	views []string
 	done  chan struct{}
 }
 
-func (cmd *unregisterFromViewReq) handleCommand(w *worker) {
+func (cmd *unsubscribeFromViewReq) handleCommand(w *worker) {
 	for _, name := range cmd.views {
 		vi, ok := w.views[name]
 		if !ok {
@@ -94,7 +94,6 @@ func (cmd *unregisterFromViewReq) handleCommand(w *worker) {
 			// The collected data can be cleared.
 			vi.clearRows()
 		}
-		delete(w.views, name)
 	}
 	cmd.done <- struct{}{}
 }

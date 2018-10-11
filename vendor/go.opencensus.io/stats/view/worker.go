@@ -86,7 +86,7 @@ func Unregister(views ...*View) {
 	for i := range views {
 		names[i] = views[i].Name
 	}
-	req := &unregisterFromViewReq{
+	req := &unsubscribeFromViewReq{
 		views: names,
 		done:  make(chan struct{}),
 	}
