@@ -596,7 +596,8 @@
     "unicode/rangetable",
   ]
   pruneopts = "NUT"
-  revision = "4e4a3210bb54bb31f6ab2cdca2edcc0b50c420c1"
+  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
+  version = "v0.3.0"
 
 [[projects]]
   digest = "1:286d3ed3b6c0d900ebef984bfab1b50b08f82a2f13ad9bb51e9be299f7f75200"
