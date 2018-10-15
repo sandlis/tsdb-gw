@@ -3,7 +3,7 @@ package keycache
 import (
 	"sync"
 
-	schema "gopkg.in/raintank/schema.v1"
+	schema "github.com/raintank/schema"
 )
 
 // SubKey is the last 15 bytes of a 16 byte Key

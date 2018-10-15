@@ -76,19 +76,20 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) startTrace(w http.ResponseWriter, r *http.Request) (*http.Request, func()) {
+	opts := trace.StartOptions{
+		Sampler:  h.StartOptions.Sampler,
+		SpanKind: trace.SpanKindServer,
+	}
+
 	name := spanNameFromURL(r.URL)
 	ctx := r.Context()
 	var span *trace.Span
 	sc, ok := h.extractSpanContext(r)
 	if ok && !h.IsPublicEndpoint {
-		ctx, span = trace.StartSpanWithRemoteParent(ctx, name, sc,
-			trace.WithSampler(h.StartOptions.Sampler),
-			trace.WithSpanKind(trace.SpanKindServer))
+		span = trace.NewSpanWithRemoteParent(name, sc, opts)
+		ctx = trace.WithSpan(ctx, span)
 	} else {
-		ctx, span = trace.StartSpan(ctx, name,
-			trace.WithSampler(h.StartOptions.Sampler),
-			trace.WithSpanKind(trace.SpanKindServer),
-		)
+		span = trace.NewSpan(name, nil, opts)
 		if ok {
 			span.AddLink(trace.Link{
 				TraceID:    sc.TraceID,
@@ -98,8 +99,9 @@ func (h *Handler) startTrace(w http.ResponseWriter, r *http.Request) (*http.Requ
 			})
 		}
 	}
+	ctx = trace.WithSpan(ctx, span)
 	span.AddAttributes(requestAttrs(r)...)
-	return r.WithContext(ctx), span.End
+	return r.WithContext(trace.WithSpan(r.Context(), span)), span.End
 }
 
 func (h *Handler) extractSpanContext(r *http.Request) (trace.SpanContext, bool) {
@@ -157,10 +159,6 @@ func (t *trackingResponseWriter) end() {
 		if t.statusCode == 0 {
 			t.statusCode = 200
 		}
-
-		span := trace.FromContext(t.ctx)
-		span.SetStatus(status(t.statusCode))
-
 		m := []stats.Measurement{
 			ServerLatency.M(float64(time.Since(t.start)) / float64(time.Millisecond)),
 			ServerResponseBytes.M(t.respSize),

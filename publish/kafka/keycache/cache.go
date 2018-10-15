@@ -1,6 +1,6 @@
 package keycache
 
-import schema "gopkg.in/raintank/schema.v1"
+import schema "github.com/raintank/schema"
 
 // Cache is a single-tenant keycache
 // it is sharded for 2 reasons:

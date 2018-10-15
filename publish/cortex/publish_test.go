@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/prometheus/prometheus/prompb"
-	schema "gopkg.in/raintank/schema.v1"
+	schema "github.com/raintank/schema"
 )
 
 func Test_packageMetrics(t *testing.T) {

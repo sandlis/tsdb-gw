@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"gopkg.in/raintank/schema.v1"
+	"github.com/raintank/schema"
 )
 
 func getMetricData(orgId, depth, count, interval int, prefix string) []*schema.MetricData {

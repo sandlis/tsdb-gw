@@ -9,7 +9,7 @@ import (
 	"github.com/raintank/tsdb-gw/api/models"
 	"github.com/raintank/tsdb-gw/publish"
 	log "github.com/sirupsen/logrus"
-	schema "gopkg.in/raintank/schema.v1"
+	schema "github.com/raintank/schema"
 )
 
 func OpenTSDBWrite(ctx *models.Context) {

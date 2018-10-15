@@ -53,11 +53,10 @@ func (t *traceTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	name := spanNameFromURL(req.URL)
 	// TODO(jbd): Discuss whether we want to prefix
 	// outgoing requests with Sent.
-	_, span := trace.StartSpan(req.Context(), name,
-		trace.WithSampler(t.startOptions.Sampler),
-		trace.WithSpanKind(trace.SpanKindClient))
-
+	parent := trace.FromContext(req.Context())
+	span := trace.NewSpan(name, parent, t.startOptions)
 	req = req.WithContext(trace.WithSpan(req.Context(), span))
+
 	if t.format != nil {
 		t.format.SpanContextToRequest(span.SpanContext(), req)
 	}
@@ -170,8 +169,6 @@ func status(statusCode int) trace.Status {
 		code = codeUnimplemented
 	case http.StatusServiceUnavailable:
 		code = codeUnavailable
-	case http.StatusOK:
-		code = codeOK
 	}
 	return trace.Status{Code: code, Message: codeToStr[code]}
 }

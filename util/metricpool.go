@@ -3,7 +3,7 @@ package util
 import (
 	"sync"
 
-	schema "gopkg.in/raintank/schema.v1"
+	schema "github.com/raintank/schema"
 )
 
 type MetricDataPool struct {

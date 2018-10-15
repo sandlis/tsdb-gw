@@ -14,8 +14,8 @@ import (
 	"github.com/raintank/tsdb-gw/usage"
 	"github.com/raintank/tsdb-gw/util"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/raintank/schema.v1"
-	"gopkg.in/raintank/schema.v1/msg"
+	"github.com/raintank/schema"
+	"github.com/raintank/schema/msg"
 )
 
 var (
