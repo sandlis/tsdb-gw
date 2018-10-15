@@ -110,19 +110,29 @@ func (a *Api) GenerateHandlers(kind string, enforceRoles bool, datadog bool, han
 	return append(combinedHandlers, handlers...)
 }
 
-func (a *Api) Auth() macaron.Handler {
-	return func(ctx *models.Context) {
-		username, key, ok := ctx.Req.BasicAuth()
-		if !ok {
-			// no basicAuth, but we also need to check for a Bearer Token
-			header := ctx.Req.Header.Get("Authorization")
-			parts := strings.SplitN(header, " ", 2)
-			if len(parts) == 2 && parts[0] == "Bearer" {
-				key = parts[1]
+func getAuthCreds(req *http.Request) (user, password string) {
+	username, key, ok := req.BasicAuth()
+	if !ok {
+		// no basicAuth, but we also need to check for a Bearer Token
+		header := req.Header.Get("Authorization")
+		parts := strings.SplitN(header, " ", 2)
+		if len(parts) == 2 && parts[0] == "Bearer" {
+			keyParts := strings.SplitN(parts[1], ":", 2)
+			if len(keyParts) < 2 {
+				key = keyParts[0]
 				username = "api_key"
+			} else {
+				key = keyParts[1]
+				username = keyParts[0]
 			}
 		}
+	}
+	return username, key
+}
 
+func (a *Api) Auth() macaron.Handler {
+	return func(ctx *models.Context) {
+		username, key := getAuthCreds(ctx.Req.Request)
 		if key == "" {
 			log.Debugf("no key specified")
 			ctx.JSON(401, "Unauthorized")
