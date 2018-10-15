@@ -20,6 +20,7 @@ type int64SliceFlag []int64
 
 func (i *int64SliceFlag) Set(value string) error {
 	for _, split := range strings.Split(value, ",") {
+		split = strings.TrimSpace(split)
 		if split == "" {
 			continue
 		}
@@ -33,6 +34,7 @@ func (i *int64SliceFlag) Set(value string) error {
 }
 
 func (i *int64SliceFlag) String() string {
+	// This is just a 1-liner to convert print a slice as a command separated list.
 	return strings.Trim(strings.Replace(fmt.Sprint(*i), " ", ", ", -1), "[]")
 }
 
