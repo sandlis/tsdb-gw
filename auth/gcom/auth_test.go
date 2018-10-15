@@ -71,7 +71,7 @@ func TestFlags(t *testing.T) {
 func TestAuth(t *testing.T) {
 	mockTransport := httpmock.NewMockTransport()
 	client.Transport = mockTransport
-
+	validOrgIds = int64SliceFlag{}
 	testUser := SignedInUser{
 		Id:        3,
 		OrgName:   "awoods Test",
