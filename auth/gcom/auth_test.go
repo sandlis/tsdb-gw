@@ -1,8 +1,10 @@
 package gcom
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -10,10 +12,66 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func TestFlags(t *testing.T) {
+	Convey("When setting auth-valid-org-id to empty string", t, func() {
+		validOrgIds = int64SliceFlag{}
+		err := flag.Set("auth-valid-org-id", "")
+		So(err, ShouldBeNil)
+		So(validOrgIds, ShouldHaveLength, 0)
+	})
+	Convey("When setting auth-valid-org-id has no values", t, func() {
+		validOrgIds = int64SliceFlag{}
+		err := flag.Set("auth-valid-org-id", ", ")
+		So(err, ShouldBeNil)
+		So(validOrgIds, ShouldHaveLength, 0)
+	})
+
+	Convey("When setting auth-valid-org-id to invalid value", t, func() {
+		validOrgIds = int64SliceFlag{}
+		err := flag.Set("auth-valid-org-id", "foo")
+		So(err, ShouldHaveSameTypeAs, &strconv.NumError{})
+	})
+
+	Convey("When setting auth-valid-org-id to single org", t, func() {
+		validOrgIds = int64SliceFlag{}
+		err := flag.Set("auth-valid-org-id", "10")
+		So(err, ShouldBeNil)
+		So(validOrgIds, ShouldHaveLength, 1)
+		So(validOrgIds[0], ShouldEqual, 10)
+	})
+
+	Convey("When setting auth-valid-org-id to many orgs", t, func() {
+		validOrgIds = int64SliceFlag{}
+		err := flag.Set("auth-valid-org-id", "10,1,17")
+		So(err, ShouldBeNil)
+		So(validOrgIds, ShouldHaveLength, 3)
+		So(validOrgIds[0], ShouldEqual, 10)
+		So(validOrgIds[1], ShouldEqual, 1)
+		So(validOrgIds[2], ShouldEqual, 17)
+	})
+
+	Convey("When auth-valid-org-id setting has spaces", t, func() {
+		validOrgIds = int64SliceFlag{}
+		err := flag.Set("auth-valid-org-id", " 10 , 1, 17")
+		So(err, ShouldBeNil)
+		So(validOrgIds, ShouldHaveLength, 3)
+		So(validOrgIds[0], ShouldEqual, 10)
+		So(validOrgIds[1], ShouldEqual, 1)
+		So(validOrgIds[2], ShouldEqual, 17)
+	})
+
+	Convey("When auth-valid-org-id setting has repeated commas", t, func() {
+		validOrgIds = int64SliceFlag{}
+		err := flag.Set("auth-valid-org-id", ",,,10")
+		So(err, ShouldBeNil)
+		So(validOrgIds, ShouldHaveLength, 1)
+	})
+}
+
 func TestAuth(t *testing.T) {
 	mockTransport := httpmock.NewMockTransport()
 	client.Transport = mockTransport
-
+	validOrgIds = int64SliceFlag{}
 	testUser := SignedInUser{
 		Id:        3,
 		OrgName:   "awoods Test",
