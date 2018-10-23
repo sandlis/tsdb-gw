@@ -67,12 +67,9 @@ func InitCarbon(requirePublisher bool) *Carbon {
 		requirePublisher: requirePublisher,
 		buf:              make(chan []byte, bufferSize),
 	}
-	plainHandler := &PlainHandler{
-		// note that we use our Carbon ingest plugin directly as Dispatcher
-		Plain: *input.NewPlain(c),
-	}
-
-	c.listener = input.NewListener("plain", addr, 2*time.Minute, plainHandler)
+	// note that we use our Carbon ingest plugin directly as Dispatcher
+	c.listener = input.NewListener(addr, 2*time.Minute, input.NewPlain(c))
+	c.listener.HandleConn = handleConn
 	err := c.listener.Start()
 	if err != nil {
 		log.Fatal(err)
