@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/raintank/schema"
 	"github.com/raintank/tsdb-gw/publish"
 	"github.com/raintank/tsdb-gw/usage"
-	"github.com/raintank/schema"
 )
 
 var shardCount = 4
@@ -188,7 +188,7 @@ func shardIndexer(shard int, flushChan chan TsdbStats) {
 					}
 				}
 				if len(stats.ActiveSeries) == 0 {
-					glog.Info("org %d has no active series.", org)
+					glog.Infof("org %d has no active series.", org)
 					delete(idx.Orgs, org)
 				}
 			}
