@@ -10,18 +10,19 @@ import (
 	"github.com/Shopify/sarama"
 	p "github.com/grafana/metrictank/cluster/partitioner"
 	"github.com/grafana/metrictank/stats"
+	"github.com/raintank/schema"
+	"github.com/raintank/schema/msg"
 	"github.com/raintank/tsdb-gw/publish/kafka/keycache"
 	"github.com/raintank/tsdb-gw/usage"
 	"github.com/raintank/tsdb-gw/util"
 	log "github.com/sirupsen/logrus"
-	"github.com/raintank/schema"
-	"github.com/raintank/schema/msg"
 )
 
 var (
-	producer sarama.SyncProducer
-	brokers  []string
-	keyCache *keycache.KeyCache
+	producer        sarama.SyncProducer
+	brokers         []string
+	kafkaVersionStr string
+	keyCache        *keycache.KeyCache
 
 	partitioner *p.Kafka
 	schemasConf string
@@ -68,6 +69,7 @@ func init() {
 	flag.BoolVar(&v2, "v2", true, "enable optimized MetricPoint payload")
 	flag.BoolVar(&v2Org, "v2-org", true, "encode org-id in messages")
 	flag.DurationVar(&v2ClearInterval, "v2-clear-interval", time.Hour, "interval after which we always resend a full MetricData")
+	flag.StringVar(&kafkaVersionStr, "kafka-version", "V0_10_0_0", "Kafka version. All brokers must be this version or newer.")
 }
 
 func getCompression(codec string) sarama.CompressionCodec {
@@ -89,6 +91,11 @@ func New(broker string, autoInterval bool) *mtPublisher {
 		return nil
 	}
 
+	kafkaVersion, err := sarama.ParseKafkaVersion(kafkaVersionStr)
+	if err != nil {
+		log.Fatalf("invalid kafka-version. %s", err)
+	}
+
 	mp := mtPublisher{
 		autoInterval: autoInterval,
 	}
@@ -101,7 +108,6 @@ func New(broker string, autoInterval bool) *mtPublisher {
 		mp.schemas = schemas
 	}
 
-	var err error
 	partitioner, err = p.NewKafka(partitionScheme)
 	if err != nil {
 		log.Fatalf("failed to initialize partitioner: %s", err)
@@ -117,6 +123,7 @@ func New(broker string, autoInterval bool) *mtPublisher {
 	config.Producer.Return.Successes = true
 	config.Producer.Flush.Frequency = flushFreq
 	config.Producer.Flush.MaxMessages = maxMessages
+	config.Version = kafkaVersion
 	err = config.Validate()
 	if err != nil {
 		log.Fatalf("failed to validate kafka config. %s", err)
