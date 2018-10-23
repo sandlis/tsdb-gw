@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -20,9 +21,9 @@ import (
 	"github.com/oxtoacart/bpool"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/prometheus/prompb"
+	schema "github.com/raintank/schema"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context/ctxhttp"
-	schema "github.com/raintank/schema"
 )
 
 var (
@@ -80,6 +81,20 @@ func Init() {
 			req.URL.Host = cortexURL.Host
 		},
 		BufferPool: bpool.NewBytePool(*writeBPoolSize, *writeBPoolWidth),
+
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+				DualStack: true,
+			}).DialContext,
+			MaxIdleConns:          10000,
+			MaxIdleConnsPerHost:   1000, // see https://github.com/golang/go/issues/13801
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
 	}
 
 	log.Infof("cortex write proxy intitialized, backend=%v", cortexURL)
