@@ -69,7 +69,7 @@ func init() {
 	flag.BoolVar(&v2, "v2", true, "enable optimized MetricPoint payload")
 	flag.BoolVar(&v2Org, "v2-org", true, "encode org-id in messages")
 	flag.DurationVar(&v2ClearInterval, "v2-clear-interval", time.Hour, "interval after which we always resend a full MetricData")
-	flag.StringVar(&kafkaVersionStr, "kafka-version", "V0_10_0_0", "Kafka version. All brokers must be this version or newer.")
+	flag.StringVar(&kafkaVersionStr, "kafka-version", "0.10.0.0", "Kafka version in semver format. All brokers must be this version or newer.")
 }
 
 func getCompression(codec string) sarama.CompressionCodec {
