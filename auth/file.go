@@ -39,7 +39,7 @@ func init() {
 }
 
 func NewFileAuth() *FileAuth {
-	log.Info("loading carbon auth file from %s", filePath)
+	log.Infof("loading carbon auth file from %s", filePath)
 	a := &FileAuth{
 		keys:        make(map[string]*User),
 		instanceMap: make(map[string]int),
