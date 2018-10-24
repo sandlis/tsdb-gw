@@ -1,22 +1,20 @@
 package carbon
 
 import (
-	"bufio"
 	"bytes"
 	"flag"
-	"io"
-	"net"
 	"sync"
 	"time"
 
 	"github.com/grafana/metrictank/conf"
 	"github.com/grafana/metrictank/stats"
+	"github.com/graphite-ng/carbon-relay-ng/input"
 	m20 "github.com/metrics20/go-metrics20/carbon20"
+	"github.com/raintank/schema"
 	"github.com/raintank/tsdb-gw/auth"
 	"github.com/raintank/tsdb-gw/publish"
 	"github.com/raintank/tsdb-gw/util"
 	log "github.com/sirupsen/logrus"
-	"github.com/raintank/schema"
 )
 
 var (
@@ -51,9 +49,7 @@ func init() {
 }
 
 type Carbon struct {
-	udp              net.Conn
-	tcp              net.Listener
-	listenWg         sync.WaitGroup
+	listener         *input.Listener
 	schemas          *conf.Schemas
 	buf              chan []byte
 	flushWg          sync.WaitGroup
@@ -62,51 +58,26 @@ type Carbon struct {
 }
 
 func InitCarbon(requirePublisher bool) *Carbon {
-	c := new(Carbon)
 	if !Enabled {
-		return c
+		return &Carbon{}
 	}
 
-	c.authPlugin = auth.GetAuthPlugin(authPlugin)
-	c.requirePublisher = requirePublisher
-
-	log.Infof("Carbon input listening on %s", addr)
-	c.buf = make(chan []byte, bufferSize)
-
-	laddr, err := net.ResolveTCPAddr("tcp", addr)
+	c := &Carbon{
+		authPlugin:       auth.GetAuthPlugin(authPlugin),
+		requirePublisher: requirePublisher,
+		buf:              make(chan []byte, bufferSize),
+	}
+	// note that we use our Carbon ingest plugin directly as Dispatcher
+	c.listener = input.NewListener(addr, 2*time.Minute, input.NewPlain(c))
+	c.listener.HandleConn = handleConn
+	err := c.listener.Start()
 	if err != nil {
-		log.Fatalf("failed to resolve TCP address. %s", err)
+		log.Fatal(err)
 	}
-	l, err := net.ListenTCP("tcp", laddr)
-	if err != nil {
-		log.Fatalf("failed to listen on TCP address. %s", err)
-	}
-	c.tcp = l
-
-	udp_addr, err := net.ResolveUDPAddr("udp", addr)
-	if err != nil {
-		log.Fatalf("failed to resolve UDP address. %s", err)
-	}
-	udp_conn, err := net.ListenUDP("udp", udp_addr)
-	if err != nil {
-		log.Fatalf("failed to listen on UDP address. %s", err)
-	}
-	c.udp = udp_conn
-
-	// start acceting TCP connections
-	c.listenWg.Add(1)
-	go c.listen()
-
-	c.listenWg.Add(1)
-	// this chan will never be closed, but the UDP connection will be closed when Stop() is called.
-	shutdown := make(chan struct{})
-	go c.handleConn(c.udp, shutdown, &c.listenWg)
-
+	c.flushWg.Add(concurrency)
 	for i := 0; i < concurrency; i++ {
-		c.flushWg.Add(1)
 		go c.flush()
 	}
-
 	return c
 }
 
@@ -114,81 +85,30 @@ func (c *Carbon) Stop() {
 	if !Enabled {
 		return
 	}
-	c.tcp.Close()
-	c.udp.Close()
-	c.listenWg.Wait()
-	// all listeners are closed, so we can close the input Buf
+	// note: this will only return when the handler is done too,
+	// which means invocations of Dispatch() will be done too.
+	c.listener.Stop()
 	close(c.buf)
 	c.flushWg.Wait()
 }
 
-func (c *Carbon) listen() {
-	log.Infof("listening on %v", c.tcp.Addr())
-	shutdown := make(chan struct{})
-	var wg sync.WaitGroup
-	for {
-		// Listen for an incoming connection.
-		conn, err := c.tcp.Accept()
-		if err != nil {
-			log.Infof("listener error. %v", err)
-			break
-		}
-		// Handle connections in a new goroutine.
-		wg.Add(1)
-		go c.handleConn(conn, shutdown, &wg)
-	}
-	close(shutdown)
-	wg.Wait()
-	log.Infoln("TCP listener has shutdown.")
-	c.listenWg.Done()
-	return
+// IncNumInvalid does not apply for plain text, so is a no-op.
+func (c *Carbon) IncNumInvalid() {
 }
 
-func (c *Carbon) handleConn(conn net.Conn, shutdown chan struct{}, wg *sync.WaitGroup) {
-	carbonConnections.Inc()
-	if conn.RemoteAddr() != nil {
-		log.Infof("handling connection from %s", conn.RemoteAddr().String())
-	}
-	defer func() {
-		carbonConnections.Dec()
-		if conn.RemoteAddr() != nil {
-			log.Infof("connection from %s ended", conn.RemoteAddr().String())
-		}
-		wg.Done()
-	}()
-
-	// if shutdown is received, close the connection.
-	go func() {
-		<-shutdown
-		conn.Close()
-	}()
-	reader := bufio.NewReader(conn)
-	for {
-		if conn.RemoteAddr() != nil {
-			conn.SetReadDeadline(time.Now().Add(2 * time.Minute))
-		}
-		// note that we don't support lines longer than 4096B. that seems very reasonable..
-		line, err := reader.ReadBytes('\n')
-
-		if err != nil {
-			if io.EOF != err {
-				log.Errorln(err.Error())
+func (c *Carbon) Dispatch(buf []byte) {
+	if len(buf) > 0 {
+		metricsReceived.Inc()
+		if nonBlockingBuffer {
+			select {
+			case c.buf <- buf:
+			default:
+				metricsDroppedBufferFull.Inc()
+				log.Debugln("metric dropped due to full buffer")
+				// maybe we should just close the connection here
 			}
-			break
-		}
-		if len(line) > 0 {
-			metricsReceived.Inc()
-			if nonBlockingBuffer {
-				select {
-				case c.buf <- line:
-				default:
-					metricsDroppedBufferFull.Inc()
-					log.Debugln("metric dropped due to full buffer")
-					// maybe we should just close the connection here
-				}
-			} else {
-				c.buf <- line
-			}
+		} else {
+			c.buf <- buf
 		}
 	}
 }

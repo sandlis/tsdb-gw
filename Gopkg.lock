@@ -237,8 +237,8 @@
   revision = "1dcfee16dd532cf6206e704d3ae6ca31ff4c6df7"
 
 [[projects]]
-  branch = "master"
-  digest = "1:d589a3ace14d7a68edf7ac801b0d5e40e5feb2150323b76c06ef3023d584b61d"
+  branch = "bump-logrus"
+  digest = "1:0ff6ff948059e8552144c955d318ad0f87044a000015bb5ec4cb047a50bca38f"
   name = "github.com/grafana/metrictank"
   packages = [
     "cluster/partitioner",
@@ -248,7 +248,19 @@
     "util",
   ]
   pruneopts = "NUT"
-  revision = "0cb838af8b8baa6def4f2b8d9b1206738f3cf6ca"
+  revision = "f7fe41bb6909eedc61a074940fd30184b319b5d8"
+
+[[projects]]
+  branch = "master"
+  digest = "1:5a4ce933a2b2a59b65477402f9077be4fe74d873e05ecbf3aeb3a99cbe2d0884"
+  name = "github.com/graphite-ng/carbon-relay-ng"
+  packages = [
+    "cfg",
+    "input",
+    "validate",
+  ]
+  pruneopts = "NUT"
+  revision = "9a65912aef436cf43ca2bc3871ade2c243a537a7"
 
 [[projects]]
   digest = "1:ad2b3db2f4438be7986ae0e4d065c8e18ffa8a7233297bd40e90f7881506b662"
@@ -269,12 +281,28 @@
   revision = "4442edb3db31196622da56482fd8d0fa375fba4d"
 
 [[projects]]
+  digest = "1:ebd0081aed1cd0af2f65a362c0ceea985eae9fe72efb28cefb84eca3b98dd3a3"
+  name = "github.com/jpillora/backoff"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "8eab2debe79d12b7bd3d10653910df25fa9552ba"
+  version = "1.0.0"
+
+[[projects]]
   digest = "1:6ddab442e52381bab82fb6c07ef3f4b565ff7ec4b8fae96d8dd4b8573a460597"
   name = "github.com/jtolds/gls"
   packages = ["."]
   pruneopts = "NUT"
   revision = "77f18212c9c7edc9bd6a33d383a7b545ce62f064"
   version = "v4.2.1"
+
+[[projects]]
+  digest = "1:f392d4a257904a86bee1467a5b2221f475cea9da2c89ad6f6675eb0cf43bc100"
+  name = "github.com/kisielk/og-rek"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "84598fe1c80986d57a2315bde379ae6336126b18"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:4059c14e87a2de3a434430340521b5feece186c1469eff0834c29a63870de3ed"
@@ -293,11 +321,12 @@
   version = "v1.0.1"
 
 [[projects]]
-  digest = "1:4bcf154f9a7d8a7ddd72f5aae7d05956ae926515053e1c13e6068bdb66a80b09"
+  branch = "master"
+  digest = "1:fbf2e13dbd89ee228a027b6f49cc139731496b7e910d458d0ff95f95fe3c6250"
   name = "github.com/metrics20/go-metrics20"
   packages = ["carbon20"]
   pruneopts = "NUT"
-  revision = "55e770486f161cc83baf4e7178f7bb928dbc5716"
+  revision = "717ed3a27bf9f8d2469e7ea5b36037a4793eee44"
 
 [[projects]]
   digest = "1:7da29c22bcc5c2ffb308324377dc00b5084650348c2799e573ed226d8cc9faf0"
@@ -407,12 +436,12 @@
   revision = "a9c93b8918eff08b47bef9dd7ade80dc04ff9d24"
 
 [[projects]]
-  branch = "v2"
-  digest = "1:fa0c599501dcefc3812c5d24f493da9cb0ccc4f49d3500c3646ff2ce40a6936a"
+  branch = "master"
+  digest = "1:73dee4e020a134e08bb4e3ec47fa38c5a155b4fa0abbd15718b30b8c7e6d0ae8"
   name = "github.com/raintank/dur"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "6ce9ec78e3a2ee918588104869369e5527aefe88"
+  revision = "955e3a77c6a8294c013cb1bf45ed3965e5f19299"
 
 [[projects]]
   digest = "1:d456de3a61bdb023a90d62584b5697f8a905cd82f002cbd683caa5aae1164d26"
@@ -433,12 +462,11 @@
   revision = "1f30fe9094a513ce4c700b9a54458bbb0c96996c"
 
 [[projects]]
-  digest = "1:ecf78eacf406c42f07f66d6b79fda24d2b92dc711bfd0760d0c931678f9621fe"
+  digest = "1:807da2ada16d2e0c37c825753667a4d5d05e89bc93aa617fce7ad6b155293e56"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "ad15b42461921f1fb3529b058c6786c6a45d5162"
-  version = "v1.1.1"
+  revision = "08e90462da344fbb3880e8e47a0ddacc37508579"
 
 [[projects]]
   digest = "1:1f0b284a6858827de4c27c66b49b2b25df3e16b031c2b57b7892273131e7dd2b"
@@ -463,6 +491,14 @@
   ]
   pruneopts = "NUT"
   revision = "ef6db91d284a0e7badaa1f0c404c30aa7dee3aed"
+
+[[projects]]
+  branch = "master"
+  digest = "1:538154cd1551f1df56485310c0edf2f217df9232a11b4a0decd5b390d908dae3"
+  name = "github.com/streadway/amqp"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "70e15c650864f4fc47f5d3c82ea117285480895d"
 
 [[projects]]
   digest = "1:eaa6698f44de8f2977e93c9b946e60a8af75f565058658aad2df8032b55c84e5"
@@ -717,6 +753,7 @@
     "github.com/grafana/metrictank/cluster/partitioner",
     "github.com/grafana/metrictank/conf",
     "github.com/grafana/metrictank/stats",
+    "github.com/graphite-ng/carbon-relay-ng/input",
     "github.com/jarcoal/httpmock",
     "github.com/metrics20/go-metrics20/carbon20",
     "github.com/opentracing/opentracing-go",
