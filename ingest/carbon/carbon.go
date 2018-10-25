@@ -97,21 +97,22 @@ func (c *Carbon) IncNumInvalid() {
 }
 
 func (c *Carbon) Dispatch(buf []byte) {
+	if len(buf) == 0 {
+		return
+	}
 	buf_copy := make([]byte, len(buf))
 	copy(buf_copy, buf)
-	if len(buf_copy) > 0 {
-		metricsReceived.Inc()
-		if nonBlockingBuffer {
-			select {
-			case c.buf <- buf_copy:
-			default:
-				metricsDroppedBufferFull.Inc()
-				log.Debugln("metric dropped due to full buffer")
-				// maybe we should just close the connection here
-			}
-		} else {
-			c.buf <- buf_copy
+	metricsReceived.Inc()
+	if nonBlockingBuffer {
+		select {
+		case c.buf <- buf_copy:
+		default:
+			metricsDroppedBufferFull.Inc()
+			log.Debugln("metric dropped due to full buffer")
+			// maybe we should just close the connection here
 		}
+	} else {
+		c.buf <- buf_copy
 	}
 }
 
