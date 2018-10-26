@@ -91,6 +91,7 @@ func (a *Api) Start() *Api {
 func (a *Api) Stop() {
 	a.l.Close()
 	<-a.done
+	a.authPlugin.Stop()
 }
 
 func index(ctx *macaron.Context) {
