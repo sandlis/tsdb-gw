@@ -238,7 +238,7 @@ func TestAuth(t *testing.T) {
 		mockTransport.Reset()
 	})
 
-	Convey("When token has not been seen for more then cachettl", t, func() {
+	Convey("When token has not been seen for more than cachettl", t, func() {
 		tc := &TokenCache{
 			items: make(map[string]*TokenResp),
 			stop:  make(chan struct{}),
@@ -448,7 +448,7 @@ func TestCheckInstance(t *testing.T) {
 		mockTransport.Reset()
 	})
 
-	Convey("When instance has not been seen for more then cachettl", t, func() {
+	Convey("When instance has not been seen for more than cachettl", t, func() {
 		ic := &InstanceCache{
 			items: make(map[string]*InstanceResp),
 			stop:  make(chan struct{}),

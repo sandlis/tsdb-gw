@@ -99,7 +99,7 @@ func (c *TokenCache) backgroundValidation() {
 func (c *TokenCache) validate(now time.Time) {
 	oldestAllowed := now.Add(-1 * cacheTTL)
 	// We want to hold the ReadLock for as short a time as possible,
-	// so we lock then get all of the keys in the cache in one go.
+	// so we lock, then get all of the keys in the cache in one go.
 	c.RLock()
 	var keys []string
 	for k, v := range c.items {
@@ -128,7 +128,7 @@ func (c *TokenCache) validate(now time.Time) {
 			continue
 		}
 
-		// if lastRead is older then retrieved then this key has not been used
+		// if lastRead is older than retrieved, then this key has not been used
 		// since it was last validated, so we should drop it from the cache.
 		// we dont need to use atomic.LoadInt64 for lastRead as we are already holding
 		// a writeLock
@@ -231,7 +231,7 @@ func (c *InstanceCache) validate(now time.Time) {
 			continue
 		}
 
-		// if lastRead is older then retrieved then this key has not been used
+		// if lastRead is older than retrieved, then this key has not been used
 		// since it was last validated, so we should drop it from the cache
 		if v.lastRead < v.retrieved.Unix() {
 			delete(c.items, k)
