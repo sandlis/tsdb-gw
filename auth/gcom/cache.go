@@ -1,7 +1,6 @@
 package gcom
 
 import (
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -215,8 +214,7 @@ func (c *InstanceCache) validate(now time.Time) {
 	c.RUnlock()
 
 	for _, k := range keys {
-		idKey := strings.SplitN(k, ":", 2)
-		err := ValidateInstance(idKey[0], idKey[1])
+		err := ValidateInstance(k)
 		if err != nil && err != ErrInvalidInstanceID {
 			// we failed to validate the token.  Grafana.com might be down.
 			// The current TokenResp is kept, and we will try to validate it

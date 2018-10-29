@@ -13,12 +13,16 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/sync/singleflight"
 )
+
+var singlef = &singleflight.Group{}
 
 func init() {
 	flag.StringVar(&authEndpoint, "auth-endpoint", authEndpoint, "Endpoint to authenticate users on")
 	flag.DurationVar(&cacheTTL, "auth-cache-ttl", cacheTTL, "how long auth responses should be cached")
 	flag.Var(&validOrgIds, "auth-valid-org-id", "restrict authentication to the listed orgId (comma separated list)")
+
 }
 
 type int64SliceFlag []int64
@@ -67,6 +71,16 @@ var (
 )
 
 func ValidateToken(keyString string) (*SignedInUser, error) {
+	user, err, _ := singlef.Do(keyString, func() (interface{}, error) {
+		return validateToken(keyString)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return user.(*SignedInUser), nil
+}
+
+func validateToken(keyString string) (*SignedInUser, error) {
 	payload := url.Values{}
 	payload.Add("token", keyString)
 
@@ -150,7 +164,17 @@ func Auth(adminKey, keyString string) (*SignedInUser, error) {
 	return user, err
 }
 
-func ValidateInstance(instanceID, token string) error {
+func ValidateInstance(cacheKey string) error {
+	_, err, _ := singlef.Do(cacheKey, func() (interface{}, error) {
+		idKey := strings.SplitN(cacheKey, ":", 2)
+		err := validateInstance(idKey[0], idKey[1])
+		return nil, err
+	})
+
+	return err
+}
+
+func validateInstance(instanceID, token string) error {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/hosted-metrics/%s", authEndpoint, instanceID), nil)
 	if err != nil {
 		return err
@@ -208,7 +232,7 @@ func (u *SignedInUser) CheckInstance(instanceID string) error {
 		return ErrInvalidInstanceID
 	}
 
-	err := ValidateInstance(instanceID, u.key)
+	err := ValidateInstance(cachekey)
 	// ErrInvalidInstanceID responses are successful responses so we
 	// dont return them here.  Instead we cache the response so that
 	// if the token is used again we can reject it straight away.

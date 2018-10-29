@@ -606,6 +606,14 @@
   revision = "6881fee410a5daf86371371f9ad451b95e168b71"
 
 [[projects]]
+  branch = "master"
+  digest = "1:5325f65188f8a9559c8f20d703b2b2684333a5e03515b6c1fbf09ffc710415af"
+  name = "golang.org/x/sync"
+  packages = ["singleflight"]
+  pruneopts = "NUT"
+  revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
+
+[[projects]]
   digest = "1:5676bcdf4687d6daa95eefa77eb053ed722934677159274f40b75193f3e01cb2"
   name = "golang.org/x/sys"
   packages = ["unix"]
@@ -774,6 +782,7 @@
     "github.com/uber/jaeger-client-go/config",
     "github.com/uber/jaeger-client-go/log",
     "golang.org/x/net/context/ctxhttp",
+    "golang.org/x/sync/singleflight",
     "gopkg.in/ini.v1",
     "gopkg.in/macaron.v1",
   ]

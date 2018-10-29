@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 
@@ -280,6 +281,53 @@ func TestAuth(t *testing.T) {
 		mockTransport.Reset()
 	})
 
+	Convey("When concurrent requests for uncached token", t, func() {
+		mu := sync.Mutex{}
+		reqCount := 0
+		mockTransport.RegisterResponder("POST", "https://grafana.com/api/api-keys/check",
+			func(req *http.Request) (*http.Response, error) {
+				mu.Lock()
+				reqCount++
+				mu.Unlock()
+				time.Sleep(time.Millisecond * 50)
+				resp, err := httpmock.NewJsonResponse(200, &testUser)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		type resp struct {
+			user *SignedInUser
+			err  error
+		}
+		ch := make(chan resp)
+		wg := sync.WaitGroup{}
+		for i := 0; i < 10; i++ {
+			wg.Add(1)
+			go func() {
+				user, err := ValidateToken("foo")
+				ch <- resp{user: user, err: err}
+				wg.Done()
+			}()
+		}
+
+		go func() {
+			wg.Wait()
+			close(ch)
+		}()
+
+		for r := range ch {
+			So(r.err, ShouldBeNil)
+			So(r.user.Role, ShouldEqual, testUser.Role)
+			So(r.user.OrgId, ShouldEqual, testUser.OrgId)
+			So(r.user.OrgName, ShouldEqual, testUser.OrgName)
+			So(r.user.OrgSlug, ShouldEqual, testUser.OrgSlug)
+			So(r.user.IsAdmin, ShouldEqual, testUser.IsAdmin)
+			So(r.user.key, ShouldEqual, testUser.key)
+		}
+		So(reqCount, ShouldEqual, 1)
+	})
 }
 
 func TestCheckInstance(t *testing.T) {
@@ -438,6 +486,44 @@ func TestCheckInstance(t *testing.T) {
 		So(cached, ShouldBeFalse)
 
 		mockTransport.Reset()
+	})
+
+	Convey("When concurrent requests for uncached instance", t, func() {
+		mu := sync.Mutex{}
+		reqCount := 0
+		mockTransport.RegisterResponder("GET", "https://grafana.com/api/hosted-metrics/10",
+			func(req *http.Request) (*http.Response, error) {
+				mu.Lock()
+				reqCount++
+				mu.Unlock()
+				time.Sleep(time.Millisecond * 50)
+				resp, err := httpmock.NewJsonResponse(200, &testInstance)
+				if err != nil {
+					return httpmock.NewStringResponse(500, ""), nil
+				}
+				return resp, nil
+			},
+		)
+		ch := make(chan error)
+		wg := sync.WaitGroup{}
+		for i := 0; i < 10; i++ {
+			wg.Add(1)
+			go func() {
+				err := ValidateInstance("10:foo")
+				ch <- err
+				wg.Done()
+			}()
+		}
+
+		go func() {
+			wg.Wait()
+			close(ch)
+		}()
+
+		for err := range ch {
+			So(err, ShouldBeNil)
+		}
+		So(reqCount, ShouldEqual, 1)
 	})
 
 }
