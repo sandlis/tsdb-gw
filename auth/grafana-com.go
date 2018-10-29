@@ -7,6 +7,7 @@ import (
 type GrafanaComAuth struct{}
 
 func NewGrafanaComAuth() *GrafanaComAuth {
+	gcom.InitTokenCache()
 	return &GrafanaComAuth{}
 }
 
@@ -30,4 +31,9 @@ func (a *GrafanaComAuth) Auth(username, password string) (*User, error) {
 		IsAdmin: u.IsAdmin,
 		Role:    u.Role,
 	}, nil
+}
+
+func (a *GrafanaComAuth) Stop() {
+	gcom.StopTokenCache()
+	gcom.StopInstanceCache()
 }

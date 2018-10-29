@@ -130,3 +130,7 @@ func (a *FileAuth) Auth(instanceID, password string) (*User, error) {
 
 	return user, nil
 }
+
+func (a *FileAuth) Stop() {
+	return
+}
