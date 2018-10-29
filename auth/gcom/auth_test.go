@@ -70,6 +70,7 @@ func TestFlags(t *testing.T) {
 }
 
 func TestAuth(t *testing.T) {
+	cacheTTL = time.Millisecond * 10
 	mockTransport := httpmock.NewMockTransport()
 	client.Transport = mockTransport
 	validOrgIds = int64SliceFlag{}
@@ -210,7 +211,6 @@ func TestAuth(t *testing.T) {
 				return resp, nil
 			},
 		)
-		cacheTTL = time.Millisecond * 10
 
 		// make sure key is cached
 		cuser, valid := tc.Get("bar")
@@ -258,7 +258,6 @@ func TestAuth(t *testing.T) {
 				return resp, nil
 			},
 		)
-		cacheTTL = time.Millisecond * 10
 
 		// make sure key is cached
 		cuser, valid := tc.Get("bar")
@@ -333,7 +332,7 @@ func TestAuth(t *testing.T) {
 func TestCheckInstance(t *testing.T) {
 	mockTransport := httpmock.NewMockTransport()
 	client.Transport = mockTransport
-
+	cacheTTL = time.Millisecond * 10
 	testUser := SignedInUser{
 		Id:        3,
 		OrgName:   "awoods Test",
@@ -426,7 +425,6 @@ func TestCheckInstance(t *testing.T) {
 				return httpmock.NewStringResponse(404, "not found"), nil
 			},
 		)
-		cacheTTL = time.Millisecond * 10
 
 		// make sure key is cached
 		valid, cached := ic.Get(fmt.Sprintf("%s:%s", "10", testUser.key))
@@ -464,7 +462,6 @@ func TestCheckInstance(t *testing.T) {
 				return httpmock.NewStringResponse(404, "not found"), nil
 			},
 		)
-		cacheTTL = time.Millisecond * 10
 
 		// make sure key is cached
 		valid, cached := ic.Get(fmt.Sprintf("%s:%s", "10", testUser.key))
