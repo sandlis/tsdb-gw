@@ -22,6 +22,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/prometheus/prompb"
 	schema "github.com/raintank/schema"
+	"github.com/raintank/tsdb-gw/publish"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context/ctxhttp"
 )
@@ -92,6 +93,7 @@ func Init() {
 			MaxIdleConns:          10000,
 			MaxIdleConnsPerHost:   1000, // see https://github.com/golang/go/issues/13801
 			IdleConnTimeout:       90 * time.Second,
+			DisableKeepAlives:     true,
 			TLSHandshakeTimeout:   10 * time.Second,
 			ExpectContinueTimeout: 1 * time.Second,
 		},
@@ -109,7 +111,8 @@ type cortexPublisher struct {
 	timeout time.Duration
 }
 
-func NewCortexPublisher() *cortexPublisher {
+// NewCortexPublisher creates a new cortex publisher.
+func NewCortexPublisher() publish.Publisher {
 	return &cortexPublisher{
 		url: cortexURL,
 		client: &http.Client{
