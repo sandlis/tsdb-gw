@@ -237,8 +237,8 @@
   revision = "1dcfee16dd532cf6206e704d3ae6ca31ff4c6df7"
 
 [[projects]]
-  branch = "bump-logrus"
-  digest = "1:0ff6ff948059e8552144c955d318ad0f87044a000015bb5ec4cb047a50bca38f"
+  branch = "master"
+  digest = "1:8b14f2c9b534a8789f702bbca85c664a908e42584cb036d2df6abeabc2b7ce89"
   name = "github.com/grafana/metrictank"
   packages = [
     "cluster/partitioner",
@@ -248,7 +248,7 @@
     "util",
   ]
   pruneopts = "NUT"
-  revision = "f7fe41bb6909eedc61a074940fd30184b319b5d8"
+  revision = "1d8722f3ea61acb92c425e56e653982263bdfc95"
 
 [[projects]]
   branch = "master"
