@@ -47,7 +47,7 @@ ignored = [
 
 [[constraint]]
   name = "github.com/grafana/metrictank"
-  branch = "bump-logrus"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/opentracing/opentracing-go"
