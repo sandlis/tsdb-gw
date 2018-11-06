@@ -22,7 +22,7 @@ func init() {
 	flag.StringVar(&authEndpoint, "auth-endpoint", authEndpoint, "Endpoint to authenticate users on")
 	flag.DurationVar(&cacheTTL, "auth-cache-ttl", cacheTTL, "how long auth responses should be cached")
 	flag.Var(&validOrgIds, "auth-valid-org-id", "restrict authentication to the listed orgId (comma separated list)")
-
+	flag.StringVar(&validInstanceType, "auth-valid-instance-type", "", "if set, instance validation while fail if the type attribute of an instance does not match. (graphite|graphite-shared|prometheus)")
 }
 
 type int64SliceFlag []int64
@@ -48,8 +48,9 @@ func (i *int64SliceFlag) String() string {
 }
 
 var (
-	authEndpoint = "https://grafana.com"
-	validOrgIds  = int64SliceFlag{}
+	authEndpoint      = "https://grafana.com"
+	validOrgIds       = int64SliceFlag{}
+	validInstanceType string
 
 	// global HTTP client.  By sharing the client we can take
 	// advantage of keepalives and re-use connections instead
@@ -209,6 +210,11 @@ func validateInstance(instanceID, token string) error {
 	if strconv.Itoa(int(instance.ID)) != instanceID {
 		log.Errorf("Auth: instanceID returned from grafana.com doesnt match requested instanceID. %d != %s", instance.ID, instanceID)
 		return ErrInvalidInstanceID
+	}
+
+	if validInstanceType != "" && validInstanceType != instance.InstanceType {
+		log.Errorf("Auth: instanceType returned from grafana.com doesnt match required instanceType. %s != %s", instance.InstanceType, validInstanceType)
+		return ErrInvalidInstanceType
 	}
 
 	return nil
