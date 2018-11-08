@@ -54,11 +54,3 @@ type Instance struct {
 	ClusterID    int    `json:"clusterId"`
 	InstanceType string `json:"type"`
 }
-
-type InstanceType string
-
-const (
-	Graphite       InstanceType = "graphite"
-	GraphiteShared InstanceType = "graphite-shared"
-	Cortex         InstanceType = "cortex"
-)

@@ -213,7 +213,7 @@ func validateInstance(instanceID, token string) error {
 	}
 
 	if validInstanceType != "" && validInstanceType != instance.InstanceType {
-		log.Errorf("Auth: instanceType returned from grafana.com doesnt match required instanceType. %s != %s", instance.InstanceType, validInstanceType)
+		log.Infof("Auth: instanceType returned from grafana.com doesnt match required instanceType. %s != %s", instance.InstanceType, validInstanceType)
 		return ErrInvalidInstanceType
 	}
 
