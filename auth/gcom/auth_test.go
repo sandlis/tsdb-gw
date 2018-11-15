@@ -345,8 +345,9 @@ func TestCheckInstance(t *testing.T) {
 	}
 
 	testInstance := Instance{
-		ID:    10,
-		OrgID: 3,
+		ID:           10,
+		OrgID:        3,
+		InstanceType: "graphite",
 	}
 
 	tokenCache = &TokenCache{items: make(map[string]*TokenResp)}
@@ -523,4 +524,39 @@ func TestCheckInstance(t *testing.T) {
 		So(reqCount, ShouldEqual, 1)
 	})
 
+	validInstanceType = "graphite"
+	Convey("when checking valid instanceType", t, func() {
+		responder, err := httpmock.NewJsonResponder(200, &testInstance)
+		So(err, ShouldBeNil)
+		mockTransport.RegisterResponder("GET", "https://grafana.com/api/hosted-metrics/10", responder)
+		instanceCache.Clear()
+		// instance should not be cached.
+		valid, cached := instanceCache.Get(fmt.Sprintf("%s:%s", "10", testUser.key))
+		So(valid, ShouldBeFalse)
+		So(cached, ShouldBeFalse)
+
+		err = testUser.CheckInstance("10")
+		So(err, ShouldBeNil)
+		mockTransport.Reset()
+
+		valid, cached = instanceCache.Get(fmt.Sprintf("%s:%s", "10", testUser.key))
+		So(valid, ShouldBeTrue)
+		So(cached, ShouldBeTrue)
+	})
+
+	validInstanceType = "cortex"
+	Convey("when checking invalid instanceType", t, func() {
+		responder, err := httpmock.NewJsonResponder(200, &testInstance)
+		So(err, ShouldBeNil)
+		mockTransport.RegisterResponder("GET", "https://grafana.com/api/hosted-metrics/10", responder)
+		instanceCache.Clear()
+		// instance should not be cached.
+		valid, cached := instanceCache.Get(fmt.Sprintf("%s:%s", "10", testUser.key))
+		So(valid, ShouldBeFalse)
+		So(cached, ShouldBeFalse)
+
+		err = testUser.CheckInstance("10")
+		So(err, ShouldEqual, ErrInvalidInstanceType)
+		mockTransport.Reset()
+	})
 }
