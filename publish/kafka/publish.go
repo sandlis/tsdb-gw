@@ -25,6 +25,7 @@ var (
 	keyCache        *keycache.KeyCache
 
 	partitioner *p.Kafka
+	partitions  []int32
 	schemasConf string
 
 	publishedMD     = stats.NewCounterRate32("output.kafka.published.metricdata")
@@ -108,11 +109,6 @@ func New(broker string, autoInterval bool) *mtPublisher {
 		mp.schemas = schemas
 	}
 
-	partitioner, err = p.NewKafka(partitionScheme)
-	if err != nil {
-		log.Fatalf("failed to initialize partitioner: %s", err)
-	}
-
 	// We are looking for strong consistency semantics.
 	// Because we don't change the flush settings, sarama will try to produce messages
 	// as fast as possible to keep latency low.
@@ -123,6 +119,7 @@ func New(broker string, autoInterval bool) *mtPublisher {
 	config.Producer.Return.Successes = true
 	config.Producer.Flush.Frequency = flushFreq
 	config.Producer.Flush.MaxMessages = maxMessages
+	config.Producer.Partitioner = sarama.NewManualPartitioner
 	config.Version = kafkaVersion
 	err = config.Validate()
 	if err != nil {
@@ -130,8 +127,26 @@ func New(broker string, autoInterval bool) *mtPublisher {
 	}
 
 	brokers = []string{broker}
+	client, err := sarama.NewClient(brokers, config)
+	if err != nil {
+		log.Fatalf("failed to initialize kafka client. %s", err)
+	}
 
-	producer, err = sarama.NewSyncProducer(brokers, config)
+	partitioner, err = p.NewKafka(partitionScheme)
+	if err != nil {
+		log.Fatalf("failed to initialize partitioner: %s", err)
+	}
+
+	if partitioner.Partitioner.RequiresConsistency() {
+		partitions, err = client.Partitions(topic)
+	} else {
+		partitions, err = client.WritablePartitions(topic)
+	}
+	if err != nil {
+		log.Fatalf("failed to get number of partitions: %s", err)
+	}
+
+	producer, err = sarama.NewSyncProducerFromClient(client)
 	if err != nil {
 		log.Fatalf("failed to initialize kafka producer. %s", err)
 	}
@@ -217,14 +232,15 @@ func (m *mtPublisher) Publish(metrics []*schema.MetricData) error {
 			pubMD++
 		}
 
-		key, err := partitioner.GetPartitionKey(metric, nil)
+		partition, err := partitioner.Partition(metric, int32(len(partitions)))
 		if err != nil {
 			return err
 		}
+
 		payload[i] = &sarama.ProducerMessage{
-			Key:   sarama.ByteEncoder(key),
-			Topic: topic,
-			Value: sarama.ByteEncoder(data),
+			Partition: partition,
+			Topic:     topic,
+			Value:     sarama.ByteEncoder(data),
 		}
 
 		messagesSize.Value(len(data))
