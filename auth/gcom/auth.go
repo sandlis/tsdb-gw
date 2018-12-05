@@ -22,7 +22,7 @@ func init() {
 	flag.StringVar(&authEndpoint, "auth-endpoint", authEndpoint, "Endpoint to authenticate users on")
 	flag.DurationVar(&cacheTTL, "auth-cache-ttl", cacheTTL, "how long auth responses should be cached")
 	flag.Var(&validOrgIds, "auth-valid-org-id", "restrict authentication to the listed orgId (comma separated list)")
-	flag.StringVar(&validInstanceType, "auth-valid-instance-type", "", "if set, instance validation while fail if the type attribute of an instance does not match. (graphite|graphite-shared|prometheus)")
+	flag.StringVar(&validInstanceType, "auth-valid-instance-type", "", "if set, instance validation while fail if the type attribute of an instance does not match. (graphite|graphite-shared|prometheus|logs)")
 }
 
 type int64SliceFlag []int64
@@ -176,7 +176,15 @@ func ValidateInstance(cacheKey string) error {
 }
 
 func validateInstance(instanceID, token string) error {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/hosted-metrics/%s", authEndpoint, instanceID), nil)
+	var instanceUrl string
+
+	if validInstanceType == "logs" {
+		instanceUrl = fmt.Sprintf("%s/api/hosted-logs/%s", authEndpoint, instanceID)
+	} else {
+		instanceUrl = fmt.Sprintf("%s/api/hosted-metrics/%s", authEndpoint, instanceID)
+	}
+
+	req, err := http.NewRequest("GET", instanceUrl, nil)
 	if err != nil {
 		return err
 	}
@@ -191,7 +199,7 @@ func validateInstance(instanceID, token string) error {
 	body, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 
-	log.Debugf("Auth: hosted-metrics response was: %s", body)
+	log.Debugf("Auth: %s response was: %s", authEndpoint, body)
 
 	if res.StatusCode >= 500 {
 		return err
