@@ -199,7 +199,7 @@ func validateInstance(instanceID, token string) error {
 	body, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 
-	log.Debugf("Auth: %s response was: %s", authEndpoint, body)
+	log.Debugf("Auth: %s response was: %s", instanceUrl, body)
 
 	if res.StatusCode >= 500 {
 		return err
