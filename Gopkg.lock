@@ -75,29 +75,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:349887f98324a7458a41e90d4a0f5ebfa48530be2bb8804e1d83d7270fddf637"
-  name = "github.com/dgryski/go-bits"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "bd8a69a71dc203aa976f9d918b428db9ac605f57"
-
-[[projects]]
-  branch = "master"
   digest = "1:07e80adc1161a63d37f382328ebabbf4f50e027cfaadf718515c3f39a65eb18f"
   name = "github.com/dgryski/go-linlog"
   packages = ["."]
   pruneopts = "NUT"
   revision = "edcf2dfd90ff209a4434491d7f38e203b3163de2"
-
-[[projects]]
-  digest = "1:00d4c9e5197f9ffb3f067e363298a25b4ff59eead77a24c839505d185caef176"
-  name = "github.com/dgryski/go-tsz"
-  packages = [
-    ".",
-    "testdata",
-  ]
-  pruneopts = "NUT"
-  revision = "5f4c484a9e838989c201ff437b3cab59cfdc46c8"
 
 [[projects]]
   digest = "1:08143362be979b087c2c1bae5dde986e988d3d5d4dc661727cbe436411b3f33a"
@@ -238,17 +220,19 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8b14f2c9b534a8789f702bbca85c664a908e42584cb036d2df6abeabc2b7ce89"
+  digest = "1:c281f264a56a15c6a3fcf24ae57bfda5e54f9daa1e1f6e37dd682db08504c56a"
   name = "github.com/grafana/metrictank"
   packages = [
     "cluster/partitioner",
     "conf",
     "mdata/chunk",
+    "mdata/chunk/tsz",
+    "mdata/chunk/tsz/testdata",
     "stats",
     "util",
   ]
   pruneopts = "NUT"
-  revision = "1d8722f3ea61acb92c425e56e653982263bdfc95"
+  revision = "8a72e44d3c606112fb58f34b00b5ddc4377fe3c2"
 
 [[projects]]
   branch = "master"
