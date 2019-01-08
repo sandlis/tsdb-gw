@@ -36,126 +36,126 @@ func Metrics(ctx *models.Context) {
 
 func metricsJson(ctx *models.Context) {
 	defer ctx.Req.Request.Body.Close()
-	if ctx.Req.Request.Body != nil {
-		body, err := ioutil.ReadAll(ctx.Req.Request.Body)
-		if err != nil {
-			log.Errorf("unable to read request body. %s", err)
-		}
-		metrics := make([]*schema.MetricData, 0)
-		err = json.Unmarshal(body, &metrics)
-		if err != nil {
-			ctx.JSON(400, fmt.Sprintf("unable to parse request body. %s", err))
-			return
-		}
-
-		if ctx.IsAdmin {
-			for _, m := range metrics {
-				if m.Mtype == "" {
-					m.Mtype = "gauge"
-				}
-				if err := m.Validate(); err != nil {
-					log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
-					metricsRejected.Add(len(metrics))
-					ctx.JSON(400, err.Error())
-					return
-				}
-			}
-		} else {
-			for _, m := range metrics {
-				m.OrgId = ctx.ID
-				if m.Mtype == "" {
-					m.Mtype = "gauge"
-				}
-				if err := m.Validate(); err != nil {
-					log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
-					metricsRejected.Add(len(metrics))
-					ctx.JSON(400, err.Error())
-					return
-				}
-				m.SetId()
-			}
-		}
-		metricsValid.Add(len(metrics))
-		err = publish.Publish(metrics)
-		if err != nil {
-			log.Errorf("failed to publish metrics. %s", err)
-			ctx.JSON(500, err)
-			return
-		}
-		ctx.JSON(200, "ok")
+	if ctx.Req.Request.Body == nil {
+		ctx.JSON(400, "no data included in request.")
 		return
 	}
-	ctx.JSON(400, "no data included in request.")
+	body, err := ioutil.ReadAll(ctx.Req.Request.Body)
+	if err != nil {
+		log.Errorf("unable to read request body. %s", err)
+	}
+	metrics := make([]*schema.MetricData, 0)
+	err = json.Unmarshal(body, &metrics)
+	if err != nil {
+		ctx.JSON(400, fmt.Sprintf("unable to parse request body. %s", err))
+		return
+	}
+
+	if ctx.IsAdmin {
+		for _, m := range metrics {
+			if m.Mtype == "" {
+				m.Mtype = "gauge"
+			}
+			if err := m.Validate(); err != nil {
+				log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
+				metricsRejected.Add(len(metrics))
+				ctx.JSON(400, err.Error())
+				return
+			}
+		}
+	} else {
+		for _, m := range metrics {
+			m.OrgId = ctx.ID
+			if m.Mtype == "" {
+				m.Mtype = "gauge"
+			}
+			if err := m.Validate(); err != nil {
+				log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
+				metricsRejected.Add(len(metrics))
+				ctx.JSON(400, err.Error())
+				return
+			}
+			m.SetId()
+		}
+	}
+	metricsValid.Add(len(metrics))
+	err = publish.Publish(metrics)
+	if err != nil {
+		log.Errorf("failed to publish metrics. %s", err)
+		ctx.JSON(500, err)
+		return
+	}
+	ctx.JSON(200, "ok")
 }
 
 func metricsBinary(ctx *models.Context, compressed bool) {
-	var body io.ReadCloser
-	if compressed {
-		body = ioutil.NopCloser(snappy.NewReader(ctx.Req.Request.Body))
-	} else {
-		body = ctx.Req.Request.Body
-	}
-	defer body.Close()
-
-	if ctx.Req.Request.Body != nil {
-		body, err := ioutil.ReadAll(body)
-		if err != nil {
-			log.Errorf("unable to read request body. %s", err)
-			ctx.JSON(500, err)
-			return
-		}
-		metricData := new(msg.MetricData)
-		err = metricData.InitFromMsg(body)
-		if err != nil {
-			log.Errorf("payload not metricData. %s", err)
-			ctx.JSON(500, err)
-			return
-		}
-
-		err = metricData.DecodeMetricData()
-		if err != nil {
-			log.Errorf("failed to unmarshal metricData. %s", err)
-			ctx.JSON(500, err)
-			return
-		}
-
-		if ctx.IsAdmin {
-			for _, m := range metricData.Metrics {
-				if m.Mtype == "" {
-					m.Mtype = "gauge"
-				}
-
-				if err := m.Validate(); err != nil {
-					metricsRejected.Add(len(metricData.Metrics))
-					log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
-					ctx.JSON(400, err.Error())
-					return
-				}
-			}
-		} else {
-			for _, m := range metricData.Metrics {
-				m.OrgId = ctx.ID
-				if m.Mtype == "" {
-					m.Mtype = "gauge"
-				}
-				if err := m.Validate(); err != nil {
-					log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
-					metricsRejected.Add(len(metricData.Metrics))
-					ctx.JSON(400, err.Error())
-					return
-				}
-				m.SetId()
-			}
-		}
-		metricsValid.Add(len(metricData.Metrics))
-		err = publish.Publish(metricData.Metrics)
-		if err != nil {
-			log.Errorf("failed to publish metrics. %s", err)
-			ctx.JSON(500, err)
-			return
-		}
-		ctx.JSON(200, "ok")
+	if ctx.Req.Request.Body == nil {
+		ctx.JSON(400, "no data included in request.")
 		return
 	}
-	ctx.JSON(400, "no data included in request.")
+	var bodyReadCloser io.ReadCloser
+	if compressed {
+		bodyReadCloser = ioutil.NopCloser(snappy.NewReader(ctx.Req.Request.Body))
+	} else {
+		bodyReadCloser = ctx.Req.Request.Body
+	}
+	defer bodyReadCloser.Close()
+
+	body, err := ioutil.ReadAll(bodyReadCloser)
+	if err != nil {
+		log.Errorf("unable to read request body. %s", err)
+		ctx.JSON(500, err)
+		return
+	}
+	metricData := new(msg.MetricData)
+	err = metricData.InitFromMsg(body)
+	if err != nil {
+		log.Errorf("payload not metricData. %s", err)
+		ctx.JSON(500, err)
+		return
+	}
+
+	err = metricData.DecodeMetricData()
+	if err != nil {
+		log.Errorf("failed to unmarshal metricData. %s", err)
+		ctx.JSON(500, err)
+		return
+	}
+
+	if ctx.IsAdmin {
+		for _, m := range metricData.Metrics {
+			if m.Mtype == "" {
+				m.Mtype = "gauge"
+			}
+
+			if err := m.Validate(); err != nil {
+				metricsRejected.Add(len(metricData.Metrics))
+				log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
+				ctx.JSON(400, err.Error())
+				return
+			}
+		}
+	} else {
+		for _, m := range metricData.Metrics {
+			m.OrgId = ctx.ID
+			if m.Mtype == "" {
+				m.Mtype = "gauge"
+			}
+			if err := m.Validate(); err != nil {
+				log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
+				metricsRejected.Add(len(metricData.Metrics))
+				ctx.JSON(400, err.Error())
+				return
+			}
+			m.SetId()
+		}
+	}
+	metricsValid.Add(len(metricData.Metrics))
+	err = publish.Publish(metricData.Metrics)
+	if err != nil {
+		log.Errorf("failed to publish metrics. %s", err)
+		ctx.JSON(500, err)
+		return
+	}
+	ctx.JSON(200, "ok")
 }
