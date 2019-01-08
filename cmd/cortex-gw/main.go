@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -31,6 +32,7 @@ var (
 	authPlugin      = flag.String("api-auth-plugin", "grafana-instance", "auth plugin to use. (grafana-instance|file)")
 	enforceRoles    = flag.Bool("enforce-roles", false, "enable role verification during authentication")
 	forward3rdParty = flag.Bool("forward-3rdparty", false, "enable writing to cortex with non standard agents")
+	writeURL        = flag.String("write-url", "http://localhost:9000", "cortex write address. use kubernetes:// for grpc")
 
 	tracingEnabled = flag.Bool("tracing-enabled", false, "enable/disable distributed opentracing via jaeger")
 	tracingAddr    = flag.String("tracing-addr", "localhost:6831", "address of the jaeger agent to send data to")
@@ -75,11 +77,21 @@ func main() {
 		persist.Init(*persisterAddr)
 	}
 
-	var inputs []Stoppable
+	proxyURL := *writeURL
 
-	cortexPublish.Init()
+	var writeProxy *cortexPublish.CortexWriteProxy
+	if strings.Contains(proxyURL, "kubernetes://") || strings.Contains(proxyURL, "dns://") {
+		writeProxy, err = cortexPublish.NewCortexWriteProxy(cortexPublish.GRPCProxy, proxyURL)
+	} else {
+		writeProxy, err = cortexPublish.NewCortexWriteProxy(cortexPublish.HTTPProxy, proxyURL)
+	}
+
+	if err != nil {
+		log.Fatalf("cannot initialise write proxy: %v", err)
+	}
+
 	if *forward3rdParty {
-		publish.Init(cortexPublish.NewCortexPublisher())
+		publish.Init(cortexPublish.NewCortexPublisher(proxyURL))
 	} else {
 		publish.Init(nil)
 	}
@@ -88,7 +100,7 @@ func main() {
 		log.Fatalf("could not initialize cortex proxy: %s", err.Error())
 	}
 	api := api.New(*authPlugin, app)
-	initRoutes(api, *enforceRoles)
+	initRoutes(api, writeProxy, *enforceRoles)
 
 	ms := util.NewMetricsServer(*metricsAddr)
 
@@ -97,7 +109,7 @@ func main() {
 
 	log.Infof("Starting %v ...", app)
 	done := make(chan struct{})
-	inputs = append(inputs, api.Start(), ms)
+	inputs := []Stoppable{api.Start(), ms}
 	go handleShutdown(done, interrupt, inputs)
 	log.Infof("%v Started", app)
 	<-done
@@ -138,9 +150,9 @@ func handleShutdown(done chan struct{}, interrupt chan os.Signal, inputs []Stopp
 }
 
 // InitRoutes initializes the routes.
-func initRoutes(a *api.Api, enforceRoles bool) {
+func initRoutes(a *api.Api, writeProxy *cortexPublish.CortexWriteProxy, enforceRoles bool) {
 	a.Router.Any("/api/prom/*", a.GenerateHandlers("read", enforceRoles, false, a.PromStats("cortex-read"), cortex.Proxy)...)
-	a.Router.Any("/api/prom/push", a.GenerateHandlers("write", enforceRoles, false, a.PromStats("cortex-write"), cortexPublish.Write)...)
+	a.Router.Any("/api/prom/push", a.GenerateHandlers("write", enforceRoles, false, a.PromStats("cortex-write"), writeProxy.Write)...)
 	a.Router.Post("/datadog/api/v1/series", a.GenerateHandlers("write", enforceRoles, true, datadog.DataDogSeries)...)
 	a.Router.Post("/datadog/api/v1/check_run", a.GenerateHandlers("write", enforceRoles, true, datadog.DataDogCheck)...)
 	a.Router.Post("/datadog/intake", a.GenerateHandlers("write", enforceRoles, true, datadog.DataDogIntake)...)

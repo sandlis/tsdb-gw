@@ -40,6 +40,7 @@ type RecordBatch struct {
 	PartitionLeaderEpoch  int32
 	Version               int8
 	Codec                 CompressionCodec
+	CompressionLevel      int
 	Control               bool
 	LastOffsetDelta       int32
 	FirstTimestamp        time.Time
@@ -192,6 +193,10 @@ func (b *RecordBatch) decode(pd packetDecoder) (err error) {
 		if recBuffer, err = ioutil.ReadAll(reader); err != nil {
 			return err
 		}
+	case CompressionZSTD:
+		if recBuffer, err = zstdDecompress(nil, recBuffer); err != nil {
+			return err
+		}
 	default:
 		return PacketDecodingError{fmt.Sprintf("invalid compression specified (%d)", b.Codec)}
 	}
@@ -219,7 +224,15 @@ func (b *RecordBatch) encodeRecords(pe packetEncoder) error {
 		b.compressedRecords = raw
 	case CompressionGZIP:
 		var buf bytes.Buffer
-		writer := gzip.NewWriter(&buf)
+		var writer *gzip.Writer
+		if b.CompressionLevel != CompressionLevelDefault {
+			writer, err = gzip.NewWriterLevel(&buf, b.CompressionLevel)
+			if err != nil {
+				return err
+			}
+		} else {
+			writer = gzip.NewWriter(&buf)
+		}
 		if _, err := writer.Write(raw); err != nil {
 			return err
 		}
@@ -239,6 +252,12 @@ func (b *RecordBatch) encodeRecords(pe packetEncoder) error {
 			return err
 		}
 		b.compressedRecords = buf.Bytes()
+	case CompressionZSTD:
+		c, err := zstdCompressLevel(nil, raw, b.CompressionLevel)
+		if err != nil {
+			return err
+		}
+		b.compressedRecords = c
 	default:
 		return PacketEncodingError{fmt.Sprintf("unsupported compression codec (%d)", b.Codec)}
 	}

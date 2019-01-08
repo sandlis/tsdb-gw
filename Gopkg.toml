@@ -91,6 +91,15 @@ ignored = [
   name = "github.com/raintank/schema"
   version = "^2"
 
+[[override]]
+  name = "github.com/sercand/kuberesolver"
+  branch = "master"
+
+[[override]]
+  name = "github.com/weaveworks/common"
+  branch = "master"
+
+
 [prune]
 go-tests = true
 non-go = true
