@@ -8,11 +8,11 @@ import (
 
 	"github.com/golang/snappy"
 	"github.com/grafana/metrictank/stats"
+	"github.com/raintank/schema"
+	"github.com/raintank/schema/msg"
 	"github.com/raintank/tsdb-gw/api/models"
 	"github.com/raintank/tsdb-gw/publish"
 	log "github.com/sirupsen/logrus"
-	"github.com/raintank/schema"
-	"github.com/raintank/schema/msg"
 )
 
 var (
@@ -54,7 +54,7 @@ func metricsJson(ctx *models.Context) {
 					m.Mtype = "gauge"
 				}
 				if err := m.Validate(); err != nil {
-					log.Debugf("unable to validate metric: %v %v %v", m.Name, m.OrgId, m.Tags)
+					log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
 					metricsRejected.Add(len(metrics))
 					ctx.JSON(400, err.Error())
 					return
@@ -67,7 +67,7 @@ func metricsJson(ctx *models.Context) {
 					m.Mtype = "gauge"
 				}
 				if err := m.Validate(); err != nil {
-					log.Debugf("unable to validate metric: %v %v %v", m.Name, m.OrgId, m.Tags)
+					log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
 					metricsRejected.Add(len(metrics))
 					ctx.JSON(400, err.Error())
 					return
@@ -127,7 +127,7 @@ func metricsBinary(ctx *models.Context, compressed bool) {
 
 				if err := m.Validate(); err != nil {
 					metricsRejected.Add(len(metricData.Metrics))
-					log.Debugf("unable to validate metric: %v %v %v", m.Name, m.OrgId, m.Tags)
+					log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
 					ctx.JSON(400, err.Error())
 					return
 				}
@@ -139,7 +139,7 @@ func metricsBinary(ctx *models.Context, compressed bool) {
 					m.Mtype = "gauge"
 				}
 				if err := m.Validate(); err != nil {
-					log.Debugf("unable to validate metric: %v %v %v", m.Name, m.OrgId, m.Tags)
+					log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
 					metricsRejected.Add(len(metricData.Metrics))
 					ctx.JSON(400, err.Error())
 					return
