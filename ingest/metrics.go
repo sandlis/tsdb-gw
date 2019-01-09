@@ -66,6 +66,8 @@ func metricsJson(ctx *models.Context) {
 	body, err := ioutil.ReadAll(ctx.Req.Request.Body)
 	if err != nil {
 		log.Errorf("unable to read request body. %s", err)
+		ctx.JSON(500, err)
+		return
 	}
 	metrics := make([]*schema.MetricData, 0)
 	err = json.Unmarshal(body, &metrics)
@@ -153,14 +155,14 @@ func metricsBinary(ctx *models.Context, compressed bool) {
 	err = metricData.InitFromMsg(body)
 	if err != nil {
 		log.Errorf("payload not metricData. %s", err)
-		ctx.JSON(500, err)
+		ctx.JSON(400, err)
 		return
 	}
 
 	err = metricData.DecodeMetricData()
 	if err != nil {
 		log.Errorf("failed to unmarshal metricData. %s", err)
-		ctx.JSON(500, err)
+		ctx.JSON(400, err)
 		return
 	}
 
