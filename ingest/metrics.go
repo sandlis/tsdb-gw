@@ -80,34 +80,23 @@ func metricsJson(ctx *models.Context) {
 	resp := NewMetricsResponse()
 	promDiscards := make(discardsByOrg)
 
-	if ctx.IsAdmin {
-		for i, m := range metrics {
-			if m.Mtype == "" {
-				m.Mtype = "gauge"
-			}
-			if err := m.Validate(); err != nil {
-				log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
-				resp.AddInvalid(err, i)
-				promDiscards.Add(m.OrgId, err.Error())
-				continue
-			}
-			toPublish = append(toPublish, m)
-		}
-	} else {
-		for i, m := range metrics {
+	for i, m := range metrics {
+		if !ctx.IsAdmin {
 			m.OrgId = ctx.ID
-			if m.Mtype == "" {
-				m.Mtype = "gauge"
-			}
-			if err := m.Validate(); err != nil {
-				log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
-				resp.AddInvalid(err, i)
-				promDiscards.Add(ctx.ID, err.Error())
-				continue
-			}
-			m.SetId()
-			toPublish = append(toPublish, m)
 		}
+		if m.Mtype == "" {
+			m.Mtype = "gauge"
+		}
+		if err := m.Validate(); err != nil {
+			log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
+			resp.AddInvalid(err, i)
+			promDiscards.Add(ctx.ID, err.Error())
+			continue
+		}
+		if !ctx.IsAdmin {
+			m.SetId()
+		}
+		toPublish = append(toPublish, m)
 	}
 
 	// track invalid/discards in graphite and prometheus
@@ -170,34 +159,23 @@ func metricsBinary(ctx *models.Context, compressed bool) {
 	resp := NewMetricsResponse()
 	promDiscards := make(discardsByOrg)
 
-	if ctx.IsAdmin {
-		for i, m := range metricData.Metrics {
-			if m.Mtype == "" {
-				m.Mtype = "gauge"
-			}
-			if err := m.Validate(); err != nil {
-				log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
-				resp.AddInvalid(err, i)
-				promDiscards.Add(m.OrgId, err.Error())
-				continue
-			}
-			toPublish = append(toPublish, m)
-		}
-	} else {
-		for i, m := range metricData.Metrics {
+	for i, m := range metricData.Metrics {
+		if !ctx.IsAdmin {
 			m.OrgId = ctx.ID
-			if m.Mtype == "" {
-				m.Mtype = "gauge"
-			}
-			if err := m.Validate(); err != nil {
-				log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
-				resp.AddInvalid(err, i)
-				promDiscards.Add(ctx.ID, err.Error())
-				continue
-			}
-			m.SetId()
-			toPublish = append(toPublish, m)
 		}
+		if m.Mtype == "" {
+			m.Mtype = "gauge"
+		}
+		if err := m.Validate(); err != nil {
+			log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
+			resp.AddInvalid(err, i)
+			promDiscards.Add(ctx.ID, err.Error())
+			continue
+		}
+		if !ctx.IsAdmin {
+			m.SetId()
+		}
+		toPublish = append(toPublish, m)
 	}
 
 	// track invalid/discards in graphite and prometheus
