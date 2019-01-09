@@ -27,8 +27,8 @@ func Test_packageMetrics(t *testing.T) {
 							Labels: []*prompb.Label{
 								&prompb.Label{Name: "__name__", Value: "example_metric"},
 							},
-							Samples: []*prompb.Sample{
-								&prompb.Sample{Value: 0, Timestamp: 0},
+							Samples: []prompb.Sample{
+								prompb.Sample{Value: 0, Timestamp: 0},
 							},
 						},
 					},
@@ -48,8 +48,8 @@ func Test_packageMetrics(t *testing.T) {
 							Labels: []*prompb.Label{
 								&prompb.Label{Name: "__name__", Value: "example_metric"},
 							},
-							Samples: []*prompb.Sample{
-								&prompb.Sample{Value: 0, Timestamp: 0},
+							Samples: []prompb.Sample{
+								prompb.Sample{Value: 0, Timestamp: 0},
 							},
 						},
 					},
@@ -73,8 +73,8 @@ func Test_packageMetrics(t *testing.T) {
 								&prompb.Label{Name: "__name__", Value: "example_metric"},
 								&prompb.Label{Name: "example", Value: "tag"},
 							},
-							Samples: []*prompb.Sample{
-								&prompb.Sample{Value: 0, Timestamp: 0},
+							Samples: []prompb.Sample{
+								prompb.Sample{Value: 0, Timestamp: 0},
 							},
 						},
 					},
@@ -97,8 +97,8 @@ func Test_packageMetrics(t *testing.T) {
 							Labels: []*prompb.Label{
 								&prompb.Label{Name: "__name__", Value: "example_metric"},
 							},
-							Samples: []*prompb.Sample{
-								&prompb.Sample{Value: 0, Timestamp: 0},
+							Samples: []prompb.Sample{
+								prompb.Sample{Value: 0, Timestamp: 0},
 							},
 						},
 					},
@@ -123,8 +123,8 @@ func Test_packageMetrics(t *testing.T) {
 								&prompb.Label{Name: "example1", Value: "tag"},
 								&prompb.Label{Name: "example2", Value: "tag"},
 							},
-							Samples: []*prompb.Sample{
-								&prompb.Sample{Value: 0, Timestamp: 0},
+							Samples: []prompb.Sample{
+								prompb.Sample{Value: 0, Timestamp: 0},
 							},
 						},
 					},

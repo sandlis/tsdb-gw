@@ -8,9 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"strconv"
 	"strings"
@@ -18,8 +16,8 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
-	"github.com/oxtoacart/bpool"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/prometheus/prompb"
 	schema "github.com/raintank/schema"
 	"github.com/raintank/tsdb-gw/publish"
@@ -30,14 +28,11 @@ import (
 var (
 	writeBPoolSize  = flag.Int("bpool-size", 100, "max number of byte buffers in the cortex write buffer pool")
 	writeBPoolWidth = flag.Int("bpool-width", 1024, "capacity of byte array provided by cortex write buffer pool")
-	writeURL        = flag.String("write-url", "http://localhost:9000", "cortex write address")
-
-	writeProxy *httputil.ReverseProxy
 
 	errBadTag    = errors.New("unable to parse tags")
 	errNoMetrics = errors.New("no metrics provided in write request")
 
-	droppedSamplesTotal = prometheus.NewCounterVec(
+	droppedSamplesTotal = promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "cortex_gw",
 			Subsystem: "publisher",
@@ -46,7 +41,7 @@ var (
 		},
 		[]string{},
 	)
-	succeededSamplesTotal = prometheus.NewCounterVec(
+	succeededSamplesTotal = promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "cortex_gw",
 			Subsystem: "publisher",
@@ -55,55 +50,16 @@ var (
 		},
 		[]string{},
 	)
-	requestDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	requestDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "cortex_gw",
 		Subsystem: "publisher",
 		Name:      "publish_duration_seconds",
 		Help:      "Time (in seconds) spent publishing metrics to cortex.",
 		Buckets:   prometheus.ExponentialBuckets(.05, 2, 10),
 	}, []string{"status"})
-
-	cortexURL *url.URL
 )
 
 const maxErrMsgLen = 256
-
-// Init initializes the cortex reverse proxies
-func Init() {
-	var err error
-	cortexURL, err = url.Parse(*writeURL)
-	if err != nil {
-		log.Fatalf("unable to parse cortex write url '%s': %v", *writeURL, err)
-	}
-	// Seperate Proxy for Writes, add BufferPool for perf reasons if needed
-	writeProxy = &httputil.ReverseProxy{
-		Director: func(req *http.Request) {
-			req.URL.Scheme = cortexURL.Scheme
-			req.URL.Host = cortexURL.Host
-		},
-		BufferPool: bpool.NewBytePool(*writeBPoolSize, *writeBPoolWidth),
-
-		Transport: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-			DialContext: (&net.Dialer{
-				Timeout:   30 * time.Second,
-				KeepAlive: 30 * time.Second,
-				DualStack: true,
-			}).DialContext,
-			MaxIdleConns:          10000,
-			MaxIdleConnsPerHost:   1000, // see https://github.com/golang/go/issues/13801
-			IdleConnTimeout:       90 * time.Second,
-			DisableKeepAlives:     true,
-			TLSHandshakeTimeout:   10 * time.Second,
-			ExpectContinueTimeout: 1 * time.Second,
-		},
-	}
-
-	log.Infof("cortex write proxy intitialized, backend=%v", cortexURL)
-	prometheus.MustRegister(droppedSamplesTotal)
-	prometheus.MustRegister(succeededSamplesTotal)
-	prometheus.MustRegister(requestDuration)
-}
 
 type cortexPublisher struct {
 	url     *url.URL
@@ -112,7 +68,12 @@ type cortexPublisher struct {
 }
 
 // NewCortexPublisher creates a new cortex publisher.
-func NewCortexPublisher() publish.Publisher {
+func NewCortexPublisher(writeURL string) publish.Publisher {
+	cortexURL, err := url.Parse(writeURL)
+	if err != nil {
+		panic(err)
+	}
+
 	return &cortexPublisher{
 		url: cortexURL,
 		client: &http.Client{
@@ -226,7 +187,7 @@ func packageMetrics(metrics []*schema.MetricData) (writeRequest, error) {
 		}
 		req.Timeseries = append(req.Timeseries, &prompb.TimeSeries{
 			Labels: labels,
-			Samples: []*prompb.Sample{
+			Samples: []prompb.Sample{
 				{
 					Value:     m.Value,
 					Timestamp: m.Time * 1000,

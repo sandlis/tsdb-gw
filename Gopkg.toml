@@ -27,7 +27,7 @@ ignored = [
 
 [[constraint]]
   name = "github.com/Shopify/sarama"
-  version = "1.16.0"
+  version = "=1.19.0"
 
 [[constraint]]
   branch = "master"
@@ -90,6 +90,15 @@ ignored = [
 [[constraint]]
   name = "github.com/raintank/schema"
   version = "^2"
+
+[[override]]
+  name = "github.com/sercand/kuberesolver"
+  branch = "master"
+
+[[override]]
+  name = "github.com/weaveworks/common"
+  branch = "master"
+
 
 [prune]
 go-tests = true
