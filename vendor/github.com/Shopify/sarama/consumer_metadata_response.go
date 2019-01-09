@@ -5,7 +5,6 @@ import (
 	"strconv"
 )
 
-//ConsumerMetadataResponse holds the reponse for a consumer gorup meta data request
 type ConsumerMetadataResponse struct {
 	Err             KError
 	Coordinator     *Broker

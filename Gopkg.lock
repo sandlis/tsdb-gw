@@ -17,14 +17,6 @@
   revision = "56a4b816916d3e8616919a0d2c822bfef707de09"
 
 [[projects]]
-  digest = "1:9c8312fb77e9c27242307176963dd65c02ad03016f7696026a83214fc45c6566"
-  name = "github.com/DataDog/zstd"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "c7161f8c63c045cbc7ca051dcc969dd0e4054de2"
-  version = "v1.3.5"
-
-[[projects]]
   branch = "master"
   digest = "1:622bc18c663f130b5b16abe3c723a5ce0f91413b0e59e1f2e319d8dae337ecb3"
   name = "github.com/Dieterbe/artisanalhistogram"
@@ -36,12 +28,12 @@
   revision = "f61b7225d304620f6f2c5cbb21435d0957115429"
 
 [[projects]]
-  digest = "1:d23be4935b3f63583b7a7f847dca8be74c89af8943a5f70d96cace715aed47c1"
+  digest = "1:a074ae0f4788ea4c4c7045ab37f21943920bc20cf6ff8afcb2d971154cfa87ab"
   name = "github.com/Shopify/sarama"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "879f631812a30a580659e8035e7cda9994bb99ac"
-  version = "v1.20.0"
+  revision = "ec843464b50d4c8b56403ec9d589cf41ea30e722"
+  version = "v1.19.0"
 
 [[projects]]
   digest = "1:70c7e0885c12d2b7177b240f7ddc7405a180cf2eff61fc133dd5f5185fb08735"
