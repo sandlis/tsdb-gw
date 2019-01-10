@@ -18,8 +18,8 @@ import (
 )
 
 var (
-	metricsValid    = stats.NewCounterRate32("metrics.http.valid")
-	metricsRejected = stats.NewCounterRate32("metrics.http.rejected")
+	metricsValid    = stats.NewCounterRate32("metrics.http.valid")    // valid metrics received (not necessarily published)
+	metricsRejected = stats.NewCounterRate32("metrics.http.rejected") // invalid metrics received
 
 	discardedSamples = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -82,6 +82,7 @@ func prepareIngest(ctx *models.Context, in []*schema.MetricData, toPublish []*sc
 
 	// track invalid/discards in graphite and prometheus
 	metricsRejected.Add(resp.Invalid)
+	metricsValid.Add(len(toPublish))
 	for org, promDiscardsByOrg := range promDiscards {
 		for reason, cnt := range promDiscardsByOrg {
 			discardedSamples.WithLabelValues(strconv.Itoa(org), reason).Add(float64(cnt))
@@ -131,9 +132,7 @@ func metricsJson(ctx *models.Context) {
 		return
 	}
 
-	// track published in graphite and the response (which already has discards)
-	// published metrics for prometheus will be set by the publisher
-	metricsValid.Add(len(toPublish))
+	// track published in the response (it already has discards)
 	resp.Published = len(toPublish)
 	ctx.JSON(200, resp)
 }
@@ -194,9 +193,7 @@ func metricsBinary(ctx *models.Context, compressed bool) {
 		return
 	}
 
-	// track published in graphite and the response (which already has discards)
-	// published metrics for prometheus will be set by the publisher
-	metricsValid.Add(len(toPublish))
+	// track published in the response (it already has discards)
 	resp.Published = len(toPublish)
 	ctx.JSON(200, resp)
 }
