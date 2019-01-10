@@ -71,7 +71,7 @@ func prepareIngest(ctx *models.Context, in []*schema.MetricData, toPublish []*sc
 		if err := m.Validate(); err != nil {
 			log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
 			resp.AddInvalid(err, i)
-			promDiscards.Add(ctx.ID, err.Error())
+			promDiscards.Add(m.OrgId, err.Error())
 			continue
 		}
 		if !ctx.IsAdmin {
@@ -101,11 +101,10 @@ func metricsJson(ctx *models.Context) {
 		select {
 		case <-ctx.Req.Context().Done():
 			ctx.Error(499, "request canceled")
-			return
 		default:
+			log.Errorf("unable to read request body. %s", err)
+			ctx.JSON(500, err)
 		}
-		log.Errorf("unable to read request body. %s", err)
-		ctx.JSON(500, err)
 		return
 	}
 	metrics := make([]*schema.MetricData, 0)
@@ -149,11 +148,10 @@ func metricsBinary(ctx *models.Context, compressed bool) {
 		select {
 		case <-ctx.Req.Context().Done():
 			ctx.Error(499, "request canceled")
-			return
 		default:
+			log.Errorf("unable to read request body. %s", err)
+			ctx.JSON(500, err)
 		}
-		log.Errorf("unable to read request body. %s", err)
-		ctx.JSON(500, err)
 		return
 	}
 	metricData := new(msg.MetricData)
