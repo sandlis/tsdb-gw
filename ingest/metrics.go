@@ -57,30 +57,11 @@ func (dbo discardsByOrg) Add(org int, reason string) {
 	dbo[org] = dbr
 }
 
-func metricsJson(ctx *models.Context) {
-	if ctx.Req.Request.Body == nil {
-		ctx.JSON(400, "no data included in request.")
-		return
-	}
-	defer ctx.Req.Request.Body.Close()
-	body, err := ioutil.ReadAll(ctx.Req.Request.Body)
-	if err != nil {
-		log.Errorf("unable to read request body. %s", err)
-		ctx.JSON(500, err)
-		return
-	}
-	metrics := make([]*schema.MetricData, 0)
-	err = json.Unmarshal(body, &metrics)
-	if err != nil {
-		ctx.JSON(400, fmt.Sprintf("unable to parse request body. %s", err))
-		return
-	}
-
-	toPublish := make([]*schema.MetricData, 0, len(metrics))
+func prepareIngest(ctx *models.Context, in []*schema.MetricData, toPublish []*schema.MetricData) ([]*schema.MetricData, MetricsResponse) {
 	resp := NewMetricsResponse()
 	promDiscards := make(discardsByOrg)
 
-	for i, m := range metrics {
+	for i, m := range in {
 		if !ctx.IsAdmin {
 			m.OrgId = ctx.ID
 		}
@@ -106,7 +87,30 @@ func metricsJson(ctx *models.Context) {
 			discardedSamples.WithLabelValues(strconv.Itoa(org), reason).Add(float64(cnt))
 		}
 	}
+	return toPublish, resp
+}
 
+func metricsJson(ctx *models.Context) {
+	if ctx.Req.Request.Body == nil {
+		ctx.JSON(400, "no data included in request.")
+		return
+	}
+	defer ctx.Req.Request.Body.Close()
+	body, err := ioutil.ReadAll(ctx.Req.Request.Body)
+	if err != nil {
+		log.Errorf("unable to read request body. %s", err)
+		ctx.JSON(500, err)
+		return
+	}
+	metrics := make([]*schema.MetricData, 0)
+	err = json.Unmarshal(body, &metrics)
+	if err != nil {
+		ctx.JSON(400, fmt.Sprintf("unable to parse request body. %s", err))
+		return
+	}
+
+	toPublish := make([]*schema.MetricData, 0, len(metrics))
+	toPublish, resp := prepareIngest(ctx, metrics, toPublish)
 	err = publish.Publish(toPublish)
 	if err != nil {
 		log.Errorf("failed to publish metrics. %s", err)
@@ -156,35 +160,7 @@ func metricsBinary(ctx *models.Context, compressed bool) {
 	}
 
 	toPublish := make([]*schema.MetricData, 0, len(metricData.Metrics))
-	resp := NewMetricsResponse()
-	promDiscards := make(discardsByOrg)
-
-	for i, m := range metricData.Metrics {
-		if !ctx.IsAdmin {
-			m.OrgId = ctx.ID
-		}
-		if m.Mtype == "" {
-			m.Mtype = "gauge"
-		}
-		if err := m.Validate(); err != nil {
-			log.Debugf("received invalid metric: %v %v %v", m.Name, m.OrgId, m.Tags)
-			resp.AddInvalid(err, i)
-			promDiscards.Add(ctx.ID, err.Error())
-			continue
-		}
-		if !ctx.IsAdmin {
-			m.SetId()
-		}
-		toPublish = append(toPublish, m)
-	}
-
-	// track invalid/discards in graphite and prometheus
-	metricsRejected.Add(resp.Invalid)
-	for org, promDiscardsByOrg := range promDiscards {
-		for reason, cnt := range promDiscardsByOrg {
-			discardedSamples.WithLabelValues(strconv.Itoa(org), reason).Add(float64(cnt))
-		}
-	}
+	toPublish, resp := prepareIngest(ctx, metricData.Metrics, toPublish)
 
 	err = publish.Publish(toPublish)
 	if err != nil {
