@@ -116,6 +116,14 @@ func metricsJson(ctx *models.Context) {
 
 	toPublish := make([]*schema.MetricData, 0, len(metrics))
 	toPublish, resp := prepareIngest(ctx, metrics, toPublish)
+
+	select {
+	case <-ctx.Req.Context().Done():
+		ctx.Error(499, "request canceled")
+		return
+	default:
+	}
+
 	err = publish.Publish(toPublish)
 	if err != nil {
 		log.Errorf("failed to publish metrics. %s", err)
@@ -171,6 +179,13 @@ func metricsBinary(ctx *models.Context, compressed bool) {
 
 	toPublish := make([]*schema.MetricData, 0, len(metricData.Metrics))
 	toPublish, resp := prepareIngest(ctx, metricData.Metrics, toPublish)
+
+	select {
+	case <-ctx.Req.Context().Done():
+		ctx.Error(499, "request canceled")
+		return
+	default:
+	}
 
 	err = publish.Publish(toPublish)
 	if err != nil {
