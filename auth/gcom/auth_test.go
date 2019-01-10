@@ -70,7 +70,6 @@ func TestFlags(t *testing.T) {
 }
 
 func TestAuth(t *testing.T) {
-	cacheTTL = time.Millisecond * 10
 	mockTransport := httpmock.NewMockTransport()
 	client.Transport = mockTransport
 	validOrgIds = int64SliceFlag{}
@@ -85,7 +84,7 @@ func TestAuth(t *testing.T) {
 		key:       "foo",
 	}
 
-	tokenCache = &TokenCache{items: make(map[string]*TokenResp)}
+	tokenCache = &TokenCache{items: make(map[string]*TokenResp), cacheTTL: time.Millisecond * 10}
 
 	Convey("When authenticating with adminKey", t, func() {
 		user, err := Auth("key", "key")
@@ -184,8 +183,9 @@ func TestAuth(t *testing.T) {
 
 	Convey("When cached entry is expired", t, func() {
 		tc := &TokenCache{
-			items: make(map[string]*TokenResp),
-			stop:  make(chan struct{}),
+			items:    make(map[string]*TokenResp),
+			stop:     make(chan struct{}),
+			cacheTTL: time.Millisecond * 10,
 		}
 		tc.Set("bar", &testUser)
 		newUser := SignedInUser{
@@ -240,8 +240,9 @@ func TestAuth(t *testing.T) {
 
 	Convey("When token has not been seen for more than cachettl", t, func() {
 		tc := &TokenCache{
-			items: make(map[string]*TokenResp),
-			stop:  make(chan struct{}),
+			items:    make(map[string]*TokenResp),
+			stop:     make(chan struct{}),
+			cacheTTL: time.Millisecond * 10,
 		}
 		tc.Set("bar", &testUser)
 		tokenCache.stop = make(chan struct{})
@@ -332,7 +333,6 @@ func TestAuth(t *testing.T) {
 func TestCheckInstance(t *testing.T) {
 	mockTransport := httpmock.NewMockTransport()
 	client.Transport = mockTransport
-	cacheTTL = time.Millisecond * 10
 	testUser := SignedInUser{
 		Id:        3,
 		OrgName:   "awoods Test",
@@ -350,8 +350,14 @@ func TestCheckInstance(t *testing.T) {
 		InstanceType: "graphite",
 	}
 
-	tokenCache = &TokenCache{items: make(map[string]*TokenResp)}
-	instanceCache = &InstanceCache{items: make(map[string]*InstanceResp)}
+	tokenCache = &TokenCache{
+		items:    make(map[string]*TokenResp),
+		cacheTTL: time.Millisecond * 10,
+	}
+	instanceCache = &InstanceCache{
+		items:    make(map[string]*InstanceResp),
+		cacheTTL: time.Millisecond * 10,
+	}
 
 	Convey("when checking valid instanceID", t, func() {
 		responder, err := httpmock.NewJsonResponder(200, &testInstance)
@@ -414,6 +420,8 @@ func TestCheckInstance(t *testing.T) {
 		ic := &InstanceCache{
 			items: make(map[string]*InstanceResp),
 			stop:  make(chan struct{}),
+
+			cacheTTL: time.Millisecond * 10,
 		}
 		ic.Set(fmt.Sprintf("%s:%s", "10", testUser.key), true)
 
@@ -449,8 +457,9 @@ func TestCheckInstance(t *testing.T) {
 
 	Convey("When instance has not been seen for more than cachettl", t, func() {
 		ic := &InstanceCache{
-			items: make(map[string]*InstanceResp),
-			stop:  make(chan struct{}),
+			items:    make(map[string]*InstanceResp),
+			stop:     make(chan struct{}),
+			cacheTTL: time.Millisecond * 10,
 		}
 		ic.Set(fmt.Sprintf("%s:%s", "10", testUser.key), true)
 
