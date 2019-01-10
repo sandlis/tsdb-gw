@@ -98,6 +98,12 @@ func metricsJson(ctx *models.Context) {
 	defer ctx.Req.Request.Body.Close()
 	body, err := ioutil.ReadAll(ctx.Req.Request.Body)
 	if err != nil {
+		select {
+		case <-ctx.Req.Context().Done():
+			ctx.Error(499, "request canceled")
+			return
+		default:
+		}
 		log.Errorf("unable to read request body. %s", err)
 		ctx.JSON(500, err)
 		return
@@ -140,6 +146,12 @@ func metricsBinary(ctx *models.Context, compressed bool) {
 
 	body, err := ioutil.ReadAll(bodyReadCloser)
 	if err != nil {
+		select {
+		case <-ctx.Req.Context().Done():
+			ctx.Error(499, "request canceled")
+			return
+		default:
+		}
 		log.Errorf("unable to read request body. %s", err)
 		ctx.JSON(500, err)
 		return
