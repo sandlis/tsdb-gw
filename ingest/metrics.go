@@ -86,7 +86,7 @@ func prepareIngest(ctx *models.Context, in []*schema.MetricData, toPublish []*sc
 	metricsValid.Add(len(toPublish))
 	for org, promDiscardsByOrg := range promDiscards {
 		for reason, cnt := range promDiscardsByOrg {
-			discardedSamples.WithLabelValues(strconv.Itoa(org), reason).Add(float64(cnt))
+			discardedSamples.WithLabelValues(reason, strconv.Itoa(org)).Add(float64(cnt))
 		}
 	}
 	return toPublish, resp
