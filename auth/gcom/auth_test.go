@@ -599,10 +599,10 @@ func TestCheckInstance(t *testing.T) {
 		ID:           10,
 		OrgID:        3,
 		InstanceType: "cortex",
-		ClusterName:  "us-central1",
+		ClusterID:    15,
 	}
 	validInstanceType = "cortex"
-	validClusterName = "us-central1"
+	validClusterID = 15
 
 	Convey("when checking valid clusterName", t, func() {
 		responder, err := httpmock.NewJsonResponder(200, &testInstance)
@@ -623,7 +623,7 @@ func TestCheckInstance(t *testing.T) {
 		So(cached, ShouldBeTrue)
 	})
 
-	validClusterName = "eu-west2"
+	validClusterID = 20
 	Convey("when checking invalid clusterName", t, func() {
 		responder, err := httpmock.NewJsonResponder(200, &testInstance)
 		So(err, ShouldBeNil)
