@@ -554,6 +554,7 @@ func TestCheckInstance(t *testing.T) {
 	})
 
 	validInstanceType = "cortex"
+	validationDryRun = false
 	Convey("when checking invalid instanceType", t, func() {
 		responder, err := httpmock.NewJsonResponder(200, &testInstance)
 		So(err, ShouldBeNil)

@@ -31,6 +31,7 @@ func init() {
 	flag.Var(&validOrgIds, "auth-valid-org-id", "restrict authentication to the listed orgId (comma separated list)")
 	flag.StringVar(&validInstanceType, "auth-valid-instance-type", "", "if set, instance validation while fail if the type attribute of an instance does not match. (graphite|graphite-shared|prometheus|logs)")
 	flag.IntVar(&validClusterID, "auth-valid-cluster-id", 0, "if set, instance validation while fail if the cluster id attribute of an instance does not match.")
+	flag.BoolVar(&validationDryRun, "auth-validation-dry-run", true, "if true, invalid instance type and cluster would just cause logging of the bad requests but not an actual failure of the request.")
 }
 
 type int64SliceFlag []int64
@@ -60,6 +61,7 @@ var (
 	validOrgIds       = int64SliceFlag{}
 	validInstanceType string
 	validClusterID    int
+	validationDryRun  bool
 
 	// global HTTP client.  By sharing the client we can take
 	// advantage of keepalives and re-use connections instead
@@ -231,14 +233,20 @@ func validateInstance(instanceID, token string) error {
 
 	if validInstanceType != "" && validInstanceType != instance.InstanceType {
 		validationFailed.WithLabelValues("instance").Inc()
-		log.Infof("Auth: instanceType returned from grafana.com doesnt match required instanceType. %s != %s", instance.InstanceType, validInstanceType)
-		return ErrInvalidInstanceType
+		log.Infof("Auth: user=%q instanceType returned from grafana.com doesnt match required instanceType. %s != %s", instanceID, instance.InstanceType, validInstanceType)
+
+		if !validationDryRun {
+			return ErrInvalidInstanceType
+		}
 	}
 
 	if validClusterID != 0 && validClusterID != instance.ClusterID {
 		validationFailed.WithLabelValues("cluster").Inc()
-		log.Infof("Auth: clusterName returned from grafana.com doesnt match required clusterID. %d != %d", instance.ClusterID, validClusterID)
-		return ErrInvalidCluster
+		log.Infof("Auth: user=%q clusterID returned from grafana.com doesnt match required clusterID. %d != %d", instanceID, instance.ClusterID, validClusterID)
+
+		if !validationDryRun {
+			return ErrInvalidCluster
+		}
 	}
 
 	return nil
