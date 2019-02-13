@@ -21,7 +21,6 @@ mkdir -p ${BUILD}/etc/gw
 
 cp ${BASE}/config/tsdb-gw.ini ${BUILD}/etc/gw/
 cp ${BUILD_ROOT}/tsdb-gw ${BUILD}/usr/bin/
-cp ${BUILD_ROOT}/tsdb-usage ${BUILD}/usr/bin/
 
 fpm -s dir -t deb \
   -v ${VERSION} -n tsdb-gw -a ${ARCH} --description "HTTP gateway service for metrictank TSDB" \
@@ -39,7 +38,6 @@ mkdir -p ${BUILD}/var/run/raintank
 
 cp ${BASE}/config/tsdb-gw.ini ${BUILD}/etc/gw/
 cp ${BUILD_ROOT}/tsdb-gw ${BUILD}/usr/bin/
-cp ${BUILD_ROOT}/tsdb-usage ${BUILD}/usr/bin/
 cp ${BASE}/config/systemd/tsdb-gw.service $BUILD/lib/systemd/system
 
 fpm -s dir -t deb \
@@ -58,7 +56,6 @@ mkdir -p ${BUILD}/var/run/raintank
 
 cp ${BASE}/config/tsdb-gw.ini ${BUILD}/etc/gw/
 cp ${BUILD_ROOT}/tsdb-gw ${BUILD}/usr/bin/
-cp ${BUILD_ROOT}/tsdb-usage ${BUILD}/usr/bin/
 cp ${BASE}/config/systemd/tsdb-gw.service $BUILD/lib/systemd/system
 
 PACKAGE_NAME="${BUILD}/tsdb-gw-${VERSION}.el7.${ARCH}.rpm"
@@ -81,7 +78,6 @@ mkdir -p ${BUILD}/etc/gw
 
 cp ${BASE}/config/tsdb-gw.ini ${BUILD}/etc/gw/
 cp ${BUILD_ROOT}/tsdb-gw ${BUILD}/usr/bin/
-cp ${BUILD_ROOT}/tsdb-usage ${BUILD}/usr/bin/
 cp ${BASE}/config/upstart-0.6.5/tsdb-gw.conf $BUILD/etc/init
 
 fpm -s dir -t rpm \

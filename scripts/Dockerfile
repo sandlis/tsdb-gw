@@ -6,7 +6,6 @@ RUN apk --update add ca-certificates
 RUN mkdir -p /etc/gw
 COPY scripts/config/tsdb-gw.ini /etc/gw/tsdb-gw.ini
 COPY scripts/build/tsdb-gw /usr/bin/tsdb-gw
-COPY scripts/build/tsdb-usage /usr/bin/tsdb-usage
 COPY scripts/entrypoint.sh /usr/bin/
 
 EXPOSE 80

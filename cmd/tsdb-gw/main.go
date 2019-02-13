@@ -23,7 +23,6 @@ import (
 	"github.com/raintank/tsdb-gw/publish/kafka"
 	"github.com/raintank/tsdb-gw/query/graphite"
 	"github.com/raintank/tsdb-gw/query/metrictank"
-	"github.com/raintank/tsdb-gw/usage"
 	"github.com/raintank/tsdb-gw/util"
 	log "github.com/sirupsen/logrus"
 )
@@ -41,10 +40,6 @@ var (
 
 	graphiteURL   = flag.String("graphite-url", "http://localhost:8080", "graphite-api address")
 	metrictankURL = flag.String("metrictank-url", "http://localhost:6060", "metrictank address")
-
-	// usage tracking
-	tsdbStatsEnabled = flag.Bool("tsdb-stats-enabled", false, "enable collecting usage stats")
-	tsdbStatsAddr    = flag.String("tsdb-stats-addr", "localhost:2004", "tsdb-usage server address")
 
 	// stats and tracing
 	statsEnabled    = flag.Bool("stats-enabled", false, "enable sending graphite messages for instrumentation")
@@ -94,13 +89,6 @@ func main() {
 		stats.NewGraphite(prefix, *statsAddr, *statsInterval, *statsBufferSize, *statsTimeout)
 	} else {
 		stats.NewDevnull()
-	}
-
-	if *tsdbStatsEnabled {
-		err := usage.Init(*tsdbStatsAddr)
-		if err != nil {
-			log.Fatalf("failed to initialize usage stats. %s", err.Error())
-		}
 	}
 
 	_, traceCloser, err := util.GetTracer(app, *tracingEnabled, *tracingAddr)
