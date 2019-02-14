@@ -554,6 +554,7 @@ func TestCheckInstance(t *testing.T) {
 	})
 
 	validInstanceType = "cortex"
+	validationDryRun = false
 	Convey("when checking invalid instanceType", t, func() {
 		responder, err := httpmock.NewJsonResponder(200, &testInstance)
 		So(err, ShouldBeNil)
@@ -593,5 +594,49 @@ func TestCheckInstance(t *testing.T) {
 		valid, cached = instanceCache.Get(fmt.Sprintf("%s:%s", "10", testUser.key))
 		So(valid, ShouldBeTrue)
 		So(cached, ShouldBeTrue)
+	})
+
+	testInstance = Instance{
+		ID:           10,
+		OrgID:        3,
+		InstanceType: "cortex",
+		ClusterID:    15,
+	}
+	validInstanceType = "cortex"
+	validClusterID = 15
+
+	Convey("when checking valid clusterName", t, func() {
+		responder, err := httpmock.NewJsonResponder(200, &testInstance)
+		So(err, ShouldBeNil)
+		mockTransport.RegisterResponder("GET", "https://grafana.com/api/hosted-metrics/10", responder)
+		instanceCache.Clear()
+		// instance should not be cached.
+		valid, cached := instanceCache.Get(fmt.Sprintf("%s:%s", "10", testUser.key))
+		So(valid, ShouldBeFalse)
+		So(cached, ShouldBeFalse)
+
+		err = testUser.CheckInstance("10")
+		So(err, ShouldBeNil)
+		mockTransport.Reset()
+
+		valid, cached = instanceCache.Get(fmt.Sprintf("%s:%s", "10", testUser.key))
+		So(valid, ShouldBeTrue)
+		So(cached, ShouldBeTrue)
+	})
+
+	validClusterID = 20
+	Convey("when checking invalid clusterName", t, func() {
+		responder, err := httpmock.NewJsonResponder(200, &testInstance)
+		So(err, ShouldBeNil)
+		mockTransport.RegisterResponder("GET", "https://grafana.com/api/hosted-metrics/10", responder)
+		instanceCache.Clear()
+		// instance should not be cached.
+		valid, cached := instanceCache.Get(fmt.Sprintf("%s:%s", "10", testUser.key))
+		So(valid, ShouldBeFalse)
+		So(cached, ShouldBeFalse)
+
+		err = testUser.CheckInstance("10")
+		So(err, ShouldEqual, ErrInvalidCluster)
+		mockTransport.Reset()
 	})
 }
