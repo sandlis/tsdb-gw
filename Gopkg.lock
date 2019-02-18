@@ -175,13 +175,6 @@
   version = "v1.0.3"
 
 [[projects]]
-  digest = "1:78b8040ece2ff622580def2708b9eb0b2857711b6744c475439bf337e9c677ea"
-  name = "github.com/golang/glog"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "44145f04b68cf362d9c4df2182967c2275eaefed"
-
-[[projects]]
   digest = "1:6348a79dacae28c9dc9c861cb4a9b5e54f1ad470cd3c9a6757f45bc6473fa953"
   name = "github.com/golang/protobuf"
   packages = [
@@ -846,7 +839,6 @@
     "github.com/Shopify/sarama",
     "github.com/go-macaron/binding",
     "github.com/gogo/protobuf/proto",
-    "github.com/golang/glog",
     "github.com/golang/snappy",
     "github.com/gorilla/handlers",
     "github.com/gorilla/mux",
