@@ -19,7 +19,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/raintank/tsdb-gw/api/models"
 	"github.com/raintank/tsdb-gw/auth"
-	"github.com/raintank/tsdb-gw/usage"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/macaron.v1"
 )
@@ -235,7 +234,6 @@ func (r *requestStats) PathStatusCount(ctx *models.Context, path string, status 
 	}
 	r.Unlock()
 	c.Inc()
-	usage.LogRequest(ctx.ID, metricKey)
 }
 
 func (r *requestStats) PathLatency(ctx *models.Context, path string, dur time.Duration) {
