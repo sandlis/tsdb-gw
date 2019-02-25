@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strconv"
 	"strings"
@@ -22,7 +23,7 @@ import (
 	schema "github.com/raintank/schema"
 	"github.com/raintank/tsdb-gw/publish"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/net/context/ctxhttp"
+	"github.com/weaveworks/common/httpgrpc/server"
 )
 
 var (
@@ -61,31 +62,77 @@ var (
 
 const maxErrMsgLen = 256
 
+type httpRoundtripper struct {
+	client *http.Client
+}
+
+func (rt *httpRoundtripper) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	return rt.client.Do(req)
+}
+
+func newCortexPublishHTTPRoundTripper() http.RoundTripper {
+	client := &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConns:        20000,
+			MaxIdleConnsPerHost: 1000,
+			DisableKeepAlives:   false,
+			DisableCompression:  true,
+			IdleConnTimeout:     5 * time.Minute,
+		},
+	}
+
+	return &httpRoundtripper{client: client}
+}
+
+type grpcRoundtripper struct {
+	client *server.Client
+}
+
+func (rt *grpcRoundtripper) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	rr := httptest.NewRecorder()
+	rt.client.ServeHTTP(rr, req)
+
+	return rr.Result(), nil
+}
+
+func newCortexPublishGRPCRoundTripper(writeURL string) http.RoundTripper {
+	httpGrpcClient, err := server.NewClient(writeURL)
+	if err != nil {
+		panic(err)
+	}
+
+	return &grpcRoundtripper{
+		client: httpGrpcClient,
+	}
+}
+
 type cortexPublisher struct {
-	url     *url.URL
-	client  *http.Client
-	timeout time.Duration
+	url          *url.URL
+	roundtripper http.RoundTripper
+	timeout      time.Duration
 }
 
 // NewCortexPublisher creates a new cortex publisher.
-func NewCortexPublisher(writeURL string) publish.Publisher {
+func NewCortexPublisher(ptype ProxyType, writeURL string) publish.Publisher {
 	cortexURL, err := url.Parse(writeURL)
 	if err != nil {
 		panic(err)
 	}
 
+	var roundtripper http.RoundTripper
+
+	switch ptype {
+	case HTTPProxy:
+		roundtripper = newCortexPublishHTTPRoundTripper()
+
+	case GRPCProxy:
+		roundtripper = newCortexPublishGRPCRoundTripper(writeURL)
+	}
+
 	return &cortexPublisher{
-		url: cortexURL,
-		client: &http.Client{
-			Transport: &http.Transport{
-				MaxIdleConns:        20000,
-				MaxIdleConnsPerHost: 1000,
-				DisableKeepAlives:   false,
-				DisableCompression:  true,
-				IdleConnTimeout:     5 * time.Minute,
-			},
-		},
-		timeout: time.Second * 60,
+		url:          cortexURL,
+		roundtripper: roundtripper,
+		timeout:      time.Second * 60,
 	}
 }
 
@@ -134,8 +181,9 @@ func (c *cortexPublisher) Write(req writeRequest) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
+	httpReq = httpReq.WithContext(ctx)
 
-	httpResp, err := ctxhttp.Do(ctx, c.client, httpReq)
+	httpResp, err := c.roundtripper.RoundTrip(httpReq)
 	if err != nil {
 		return err
 	}

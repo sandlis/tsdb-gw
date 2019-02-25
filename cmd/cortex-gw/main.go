@@ -78,20 +78,21 @@ func main() {
 	}
 
 	proxyURL := *writeURL
+	proxyType := cortexPublish.HTTPProxy
 
 	var writeProxy *cortexPublish.CortexWriteProxy
 	if strings.Contains(proxyURL, "kubernetes://") || strings.Contains(proxyURL, "dns://") {
-		writeProxy, err = cortexPublish.NewCortexWriteProxy(cortexPublish.GRPCProxy, proxyURL)
-	} else {
-		writeProxy, err = cortexPublish.NewCortexWriteProxy(cortexPublish.HTTPProxy, proxyURL)
+		proxyType = cortexPublish.GRPCProxy
 	}
+
+	writeProxy, err = cortexPublish.NewCortexWriteProxy(proxyType, proxyURL)
 
 	if err != nil {
 		log.Fatalf("cannot initialise write proxy: %v", err)
 	}
 
 	if *forward3rdParty {
-		publish.Init(cortexPublish.NewCortexPublisher(proxyURL))
+		publish.Init(cortexPublish.NewCortexPublisher(proxyType, proxyURL))
 	} else {
 		publish.Init(nil)
 	}
