@@ -171,9 +171,9 @@ func initRoutes(a *api.Api, enforceRoles bool) {
 	a.Router.Get("/graphite/metrics/index.json", a.GenerateHandlers("read", enforceRoles, false, metrictank.MetrictankProxy("/metrics/index.json"))...)
 	a.Router.Any("/prometheus/*", a.GenerateHandlers("read", enforceRoles, false, metrictank.PrometheusProxy)...)
 	if len(*timerangeLimit) > 0 {
-		a.Router.Any("/graphite/*", a.GenerateHandlers("read", enforceRoles, false, api.CaptureBody, binding.Bind(graphite.FromTo{}), graphite.GraphiteProxy)...)
+		a.Router.Any("/graphite/*", a.GenerateHandlers("read", enforceRoles, false, api.CaptureBody, binding.Bind(graphite.FromTo{}), a.PromStats("graphite"), graphite.GraphiteProxy)...)
 	} else {
-		a.Router.Any("/graphite/*", a.GenerateHandlers("read", enforceRoles, false, graphite.GraphiteProxy)...)
+		a.Router.Any("/graphite/*", a.GenerateHandlers("read", enforceRoles, false, a.PromStats("graphite"), graphite.GraphiteProxy)...)
 	}
 	a.Router.Post("/metrics", a.GenerateHandlers("write", enforceRoles, false, ingest.Metrics)...)
 	a.Router.Post("/datadog/api/v1/series", a.GenerateHandlers("write", enforceRoles, true, datadog.DataDogSeries)...)
