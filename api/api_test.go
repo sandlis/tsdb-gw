@@ -8,7 +8,6 @@ import (
 	"net/http/httptest"
 	"net/http/httputil"
 	"net/url"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -25,7 +24,9 @@ func upgradeType(h http.Header) string {
 }
 
 func createWSBackendServer(t *testing.T) *httptest.Server {
+	// Creates a test server with Websocket handler
 	return httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Verifying whether right Websocket headers are set
 		if upgradeType(r.Header) != "websocket" {
 			t.Error("unexpected backend request")
 			http.Error(w, "unexpected request", 400)
@@ -38,7 +39,11 @@ func createWSBackendServer(t *testing.T) *httptest.Server {
 			return
 		}
 		defer c.Close()
+
+		// Upgrading connection to Websocket
 		io.WriteString(c, "HTTP/1.1 101 Switching Protocols\r\nConnection: upgrade\r\nUpgrade: WebSocket\r\n\r\n")
+
+		// Reading messages from client
 		bs := bufio.NewScanner(c)
 		if !bs.Scan() {
 			t.Errorf("backend failed to read line from client: %v", bs.Err())
@@ -49,19 +54,25 @@ func createWSBackendServer(t *testing.T) *httptest.Server {
 
 }
 
+// ReverseProxy in Go uses Hijack() method to handle Websocket connection requests.
+// Any type that satisfies http.Hijacker interface has that method.
+// This function is to test whether all the middlewares or other pieces of codes that manipulate http.ResponseWriter which
+// eventually gets passed to ServeHTTP method of ReverseProxy satisfies http.Hijacker interface.
+// If any newly added middleware does not satisfy http.Hijacker interface, this test would fail.
 func TestReverseProxyWebSocketWithHijacker(t *testing.T) {
 	*addr = ":0"
 
+	// Creating a backend server for proxying WS requests to it
 	backendServer := createWSBackendServer(t)
 	backendServer.Start()
 	defer backendServer.Close()
 
+	// Creating a proxy server for proxying requests to backend server created previously
 	backURL, _ := url.Parse(backendServer.URL)
 	rproxy := httputil.NewSingleHostReverseProxy(backURL)
 
 	a := New("grafana-instance", "test-ws")
 	a.Router.Any("/ws", a.GenerateHandlers("read", false, false, a.PromStats("cortex-read"), func(c *models.Context) {
-		c.Req.Request.Header.Set("X-Scope-OrgID", strconv.Itoa(c.User.ID))
 		rproxy.ServeHTTP(c.Resp, c.Req.Request)
 	})...)
 
@@ -72,6 +83,7 @@ func TestReverseProxyWebSocketWithHijacker(t *testing.T) {
 	frontendProxy.Start()
 	defer frontendProxy.Close()
 
+	// Sending WS request to proxy server and verifying whether it works fine
 	req, _ := http.NewRequest("GET", frontendProxy.URL+"/ws", nil)
 	req.Header.Set("Connection", "Upgrade")
 	req.Header.Set("Upgrade", "websocket")
@@ -106,6 +118,7 @@ func TestReverseProxyWebSocketWithHijacker(t *testing.T) {
 	}
 }
 
+// This is an example type which does not satisfy http.Hijacker interface since it does not implement Hijack function
 type ResponseWriterWithoutHijacker struct {
 	http.ResponseWriter
 }
@@ -114,6 +127,7 @@ func (rw *ResponseWriterWithoutHijacker) Write(b []byte) (int, error) {
 	return rw.ResponseWriter.Write(b)
 }
 
+// This test is just for showing how ReverseProxy would fail when ResponseWriter does not satisfy http.Hijacker interface
 func TestReverseProxyWebSocketWithoutHijacker(t *testing.T) {
 	*addr = ":0"
 
